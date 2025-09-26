@@ -1,0 +1,42 @@
+@startuml トーナメント
+
+
+
+start
+:画面設計;
+
+partition 設計 {
+  :API設計;
+  :インフラ設計;
+  :DB設計;
+}
+
+partition 実装 {
+  :入力画面;
+  :表示画面;
+  :管理画面;
+  :リアルタイム連携;
+  :バックエンド;
+}
+note right #FFEEEE
+  M1
+end note
+
+:単体/負荷/結合/UATテスト;
+note right #FFEEEE
+  M2
+end note
+
+:トレーニング;
+:本番リリース;
+note right #FFEEEE
+  M3
+end note
+
+:本番監視;
+note right #FFEEEE
+  M4
+end note
+
+stop
+@enduml
