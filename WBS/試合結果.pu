@@ -1,0 +1,12 @@
+@startwbs タイトルWBS
+title 試合結果
++ 試合結果
+**[#Pink] 試合のデータ収集
+***[#SkyBlue] 勝敗・本数の入力
+***[#SkyBlue] 団体戦→チームメンバーの勝敗、試合結果
+***[#SkyBlue] 個人戦→結果の記入
+**[#Pink] 本部側
+***[#SkyBlue] 結果の収集
+***[#SkyBlue] データの保存・取得の確認
+***[#SkyBlue] サイトへの反映
+@endwbs
