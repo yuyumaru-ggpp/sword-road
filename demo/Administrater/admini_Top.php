@@ -12,12 +12,12 @@
   <div class="container">
     <div class="link-box">
       <div>全体管理</div>
-      <a href="">https://www.example.com/all.html</a>
+      <a href="./all/rogin.php">https://www.example.com/all.html</a>
     </div>
 
     <div class="link-box">
       <div>大会の記録編集</div>
-      <a href="">https://www.example.com/edit.html</a>
+      <a href="./edit/rogin.php">https://www.example.com/edit.html</a>
     </div>
 
     <div class="back-link">
