@@ -39,7 +39,7 @@
         <button>次へ →</button>
     </div>
     <footer>
-        <div class="school-name">学校名</div>
+        <div class="school-name">MCL盛岡情報ビジネス＆デザイン専門学校</div>
     </footer>
   
 
