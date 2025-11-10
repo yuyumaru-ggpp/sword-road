@@ -34,7 +34,7 @@
         </div>
         
         <div class="back-link">
-            <a href="index.html" class="back-text">← 戻る</a>
+            <a href="admini_Top.php" class="back-text">← 戻る</a>
         </div>
     </div>
 </body>
