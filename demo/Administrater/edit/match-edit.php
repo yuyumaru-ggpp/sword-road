@@ -34,7 +34,7 @@
         </div>
         
         <div class="back-link">
-            <a href="tournament-detail.html" class="back-text">← 戻る</a>
+            <a href="menu.php" class="back-text">← 戻る</a>
         </div>
     </div>
 </body>
