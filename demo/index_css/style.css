@@ -7,7 +7,7 @@ header {
     }
 
 .menu-icon {
-      font-size: 24px;
+      font-size: 40px;
       cursor: pointer;
     }
 
@@ -34,6 +34,14 @@ header {
       margin: 5px 0;
     }
 
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
 body {
   font-family: 'Segoe UI', sans-serif;
   background-color: #fdfaf5;
@@ -41,9 +49,19 @@ body {
   padding: 0;
   display: flex;
   flex-direction: column;
-  align-items: center; /* 中央寄せ */
+  align-items: center;
+  min-height: 100vh;
 }
 
+.main-container {
+  max-width: 600px;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
 header {
   width: 100%;
   display: flex;
@@ -53,13 +71,6 @@ header {
   padding: 10px 20px;
 }
 
-.main-container {
-  max-width: 600px;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
 
 .search-bar {
   width: 100%;
@@ -87,14 +98,28 @@ header {
 
 .tournament-list {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .tournament-item {
+  display: block;
+  width: 80%;
+  max-width: 500px;
+  margin: 10px 0;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
   text-align: center;
-  padding: 10px;
-  border-bottom: 1px solid #ddd;
+  text-decoration: none;
+  color: #333;
+  background-color: #fff;
 }
 
+.tournament-item:hover {
+  background-color: #f0f0f0;
+}
 .pagination {
   display: flex;
   justify-content: center;
@@ -107,6 +132,7 @@ header {
   margin-bottom: 30px;
   color: #666;
 }
+
 @media screen and (max-width: 600px) {
   header {
     flex-direction: column;
