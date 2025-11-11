@@ -1,0 +1,65 @@
+/* 全体のコンテナ */
+.container {
+  min-height: 100vh;
+  background-color: #e6fff9;
+  border: 3px solid #00ffaa;
+  padding: 40px 20px;
+  font-family: sans-serif;
+}
+
+/* タイトル */
+h1 {
+  text-align: center;
+  font-size: 28px;
+  font-weight: normal;
+  margin: 0 0 60px 0;
+}
+
+
+h2 {
+  text-align: center;
+  font-size: 28px;
+  font-weight: normal;
+  margin: 0 0 60px 0;
+}
+
+a {
+  display: block;
+  font-size: 28px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* 説明文 */
+.instruction {
+  text-align: center;
+  font-size: 18px;
+  margin-bottom: 40px;
+}
+
+/* 選択肢のコンテナ - 縦並び、中央寄せ */
+.options {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 60px;
+}
+
+/* 各選択肢 - 下線なし、通常テキスト */
+.option {
+  text-decoration: none;
+  color: #000;
+  font-size: 18px;
+  text-align: center;
+}
+
+/* 戻るリンク - 左下配置 */
+.back-link {
+  text-decoration: none;
+  color: #000;
+  font-size: 16px;
+  position: absolute;
+  left: 70px;
+  bottom: 40px;
+}

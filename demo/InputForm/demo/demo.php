@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>デモ</title>
+    <link rel="stylesheet" href="demo.css">
 </head>
 <body>
     <h1>入力の練習</h1>
