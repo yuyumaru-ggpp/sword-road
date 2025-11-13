@@ -192,6 +192,110 @@
     .cancel-btn:hover, .result-select:hover {
       background-color: #f0f0f0;
     }
+
+    /* 確認画面と完了画面のスタイルを追加 */
+    .confirmation-screen, .complete-screen {
+      display: none;
+    }
+
+    .confirmation-screen.active, .complete-screen.active {
+      display: block;
+    }
+
+    .match-screen.active {
+      display: block;
+    }
+
+    .match-screen {
+      display: none;
+    }
+
+    .results-summary {
+      margin: 30px 0;
+      padding: 20px;
+      background-color: #f9f9f9;
+      border-radius: 8px;
+    }
+
+    .result-item {
+      padding: 15px;
+      margin-bottom: 10px;
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .result-role {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    .result-details {
+      font-size: 16px;
+      line-height: 1.8;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin-top: 30px;
+    }
+
+    .submit-btn, .cancel-submit-btn, .continue-btn, .return-btn {
+      padding: 12px 30px;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .submit-btn {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .cancel-submit-btn {
+      background-color: #999;
+      color: white;
+    }
+
+    .continue-btn {
+      background-color: #2196F3;
+      color: white;
+    }
+
+    .return-btn {
+      background-color: #ff9800;
+      color: white;
+    }
+
+    .submit-btn:hover {
+      background-color: #45a049;
+    }
+
+    .cancel-submit-btn:hover {
+      background-color: #888;
+    }
+
+    .continue-btn:hover {
+      background-color: #0b7dda;
+    }
+
+    .return-btn:hover {
+      background-color: #e68900;
+    }
+
+    .complete-message {
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      margin: 40px 0;
+      color: #4CAF50;
+    }
   </style>
 </head>
 <body>
@@ -199,13 +303,13 @@
     <div class="header">
       <div class="title">団体戦　〇〇大会　〇〇部門</div>
       <div class="header-buttons">
-        <button class="senpo-btn">先鋒</button>
+        <button class="senpo-btn" id="roleBtn">先鋒</button>
       </div>
     </div>
 
     <div class="nav-buttons">
-      <button class="next-btn">次へ</button>
-      <button class="back-btn">戻る</button>
+      <button class="next-btn" id="nextBtn" onclick="nextMatch()">次へ</button>
+      <button class="back-btn" onclick="prevMatch()">戻る</button>
     </div>
 
     <div style="margin-top: 30px;">
@@ -278,12 +382,78 @@
 
   <script>
     const options = ['メ', 'コ', 'ド', '反', 'ツ', '〇'];
-    const state = {
-      top: ['▲', '▲', '▲'],
-      bottom: ['▼', '▼', '▼']
-    };
+    
+    const roles = ['先鋒', '次鋒', '中堅', '副将', '大将'];
+    
+    let currentMatchIndex = 0;
+    const matchesData = [
+      { top: ['▲', '▲', '▲'], bottom: ['▼', '▼', '▼'], topName: '', bottomName: '', result: '引分け' },
+      { top: ['▲', '▲', '▲'], bottom: ['▼', '▼', '▼'], topName: '', bottomName: '', result: '引分け' },
+      { top: ['▲', '▲', '▲'], bottom: ['▼', '▼', '▼'], topName: '', bottomName: '', result: '引分け' },
+      { top: ['▲', '▲', '▲'], bottom: ['▼', '▼', '▼'], topName: '', bottomName: '', result: '引分け' },
+      { top: ['▲', '▲', '▲'], bottom: ['▼', '▼', '▼'], topName: '', bottomName: '', result: '引分け' }
+    ];
 
     let currentDropdown = null;
+
+    function saveCurrentMatch() {
+      const match = matchesData[currentMatchIndex];
+      match.topName = document.getElementById('topName').value;
+      match.bottomName = document.getElementById('bottomName').value;
+      match.result = document.getElementById('resultSelect').value;
+    }
+
+    function loadMatch() {
+      const match = matchesData[currentMatchIndex];
+      
+      // 役割名を更新
+      document.getElementById('roleBtn').textContent = roles[currentMatchIndex];
+      
+      // 次へボタンのテキストを更新
+      const nextBtn = document.getElementById('nextBtn');
+      if (currentMatchIndex === roles.length - 1) {
+        nextBtn.textContent = '送信';
+      } else {
+        nextBtn.textContent = '次へ';
+      }
+      
+      // 名前とプルダウンの値を復元
+      document.getElementById('topName').value = match.topName;
+      document.getElementById('bottomName').value = match.bottomName;
+      document.getElementById('resultSelect').value = match.result;
+      
+      // 三角ボタンの値を復元
+      document.querySelectorAll('.triangle-btn').forEach(btn => {
+        const position = btn.dataset.position;
+        const index = parseInt(btn.dataset.index);
+        btn.textContent = match[position][index];
+      });
+      
+      // 戻るボタンの表示制御
+      document.querySelector('.back-btn').style.display = currentMatchIndex === 0 ? 'none' : 'block';
+    }
+
+    function nextMatch() {
+      saveCurrentMatch();
+      
+      if (currentMatchIndex < roles.length - 1) {
+        currentMatchIndex++;
+        loadMatch();
+      } else {
+        // 大将戦の場合は確認画面へ遷移
+        localStorage.setItem('matchesData', JSON.stringify(matchesData));
+        window.location.href = 'check_result.php';
+      }
+    }
+
+    function prevMatch() {
+      saveCurrentMatch();
+      
+      if (currentMatchIndex > 0) {
+        currentMatchIndex--;
+        loadMatch();
+      }
+    }
 
     document.querySelectorAll('.triangle-btn').forEach(btn => {
       btn.addEventListener('click', function(e) {
@@ -306,7 +476,7 @@
           item.textContent = option;
           item.addEventListener('click', function(e) {
             e.stopPropagation();
-            state[position][index] = option;
+            matchesData[currentMatchIndex][position][index] = option;
             btn.textContent = option;
             dropdown.remove();
             currentDropdown = null;
@@ -327,24 +497,25 @@
     });
 
     function resetAll() {
-      state.top = ['▲', '▲', '▲'];
-      state.bottom = ['▼', '▼', '▼'];
+      matchesData[currentMatchIndex] = {
+        top: ['▲', '▲', '▲'],
+        bottom: ['▼', '▼', '▼'],
+        topName: '',
+        bottomName: '',
+        result: '引分け'
+      };
       
-      document.querySelectorAll('.triangle-btn').forEach(btn => {
-        const position = btn.dataset.position;
-        const index = parseInt(btn.dataset.index);
-        btn.textContent = state[position][index];
-      });
-      
-      document.getElementById('topName').value = '';
-      document.getElementById('bottomName').value = '';
-      document.getElementById('resultSelect').value = '引分け';
+      loadMatch();
       
       if (currentDropdown) {
         currentDropdown.remove();
         currentDropdown = null;
       }
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      loadMatch();
+    });
   </script>
 </body>
 </html>
