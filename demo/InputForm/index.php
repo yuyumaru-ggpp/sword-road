@@ -29,7 +29,7 @@
             <div class="team">
                 <h2>団体戦</h2>
                 <ul>
-                    <li><a href="./Team/Elementary.php">小学生団体</a></li>
+                    <li><a href="./Team/小学生部門/Elementary.php">小学生団体</a></li>
                     <li><a href="./Team/T_j_men.php">中学生男子団体</a></li>
                     <li><a href="./Team/T_J_women.php">中学生女子団体</a></li>
                     <li><a href="./Team/T_h_men.php">高校生男子団体</a></li>
