@@ -120,7 +120,10 @@
     const roles = ['先鋒', '次鋒', '中堅', '副将', '大将'];
 
     function displayResults() {
-      const matchesData = JSON.parse(localStorage.getItem('matchesData') || '[]');
+      const savedData = JSON.parse(localStorage.getItem('matchesData') || '{}');
+      const matchesData = savedData.matches || [];
+      const playoffData = savedData.playoff || null;
+      
       const summaryDiv = document.getElementById('resultsSummary');
       summaryDiv.innerHTML = '';
       
@@ -144,19 +147,42 @@
         resultItem.appendChild(detailsDiv);
         summaryDiv.appendChild(resultItem);
       });
+
+      if (playoffData) {
+        const resultItem = document.createElement('div');
+        resultItem.className = 'result-item';
+        
+        const roleDiv = document.createElement('div');
+        roleDiv.className = 'result-role';
+        roleDiv.textContent = '代表決定戦';
+        
+        const detailsDiv = document.createElement('div');
+        detailsDiv.className = 'result-details';
+        detailsDiv.innerHTML = `
+          上: ${playoffData.topName || '未選択'} - ${playoffData.top.join(', ')}<br>
+          下: ${playoffData.bottomName || '未選択'} - ${playoffData.bottom.join(', ')}
+        `;
+        
+        resultItem.appendChild(roleDiv);
+        resultItem.appendChild(detailsDiv);
+        summaryDiv.appendChild(resultItem);
+      }
     }
 
     function submitData() {
-      const matchesData = JSON.parse(localStorage.getItem('matchesData') || '[]');
+      const matchesData = JSON.parse(localStorage.getItem('matchesData') || '{}');
       console.log('データを送信:', matchesData);
       
-      // completion.htmlに遷移
       window.location.href = 'completion.php';
     }
 
     function cancelSubmit() {
-      // index.htmlに戻る
-      window.location.href = 'Input_form.php';
+      const previousPage = localStorage.getItem('previousPage');
+      if (previousPage === 'playoff') {
+        window.location.href = 'playoff.php';
+      } else {
+        window.location.href = 'Input_form.php';
+      }
     }
 
     document.addEventListener('DOMContentLoaded', function() {
