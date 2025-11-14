@@ -36,6 +36,9 @@
                     <li><a href="./Team/T_h_women.php">高校生女子団体</a></li>
                 </ul>
             </div>
+            <div class="demo">
+                <a href = "./demo/demo.php">デモ</a>
+            </div>
         </div>
     </main>
 </body>
