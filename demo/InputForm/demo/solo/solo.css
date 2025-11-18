@@ -1,7 +1,9 @@
+/* ヘッダーを横並びに */
 .header {
     display: flex;
 }
 
+/* 1,2,3,を横並びと中央揃え */
 .role-header {
     display: flex;
     justify-content: center;
@@ -11,6 +13,7 @@
 .role-numbers {
     display: flex;
     gap: 10px;
+    font-size: 1.3rem;
 }
 
 .role-numbers div {
@@ -19,6 +22,7 @@
     font-weight: bold;
 }
 
+/* 役を横並びと中央揃え */
 .player-section {
     display: flex;
     justify-content: center;
@@ -34,4 +38,97 @@
     width: 80px;
     text-align: center;
     font-weight: bold;
+}
+
+/* 選手IDや名前の部分を左揃え */
+.name-input-wrapper {
+    text-align: left;
+}
+
+.win-section {
+    text-align: right;
+}
+
+/* buttonを縦並びと右寄せ */
+.button-area {
+    display: flex;
+    flex-direction: column;
+    text-align: right;
+}
+
+.button-area button {
+    align-self: flex-end;
+    width: auto;
+    font-size: 20px;
+}
+/* スマホ対応 (768px以下) */
+@media (max-width: 768px) {
+    body {
+        padding: 5px;
+    }
+
+    .header h1 {
+        font-size: 1.2rem;
+    }
+
+    .role-numbers div {
+        width: 60px;
+        font-size: 1rem;
+    }
+
+    .role-selects {
+        gap: 8px;
+    }
+
+    .role-selects select {
+        width: 60px;
+        height: 35px;
+        font-size: 0.9rem;
+    }
+
+    .win-section select {
+        width: 130px;
+        height: 35px;
+        font-size: 0.9rem;
+    }
+
+    .button-area button {
+        width: 120px;
+        padding: 10px;
+        font-size: 0.9rem;
+    }
+}
+
+/* 小さいスマホ対応 (480px以下) */
+@media (max-width: 480px) {
+    .header h1 {
+        font-size: 1rem;
+    }
+
+    .role-numbers div {
+        width: 50px;
+        font-size: 0.9rem;
+    }
+
+    .role-selects {
+        gap: 5px;
+    }
+
+    .role-selects select {
+        width: 50px;
+        height: 32px;
+        font-size: 0.8rem;
+    }
+
+    .win-section select {
+        width: 110px;
+        height: 32px;
+        font-size: 0.8rem;
+    }
+
+    .button-area button {
+        width: 100px;
+        padding: 8px;
+        font-size: 0.85rem;
+    }
 }

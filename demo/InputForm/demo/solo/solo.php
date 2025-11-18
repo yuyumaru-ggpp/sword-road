@@ -1,3 +1,4 @@
+<!-- phpやdbの処理はまだ書いてません。 -->
 <!DOCTYPE html>
 <html lang="ja">
 
@@ -23,92 +24,87 @@
         </div>
     </div>
     <!-- チームA -->
+    <!-- 選手IDを入力し候補をクリックするとlabelに名前が入力される -->
+    <div class="name-input-wrapper">
+        <label for="teamA">名前</label>
+        <input type="text" name="teamA" id="teamA" list="player-list" placeholder="選手ID">
+    </div>
     <div class="player-section">
-
-
-        <div class="player-row">
-            <div class="name-input-wrapper">
-                <label for="teamA">名前</label>
-                <input type="text" name="teamA" id="teamA" list="player-list" placeholder="選手ID">
-            </div>
-            <div class="role-selects">
-                <select name="teamA-role1" required>
-                    <option value="">▲</option>
-                    <option value="メ">メ</option>
-                    <option value="コ">コ</option>
-                    <option value="ド">ド</option>
-                    <option value="ツ">ツ</option>
-                    <option value="反">反</option>
-                    <option value="判">判</option>
-                </select>
-                <select name="teamA-role2">
-                    <option value="">▲</option>
-                    <option value="メ">メ</option>
-                    <option value="コ">コ</option>
-                    <option value="ド">ド</option>
-                    <option value="ツ">ツ</option>
-                    <option value="反">反</option>
-                    <option value="判">判</option>
-                </select>
-                <select name="teamA-role3">
-                    <option value="">▲</option>
-                    <option value="メ">メ</option>
-                    <option value="コ">コ</option>
-                    <option value="ド">ド</option>
-                    <option value="ツ">ツ</option>
-                    <option value="反">反</option>
-                    <option value="判">判</option>
-                </select>
-            </div>
+        <div class="role-selects">
+            <select name="teamA-role1" required>
+                <option value="">▲</option>
+                <option value="メ">メ</option>
+                <option value="コ">コ</option>
+                <option value="ド">ド</option>
+                <option value="ツ">ツ</option>
+                <option value="反">反</option>
+                <option value="判">判</option>
+            </select>
+            <select name="teamA-role2">
+                <option value="">▲</option>
+                <option value="メ">メ</option>
+                <option value="コ">コ</option>
+                <option value="ド">ド</option>
+                <option value="ツ">ツ</option>
+                <option value="反">反</option>
+                <option value="判">判</option>
+            </select>
+            <select name="teamA-role3">
+                <option value="">▲</option>
+                <option value="メ">メ</option>
+                <option value="コ">コ</option>
+                <option value="ド">ド</option>
+                <option value="ツ">ツ</option>
+                <option value="反">反</option>
+                <option value="判">判</option>
+            </select>
         </div>
     </div>
 
     <!-- 一本勝ちセクション -->
     <div class="win-section">
         <select name="win-role" required>
-            <option value="">一本勝</option>
+            <option value="一本勝">一本勝</option>
             <option value="引き分け">引き分け</option>
-            <option value="一本勝ち">一本勝ち</option>
             <option value="延長">延長</option>
         </select>
     </div>
 
     <!-- チームB -->
+    <!-- 選手IDを入力し候補をクリックするとlabelに名前が入力される -->
+    <div class="name-input-wrapper">
+        <label for="teamB">名前</label>
+        <input type="text" name="teamB" id="teamB" list="player-list" placeholder="選手ID">
+    </div>
     <div class="player-section">
-        <div class="player-row">
-            <div class="name-input-wrapper">
-                <label for="teamB">名前</label>
-                <input type="text" name="teamB" id="teamB" list="player-list" placeholder="選手ID">
-            </div>
-            <div class="role-selects">
-                <select name="teamB-role1" required>
-                    <option value="">▼</option>
-                    <option value="メ">メ</option>
-                    <option value="コ">コ</option>
-                    <option value="ド">ド</option>
-                    <option value="ツ">ツ</option>
-                    <option value="反">反</option>
-                    <option value="判">判</option>
-                </select>
-                <select name="teamB-role2">
-                    <option value="">▼</option>
-                    <option value="メ">メ</option>
-                    <option value="コ">コ</option>
-                    <option value="ド">ド</option>
-                    <option value="ツ">ツ</option>
-                    <option value="反">反</option>
-                    <option value="判">判</option>
-                </select>
-                <select name="teamB-role3">
-                    <option value="">▼</option>
-                    <option value="メ">メ</option>
-                    <option value="コ">コ</option>
-                    <option value="ド">ド</option>
-                    <option value="ツ">ツ</option>
-                    <option value="反">反</option>
-                    <option value="判">判</option>
-                </select>
-            </div>
+        <div class="role-selects">
+            <select name="teamB-role1" required>
+                <option value="">▼</option>
+                <option value="メ">メ</option>
+                <option value="コ">コ</option>
+                <option value="ド">ド</option>
+                <option value="ツ">ツ</option>
+                <option value="反">反</option>
+                <option value="判">判</option>
+            </select>
+            <select name="teamB-role2">
+                <option value="">▼</option>
+                <option value="メ">メ</option>
+                <option value="コ">コ</option>
+                <option value="ド">ド</option>
+                <option value="ツ">ツ</option>
+                <option value="反">反</option>
+                <option value="判">判</option>
+            </select>
+            <select name="teamB-role3">
+                <option value="">▼</option>
+                <option value="メ">メ</option>
+                <option value="コ">コ</option>
+                <option value="ド">ド</option>
+                <option value="ツ">ツ</option>
+                <option value="反">反</option>
+                <option value="判">判</option>
+            </select>
         </div>
     </div>
 
