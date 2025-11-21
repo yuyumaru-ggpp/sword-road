@@ -1,0 +1,148 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+    background-color: #f5f5f5;
+    min-height: 100vh;
+    padding: 2rem;
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.header {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.header-text {
+    font-size: 1.25rem;
+}
+
+.match-section {
+    margin-bottom: 2rem;
+}
+
+.player-info {
+    display: flex;
+    align-items: center;
+    gap: 3rem;
+    margin-bottom: 2rem;
+}
+
+.label {
+    font-size: 1.125rem;
+    min-width: 80px;
+}
+
+.id-group {
+    display: flex;
+    gap: 3rem;
+}
+
+.id-number {
+    font-size: 1.125rem;
+    min-width: 40px;
+    text-align: center;
+}
+
+.score-group {
+    display: flex;
+    gap: 3rem;
+}
+
+.score-button {
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem;
+    background-color: white;
+    border: 2px solid #d1d5db;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.score-button:hover {
+    background-color: #f9fafb;
+}
+
+.dropdown-container {
+    position: relative;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: white;
+    border: 2px solid #d1d5db;
+    border-radius: 4px;
+    margin-top: 0.25rem;
+    z-index: 10;
+}
+
+.dropdown-item {
+    display: block;
+    width: 40px;
+    padding: 0.5rem;
+    font-size: 1rem;
+    background: white;
+    border: none;
+    border-bottom: 1px solid #e5e7eb;
+    cursor: pointer;
+    text-align: center;
+}
+
+.dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.dropdown-item:hover {
+    background-color: #f9fafb;
+}
+
+.right-button {
+    position: absolute;
+    right: 0;
+    top: 120px;
+}
+
+.action-button {
+    padding: 0.75rem 2rem;
+    font-size: 1.125rem;
+    background-color: white;
+    border: 2px solid #d1d5db;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.action-button.small {
+    padding: 0.5rem 1.5rem;
+}
+
+.action-button:hover {
+    background-color: #f9fafb;
+}
+
+.divider {
+    border: none;
+    border-top: 2px dashed #d1d5db;
+    margin: 3rem 0;
+}
+
+.bottom-buttons {
+    display: flex;
+    gap: 3rem;
+    justify-content: center;
+    margin-top: 4rem;
+}
