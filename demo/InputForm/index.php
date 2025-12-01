@@ -17,7 +17,7 @@
             <div class="individual">
                 <h2>個人戦</h2>
                 <ul>
-                    <li><a href="./Individual/E_under4.php">小学生4年生以下</a></li>
+                    <li><a href="./solo/individual-match-detail.php">小学生4年生以下</a></li>
                     <li><a href="./Individual/E_upper5.php">小学生5年生以上</a></li>
                     <li><a href="./Individual/J_men.php">中学生男子</a></li>
                     <li><a href="./Individual/J_woman.php">中学生女子</a></li>
@@ -29,7 +29,7 @@
             <div class="team">
                 <h2>団体戦</h2>
                 <ul>
-                    <li><a href="./Team/Elementary.php">小学生団体</a></li>
+                    <li><a href="./Team/team-forfeit.php">小学生団体</a></li>
                     <li><a href="./Team/T_j_men.php">中学生男子団体</a></li>
                     <li><a href="./Team/T_J_women.php">中学生女子団体</a></li>
                     <li><a href="./Team/T_h_men.php">高校生男子団体</a></li>
@@ -37,7 +37,7 @@
                 </ul>
             </div>
             <div class="demo">
-                <a href = "./demo/demo.php">デモ</a>
+                <a href = "./demo/demo.php">練習</a>
             </div>
         </div>
     </main>

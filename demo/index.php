@@ -15,7 +15,7 @@
     </header>
 
     <div class="menu-links" id="menuLinks">
-        <a href="./Administrater/admini_Top.php">管理者用ログイン画面</a>
+        <a href="./administrator_version1.1/master.php">管理者用ログイン画面</a>
         <a href="./InputForm/index.php">入力補助員用ログイン画面</a>
     </div>
 

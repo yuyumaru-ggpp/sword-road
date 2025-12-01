@@ -8,7 +8,7 @@
 </head>
 <body>
     <div class="breadcrumb">
-        <a href="admin-menu.php" class="breadcrumb-link">メニュー></a>
+        <a href="master2.php" class="breadcrumb-link">メニュー></a>
         <a href="tournament-registration.php" class="breadcrumb-link">大会登録・名称変更></a>
     </div>
     
