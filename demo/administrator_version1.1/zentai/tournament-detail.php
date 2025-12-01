@@ -12,7 +12,7 @@
     </div>
     
     <div class="container">
-        <h2 class="subtitle">管理者画面</h2>
+        <h2 class="subtitle">大会記録画面</h2>
         <h1 class="title">大会名</h1>
         
         <div class="button-grid">
@@ -26,12 +26,7 @@
             </button>
         </div>
         
-        <div class="button-single">
-            <button class="menu-button-wide" onclick="location.href='csv-import.php'">
-                <span class="icon">⤓</span>
-                <span class="button-text">CSVデータの読込</span>
-            </button>
-        </div>
+        
         
         <div class="back-link">
             <a href="../master.php" class="back-text">← 戻る</a>

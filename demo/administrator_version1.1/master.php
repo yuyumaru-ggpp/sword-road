@@ -13,16 +13,16 @@
             
             <div class="url-section">
                 <h2 class="section-title">全体</h2>
-                <a href="master/master2.php" class="url-link">https://www.example.com/all.html</a>
+                <a href="master/login.php" class="url-link">https://www.example.com/all.html</a>
             </div>
             
             <div class="url-section">
                 <h2 class="section-title">大会の記録編集</h2>
-                <a href="zentai/tournament-detail.php" class="url-link">https://www.example.com/edit.html</a>
+                <a href="zentai/login.php" class="url-link">https://www.example.com/edit.html</a>
             </div>
             
             <div class="back-button-container">
-                <button class="back-button" onclick="location.href='tournament-list.html'">大会一覧に戻る</button>
+                <button class="back-button" onclick="location.href='../index.php'">大会一覧に戻る</button>
             </div>
         </div>
     </div>
