@@ -10,6 +10,7 @@
 </head>
 
 <body>
+    <!-- ヘッダーに佐藤様から提示された説明文を追加予定 -->
     <header>
         <div class="menu-icon" onclick="toggleMenu()">☰</div>
     </header>
