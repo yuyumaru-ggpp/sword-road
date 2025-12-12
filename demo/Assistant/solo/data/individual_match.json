@@ -7,7 +7,7 @@
             "▼",
             "▼"
         ],
-        "selected": -1
+        "selected": 1
     },
     "lower": {
         "name": "",
@@ -17,7 +17,7 @@
             "▲",
             "▲"
         ],
-        "selected": -1
+        "selected": 0
     },
     "special": "none"
 }
