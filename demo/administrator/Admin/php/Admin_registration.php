@@ -8,8 +8,8 @@
 </head>
 <body>
     <div class="breadcrumb">
-        <a href="master2.php" class="breadcrumb-link">メニュー></a>
-        <a href="tournament-list.php" class="breadcrumb-link">大会登録・名称変更></a>
+        <a href="Admin_top.php" class="breadcrumb-link">メニュー></a>
+        <a href="Admin_selection.php" class="breadcrumb-link">大会登録・名称変更></a>
         <a href="#" class="breadcrumb-link">〇〇大会></a>
     </div>
     
@@ -22,7 +22,7 @@
         </div>
         
         <div class="lock-button-container">
-            <button class="lock-button" onclick="location.href='tournament-locked.php'">
+            <button class="lock-button" onclick="location.href='Admin_unlock.php'">
                 <span class="lock-icon">🔒</span>
                 <span>ロック状態にする</span>
             </button>
