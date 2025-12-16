@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>大会設定</title>
-    <link rel="stylesheet" href="tournament-setting-style.css">
+    <link rel="stylesheet" href="../css/Admin_registration.css">
 </head>
 <body>
     <div class="breadcrumb">
@@ -17,8 +17,8 @@
         <h1 class="title">〇〇大会</h1>
         
         <div class="button-grid">
-            <button class="action-button" onclick="location.href='tournament-name-change.php'">名称変更</button>
-            <button class="action-button" onclick="location.href='tournament-password-change.php'">パスワード変更</button>
+            <button class="action-button" onclick="location.href='Admin_registration_namechange.php'">名称変更</button>
+            <button class="action-button" onclick="location.href='Admin_registration_pwchange.php'">パスワード変更</button>
         </div>
         
         <div class="lock-button-container">

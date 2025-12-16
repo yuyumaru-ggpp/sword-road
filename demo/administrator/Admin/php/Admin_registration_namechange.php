@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>名称変更</title>
-    <link rel="stylesheet" href="tournament-name-change-style.css">
+    <link rel="stylesheet" href="../css/Admin_registration_namechange.css">
 </head>
 <body>
     <div class="breadcrumb">

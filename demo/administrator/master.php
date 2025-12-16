@@ -13,7 +13,7 @@
             
             <div class="url-section">
                 <h2 class="section-title">全体</h2>
-                <a href="Admin/login.php" class="url-link">https://www.example.com/all.html</a>
+                <a href="Admin/php/login.php" class="url-link">https://www.example.com/all.html</a>
             </div>
             
             <div class="url-section">

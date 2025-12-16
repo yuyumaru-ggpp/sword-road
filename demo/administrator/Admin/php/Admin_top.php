@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>大会運営責任者メニュー</title>
-    <link rel="stylesheet" href="admin-menu-style.css">
+    <link rel="stylesheet" href="../css/Admin_top.css">
 </head>
 <body>
 
@@ -21,14 +21,9 @@
                 <span class="button-text">大会登録・名称変更</span>
             </button>
 
-            <button class="menu-button" onclick="location.href='tournament-unlock.php'">
+            <button class="menu-button" onclick="location.href='Admin_unlock.php'">
                 <span class="icon">🔓</span>
                 <span class="button-text">大会ロック解除</span>
-            </button>
-
-            <button class="menu-button" onclick="location.href='tournament-create.php'">
-                <span class="icon">⊞</span>
-                <span class="button-text">トーナメント作成</span>
             </button>
 
             <button class="menu-button" onclick="location.href='csv-import.php'">

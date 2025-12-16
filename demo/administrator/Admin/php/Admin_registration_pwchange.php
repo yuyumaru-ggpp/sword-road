@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>大会のパスワード変更</title>
-    <link rel="stylesheet" href="tournament-password-change-style.css">
+    <link rel="stylesheet" href="../css/Admin_registration_pwchange.css">
 </head>
 <body>
     <div class="breadcrumb">
