@@ -9,7 +9,7 @@
 <body>
     <div class="breadcrumb">
         <a href="Admin_top.php" class="breadcrumb-link">メニュー></a>
-        <a href="Admin_selection.php" class="breadcrumb-link">大会登録・名称変更></a>
+        <a href="Admin_selection.php" class="breadcrumb-link">大会、部門登録・名称変更></a>
         <a href="#" class="breadcrumb-link">大会登録></a>
     </div>
     

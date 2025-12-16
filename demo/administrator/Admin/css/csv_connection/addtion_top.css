@@ -1,0 +1,158 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+  background-color: #f5f5f5;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: #fff;
+  padding: 40px;
+  min-height: 100vh;
+}
+
+/* ブレッドクラム */
+.breadcrumb {
+  color: #4a90e2;
+  font-size: 16px;
+  margin-bottom: 40px;
+}
+
+/* メインコンテンツ */
+.main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+  margin-bottom: 100px;
+}
+
+.title {
+  font-size: 48px;
+  font-weight: bold;
+}
+
+/* アクションボタン */
+.action-btn {
+  font-size: 20px;
+  padding: 20px 40px;
+  border: 2px solid #000;
+  background-color: #fff;
+  color: #000;
+  text-align: center;
+  min-width: 180px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  text-decoration: none;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.action-btn:hover {
+  opacity: 0.7;
+}
+
+/* 競技リスト */
+.competition-columns {
+  display: flex;
+  gap: 80px;
+  justify-content: center;
+  margin-top: 40px;
+}
+
+.competition-column {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  min-width: 400px;
+}
+
+.competition-title {
+  font-size: 36px;
+  font-weight: bold;
+  text-decoration: underline;
+  margin-bottom: 10px;
+}
+
+.competition-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.competition-item {
+  font-size: 28px;
+  line-height: 1.5;
+  color: #4a90e2;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.competition-item:hover {
+  opacity: 0.7;
+  text-decoration: underline;
+}
+
+/* フォーム */
+.form-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+}
+
+.form-label {
+  font-size: 32px;
+  white-space: nowrap;
+}
+
+.form-input {
+  flex: 1;
+  max-width: 450px;
+  padding: 15px 20px;
+  font-size: 28px;
+  border: 2px solid #000;
+  border-radius: 12px;
+  background-color: #fff;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #4a90e2;
+}
+
+/* 共通ボタン */
+.actions {
+  display: flex;
+  gap: 60px;
+  justify-content: center;
+  width: 100%;
+}
+
+.btn {
+  font-size: 32px;
+  padding: 10px 40px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #000;
+  transition: opacity 0.2s ease;
+}
+
+.btn:hover {
+  opacity: 0.7;
+}

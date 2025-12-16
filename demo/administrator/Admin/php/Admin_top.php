@@ -18,7 +18,7 @@
         <div class="button-grid">
             <button class="menu-button" onclick="location.href='Admin_selection.php'">
                 <span class="icon">□</span>
-                <span class="button-text">大会登録・名称変更</span>
+                <span class="button-text">大会、部門<br>登録・名称変更</span>
             </button>
 
             <button class="menu-button" onclick="location.href='Admin_unlock.php'">
@@ -26,9 +26,9 @@
                 <span class="button-text">大会ロック解除</span>
             </button>
 
-            <button class="menu-button" onclick="location.href='csv-import.php'">
+            <button class="menu-button" onclick="location.href='csv_connection/Admin_addition_selection_tournament.php'">
                 <span class="icon">⤓</span>
-                <span class="button-text">一斉登録</span>
+                <span class="button-text">登録・閲覧・削除</span>
             </button>
         </div>
 
