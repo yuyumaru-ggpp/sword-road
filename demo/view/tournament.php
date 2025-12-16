@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>トーナメント表</title>
+    <a href="Resultonly.php" class="back-link">大会選択に戻る</a>
     <style>
         * {
             margin: 0;
@@ -58,6 +59,13 @@
             flex-direction: column;
             margin: 10px 0;
             position: relative;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+        .match:hover {
+            background: #f8f9fa;
         }
         .team {
             background: #e63946;
@@ -66,11 +74,18 @@
             margin: 2px 0;
             border-radius: 4px;
             font-weight: bold;
-            cursor: pointer;
             transition: all 0.3s;
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+        .team a {
+            color: white;
+            text-decoration: none;
+            display: block;
+        }
+        .team a:hover {
+            text-decoration: underline;
         }
         .team:hover {
             background: #d62828;
@@ -93,10 +108,6 @@
             font-size: 12px;
             margin-left: 10px;
         }
-        .connector {
-            position: absolute;
-            border: 2px solid #dee2e6;
-        }
         .round-title {
             text-align: center;
             font-weight: bold;
@@ -116,145 +127,191 @@
             font-weight: bold;
             box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
         }
+
+        /* スコアシートのスタイル */
+        #scoreSheet {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        .scoresheet-container {
+            max-width: 1200px;
+            margin: 50px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            position: relative;
+        }
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 30px;
+            cursor: pointer;
+            color: #666;
+            background: none;
+            border: none;
+            padding: 5px 10px;
+        }
+        .close-btn:hover {
+            color: #000;
+        }
+        .save-btn {
+            margin: 20px auto;
+            display: block;
+            padding: 12px 40px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .save-btn:hover {
+            background: #218838;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+            font-size: 13px;
+        }
+        th {
+            background-color: #e8e8e8;
+            font-weight: normal;
+            height: 40px;
+        }
+        td {
+            background-color: white;
+            height: 70px;
+        }
+        .confirm-cell {
+            height: 50px;
+            background-color: #e8e8e8;
+        }
+        .prefecture-cell {
+            background-color: #e8e8e8;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="number"] {
+            width: 90%;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            text-align: center;
+        }
+        .editable-cell {
+            height: 35px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🏆 トーナメント表</h1>
-        
+        <h1>トーナメント表</h1>
         <div class="search-box">
-            <input type="text" id="searchInput" placeholder="🔍 検索">
+            <input type="text" id="searchInput" placeholder="検索">
         </div>
 
-        <?php
-        // トーナメントデータ
-        $tournament = [
-            'round1' => [
-                ['名前A', '名前B'],
-                ['名前C', '名前D'],
-                ['名前E', '名前F'],
-                ['名前G', '名前H'],
-                ['名前I', '名前J'],
-                ['名前K', '名前L'],
-                ['名前M', '名前N'],
-                ['名前O', '名前P']
-            ],
-            'round2' => [
-                ['名前A', '名前D'],
-                ['名前E', '名前H'],
-                ['名前I', '名前L'],
-                ['名前M', '名前P']
-            ],
-            'round3' => [
-                ['名前A', '名前H'],
-                ['名前I', '名前P']
-            ],
-            'final' => [
-                ['名前A', '名前P']
-            ]
-        ];
-
-        // スコアデータ（ランダム生成）
-        function generateScore() {
-            return rand(0, 100);
-        }
-        ?>
-
-        <div class="tournament">
+        <div class="tournament" id="tournament">
             <!-- 1回戦 -->
             <div class="round">
                 <div class="round-title">1回戦</div>
-                <?php foreach ($tournament['round1'] as $match): ?>
-                <div class="match">
-                    <?php foreach ($match as $team): ?>
-                    <div class="team">
-                        <span class="team-name"><?php echo htmlspecialchars($team); ?></span>
-                        <span class="score">スコア</span>
-                    </div>
-                    <?php endforeach; ?>
+                <div class="match" data-round="1" data-match="1">
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=A&round=1&match=1">名前A</a></span><span class="score">-</span></div>
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=B&round=1&match=1">名前B</a></span><span class="score">-</span></div>
                 </div>
-                <?php endforeach; ?>
+                <div class="match" data-round="1" data-match="2">
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=C&round=1&match=2">名前C</a></span><span class="score">-</span></div>
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=D&round=1&match=2">名前D</a></span><span class="score">-</span></div>
+                </div>
+                <div class="match" data-round="1" data-match="3">
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=E&round=1&match=3">名前E</a></span><span class="score">-</span></div>
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=F&round=1&match=3">名前F</a></span><span class="score">-</span></div>
+                </div>
+                <div class="match" data-round="1" data-match="4">
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=G&round=1&match=4">名前G</a></span><span class="score">-</span></div>
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=H&round=1&match=4">名前H</a></span><span class="score">-</span></div>
+                </div>
+                <div class="match" data-round="1" data-match="5">
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=I&round=1&match=5">名前I</a></span><span class="score">-</span></div>
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=J&round=1&match=5">名前J</a></span><span class="score">-</span></div>
+                </div>
+                <div class="match" data-round="1" data-match="6">
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=K&round=1&match=6">名前K</a></span><span class="score">-</span></div>
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=L&round=1&match=6">名前L</a></span><span class="score">-</span></div>
+                </div>
+                <div class="match" data-round="1" data-match="7">
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=M&round=1&match=7">名前M</a></span><span class="score">-</span></div>
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=N&round=1&match=7">名前N</a></span><span class="score">-</span></div>
+                </div>
+                <div class="match" data-round="1" data-match="8">
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=O&round=1&match=8">名前O</a></span><span class="score">-</span></div>
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=P&round=1&match=8">名前P</a></span><span class="score">-</span></div>
+                </div>
             </div>
 
             <!-- 2回戦 -->
             <div class="round">
                 <div class="round-title">2回戦</div>
-                <?php foreach ($tournament['round2'] as $match): ?>
-                <div class="match">
-                    <?php foreach ($match as $team): ?>
-                    <div class="team">
-                        <span class="team-name"><?php echo htmlspecialchars($team); ?></span>
-                        <span class="score">スコア</span>
-                    </div>
-                    <?php endforeach; ?>
+                <div class="match" data-round="2" data-match="1">
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=A&round=2&match=1">名前A</a></span><span class="score">-</span></div>
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=D&round=2&match=1">名前D</a></span><span class="score">-</span></div>
                 </div>
-                <?php endforeach; ?>
+                <div class="match" data-round="2" data-match="2">
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=E&round=2&match=2">名前E</a></span><span class="score">-</span></div>
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=H&round=2&match=2">名前H</a></span><span class="score">-</span></div>
+                </div>
+                <div class="match" data-round="2" data-match="3">
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=I&round=2&match=3">名前I</a></span><span class="score">-</span></div>
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=L&round=2&match=3">名前L</a></span><span class="score">-</span></div>
+                </div>
+                <div class="match" data-round="2" data-match="4">
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=M&round=2&match=4">名前M</a></span><span class="score">-</span></div>
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=P&round=2&match=4">名前P</a></span><span class="score">-</span></div>
+                </div>
             </div>
 
             <!-- 準決勝 -->
             <div class="round">
                 <div class="round-title">準決勝</div>
-                <?php foreach ($tournament['round3'] as $match): ?>
-                <div class="match">
-                    <?php foreach ($match as $team): ?>
-                    <div class="team">
-                        <span class="team-name"><?php echo htmlspecialchars($team); ?></span>
-                        <span class="score">スコア</span>
-                    </div>
-                    <?php endforeach; ?>
+                <div class="match" data-round="3" data-match="1">
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=A&round=3&match=1">名前A</a></span><span class="score">-</span></div>
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=H&round=3&match=1">名前H</a></span><span class="score">-</span></div>
                 </div>
-                <?php endforeach; ?>
+                <div class="match" data-round="3" data-match="2">
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=I&round=3&match=2">名前I</a></span><span class="score">-</span></div>
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=P&round=3&match=2">名前P</a></span><span class="score">-</span></div>
+                </div>
             </div>
 
             <!-- 決勝 -->
             <div class="round">
                 <div class="round-title">決勝</div>
-                <?php foreach ($tournament['final'] as $match): ?>
-                <div class="match">
-                    <?php foreach ($match as $team): ?>
-                    <div class="team">
-                        <span class="team-name"><?php echo htmlspecialchars($team); ?></span>
-                        <span class="score">スコア</span>
-                    </div>
-                    <?php endforeach; ?>
+                <div class="match" data-round="4" data-match="1">
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=A&round=4&match=1">名前A</a></span><span class="score">-</span></div>
+                    <div class="team"><span class="team-name"><a href="scoresheet.php?team=P&round=4&match=1">名前P</a></span><span class="score">-</span></div>
                 </div>
-                <?php endforeach; ?>
             </div>
 
             <!-- 優勝 -->
             <div class="round">
                 <div class="round-title">優勝</div>
                 <div class="champion">
-                    🏆 名前A
+                    名前A
                 </div>
             </div>
         </div>
     </div>
-
-    <script>
-        // 検索機能
-        document.getElementById('searchInput').addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const teams = document.querySelectorAll('.team');
-            
-            teams.forEach(team => {
-                const teamName = team.querySelector('.team-name').textContent.toLowerCase();
-                if (teamName.includes(searchTerm)) {
-                    team.style.background = '#2a9d8f';
-                } else {
-                    if (!team.classList.contains('loser')) {
-                        team.style.background = '#e63946';
-                    }
-                }
-            });
-        });
-
-        // チームクリックで勝者表示
-        document.querySelectorAll('.team').forEach(team => {
-            team.addEventListener('click', function() {
-                this.classList.toggle('winner');
-            });
-        });
-    </script>
-</body>
-</html>
+    

@@ -222,15 +222,15 @@ $tournaments = [
 <body>
     <div class="container">
         <div class="header">
-            <a href="index.php" class="back-link">カテゴリー選択に戻る</a>
+            <a href="sportsSelection.php" class="back-link">カテゴリー選択に戻る</a>
             <h1>大会名</h1>
             <div class="info">・日時</div>
             <div class="info">・場所</div>
-            <a href="#" class="tournament-link"><?php echo htmlspecialchars($category_name); ?>　トーナメントで見る</a>
+            <a href="tournament.php" class="tournament-link"><?php echo htmlspecialchars($category_name); ?>　トーナメントで見る</a>
         </div>
 
         <div class="search-box">
-            <input type="text" class="search-input" placeholder="🔍 検索">
+            <input type="text" class="search-input" placeholder="検索">
         </div>
 
         <div class="results">

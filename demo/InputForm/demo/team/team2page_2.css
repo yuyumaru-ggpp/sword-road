@@ -1,0 +1,277 @@
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'MS Gothic', 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+            background-color: white;
+            padding: 30px 50px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .title {
+            font-size: 24px;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        button, .btn-next, .btn-back {
+            font-size: 18px;
+            padding: 10px 35px;
+            border: 2px solid black;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        button:hover, .btn-next:hover, .btn-back:hover {
+            opacity: 0.85;
+        }
+
+        .btn-white {
+            background-color: white;
+            color: black;
+        }
+
+        .btn-next {
+            background-color: #ff5555;
+            color: white;
+            border-color: #ff5555;
+        }
+
+        .btn-back {
+            background-color: #ff5555;
+            color: white;
+            border-color: #ff5555;
+        }
+
+        .numbers-row {
+            display: flex;
+            gap: 188px;
+            margin-left: 560px;
+            margin-bottom: 15px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .team-name-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .label {
+            width: 150px;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .circles {
+            display: flex;
+            gap: 128px;
+            margin-left: 422px;
+        }
+
+        .circle {
+            width: 38px;
+            height: 38px;
+            background-color: #cccccc;
+            border-radius: 50%;
+        }
+
+        .name-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .name-input {
+            width: 300px;
+            padding: 10px;
+            font-size: 18px;
+            border: 1px solid #666;
+            border-radius: 4px;
+        }
+
+        .middle {
+            display: flex;
+            align-items: center;
+            margin: 30px 0;
+            gap: 10px;
+            padding-left: 150px;
+        }
+
+        .line {
+            flex: 1;
+            border-top: 2px dashed black;
+        }
+
+        .select-group {
+            display: flex;
+            align-items: center;
+            gap: 128px;
+        }
+
+        select {
+            width: 60px;
+            height: 46px;
+            text-align: center;
+            font-size: 24px;
+            border: 2px solid black;
+            background-color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .separator {
+            font-size: 24px;
+            font-weight: bold;
+            padding: 0 2px;
+        }
+
+        .btn-result {
+            padding: 10px 30px;
+            font-size: 18px;
+            border: 2px solid black;
+            border-radius: 8px;
+            background-color: white;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 40px;
+        }
+
+        .btn-cancel {
+            padding: 12px 50px;
+            font-size: 18px;
+            border: 2px solid black;
+            border-radius: 30px;
+            background-color: white;
+            cursor: pointer;
+        }
+
+        /* スマホ横画面用（ランドスケープ） */
+        @media screen and (max-width: 960px) and (orientation: landscape) {
+            body {
+                padding: 20px 30px;
+            }
+
+            .header {
+                margin-bottom: 25px;
+            }
+
+            .title {
+                font-size: 18px;
+            }
+
+            button, .btn-next, .btn-back {
+                font-size: 14px;
+                padding: 8px 20px;
+            }
+
+            .numbers-row {
+                gap: 85px;
+                margin-left: 320px;
+                margin-bottom: 10px;
+                font-size: 16px;
+            }
+
+            .label {
+                width: 100px;
+                font-size: 16px;
+            }
+
+            .circles {
+                gap: 85px;
+                margin-left: 220px;
+            }
+
+            .circle {
+                width: 30px;
+                height: 30px;
+            }
+
+            .name-input {
+                width: 220px;
+                padding: 8px;
+                font-size: 16px;
+            }
+
+            .middle {
+                margin: 20px 0;
+                gap: 8px;
+            }
+
+            .select-group {
+                gap: 85px;
+            }
+
+            select {
+                width: 50px;
+                height: 38px;
+                font-size: 20px;
+            }
+
+            .separator {
+                font-size: 20px;
+            }
+
+            .btn-result {
+                padding: 8px 20px;
+                font-size: 14px;
+            }
+
+            .footer {
+                margin-top: 25px;
+            }
+
+            .btn-cancel {
+                padding: 10px 35px;
+                font-size: 16px;
+            }
+        }
+
+        /* タブレット横画面用 */
+        @media screen and (min-width: 961px) and (max-width: 1280px) and (orientation: landscape) {
+            body {
+                padding: 25px 40px;
+            }
+
+            .numbers-row {
+                gap: 105px;
+                margin-left: 400px;
+            }
+
+            .circles {
+                gap: 105px;
+                margin-left: 270px;
+            }
+
+            .select-group {
+                gap: 105px;
+            }
+        }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>デモ</title>
+    <title>団体戦デモ</title>
     <link rel="stylesheet" href="team.css">
 </head>
 <body>
@@ -13,7 +13,7 @@
     <h2 class = "teamA">チーム名</h2>
     <h2>対</h2>
     <h2 class = "teamB">チーム名</h2>
-    <a>決定</a>
+    <a href = "team2page.php">決定</a>
     <a href = "../demo.php">戻る</a>
 </body>
 </html>

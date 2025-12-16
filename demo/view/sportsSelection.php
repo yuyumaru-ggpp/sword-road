@@ -99,20 +99,21 @@
     <div class="container">
         <div class="section">
             <h2>個人戦</h2>
+            <a href="../index.php" class="back-link">大会一覧に戻る</a>
             <ul class="category-list">
-                <li><a href="tournament.php?category=elementary_under4_individual" class="category-link">小学生4年以下個人</a></li>
-                <li><a href="tournament.php?category=elementary_over5_individual" class="category-link">小学生5年以上個人</a></li>
-                <li><a href="tournament.php?category=junior_high_boys_individual" class="category-link">中学生男子個人</a></li>
-                <li><a href="tournament.php?category=junior_high_girls_individual" class="category-link">中学生女子個人</a></li>
+                <li><a href="Resultonly.php?category=elementary_under4_individual" class="category-link">小学生4年以下個人</a></li>
+                <li><a href="Resultonly.php?category=elementary_over5_individual" class="category-link">小学生5年以上個人</a></li>
+                <li><a href="Resultonly.php?category=junior_high_boys_individual" class="category-link">中学生男子個人</a></li>
+                <li><a href="Resultonly.php?category=junior_high_girls_individual" class="category-link">中学生女子個人</a></li>
             </ul>
         </div>
 
         <div class="section">
             <h2>団体戦</h2>
             <ul class="category-list">
-                <li><a href="tournament.php?category=elementary_team" class="category-link">小学生団体</a></li>
-                <li><a href="tournament.php?category=junior_high_boys_team" class="category-link">中学生男子団体</a></li>
-                <li><a href="tournament.php?category=junior_high_girls_team" class="category-link">中学生女子団体</a></li>
+                <li><a href="Resultonly.php?category=elementary_team" class="category-link">小学生団体</a></li>
+                <li><a href="Resultonly.php?category=junior_high_boys_team" class="category-link">中学生男子団体</a></li>
+                <li><a href="Resultonly.php?category=junior_high_girls_team" class="category-link">中学生女子団体</a></li>
             </ul>
         </div>
     </div>

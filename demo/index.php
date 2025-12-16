@@ -30,14 +30,14 @@
 
         <div class="tournament-list">
             <!-- aタグは絶対パスしてい。 -->
-            <a href="https://ドメイン名/" class="tournament-item">〇〇大会 開催日</a>
-            <a href="https://ドメイン名/" class="tournament-item">〇〇大会 開催日</a>
-            <a href="https://ドメイン名/" class="tournament-item">〇〇大会 開催日</a>
-            <a href="https://ドメイン名/" class="tournament-item">〇〇大会 開催日</a>
-            <a href="https://ドメイン名/" class="tournament-item">〇〇大会 開催日</a>
-            <a href="https://ドメイン名/" class="tournament-item">〇〇大会 開催日</a>
-            <a href="https://ドメイン名/" class="tournament-item">〇〇大会 開催日</a>
-            <a href="https://ドメイン名/" class="tournament-item">〇〇大会 開催日</a>
+            <a href="./view/sportsSelection.php" class="tournament-item">〇〇大会 開催日</a>
+            <a href="./view/sportsSelection.php" class="tournament-item">〇〇大会 開催日</a>
+            <a href="./view/sportsSelection.php" class="tournament-item">〇〇大会 開催日</a>
+            <a href="./view/sportsSelection.php" class="tournament-item">〇〇大会 開催日</a>
+            <a href="./view/sportsSelection.php" class="tournament-item">〇〇大会 開催日</a>
+            <a href="./view/sportsSelection.php" class="tournament-item">〇〇大会 開催日</a>
+            <a href="./view/sportsSelection.php" class="tournament-item">〇〇大会 開催日</a>
+            <a href="./view/sportsSelection.php" class="tournament-item">〇〇大会 開催日</a>
         </div>
 
         <div class="pagination">
