@@ -27,7 +27,7 @@
         
         <div class="button-container">
             <button class="action-button" onclick="history.back()">戻る</button>
-            <button class="action-button" onclick="alert('作成しました'); localStorage.removeItem('selectedCategories'); location.href='tournament-category-select.php'">作成</button>
+            <button class="action-button" onclick="alert('作成しました'); localStorage.removeItem('selectedCategories'); location.href='Admin_selection.php'">作成</button>
         </div>
     </div>
     
