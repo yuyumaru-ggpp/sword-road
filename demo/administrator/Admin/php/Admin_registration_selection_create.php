@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>部門作成</title>
-    <link rel="stylesheet" href="category-create-style.css">
+    <link rel="stylesheet" href="../css/Admin_registration_selection_create.css">
 </head>
 <body>
     <div class="breadcrumb">
