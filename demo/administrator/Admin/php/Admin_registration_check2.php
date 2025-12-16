@@ -27,7 +27,7 @@
         
         <div class="button-container">
             <button class="action-button" onclick="history.back()">戻る</button>
-            <button class="action-button" onclick="alert('登録しました'); localStorage.removeItem('selectedCategories'); location.href='tournament-list.php'">登録</button>
+            <button class="action-button" onclick="alert('登録しました'); localStorage.removeItem('selectedCategories'); location.href='Admin_selection.php'">登録</button>
         </div>
     </div>
     

@@ -16,7 +16,7 @@
         <h1 class="title">大会運営責任者メニュー</h1>
 
         <div class="button-grid">
-            <button class="menu-button" onclick="location.href='tournament-list.php'">
+            <button class="menu-button" onclick="location.href='Admin_selection.php'">
                 <span class="icon">□</span>
                 <span class="button-text">大会登録・名称変更</span>
             </button>

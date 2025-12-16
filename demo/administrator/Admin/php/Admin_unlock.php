@@ -8,8 +8,8 @@
 </head>
 <body>
     <div class="breadcrumb">
-        <a href="master2.php" class="breadcrumb-link">メニュー></a>
-        <a href="tournament-unlock.php" class="breadcrumb-link">大会ロック解除></a>
+        <a href="Admin_top.php" class="breadcrumb-link">メニュー></a>
+        <a href="#" class="breadcrumb-link">大会ロック解除></a>
     </div>
     
     <div class="container">
@@ -63,7 +63,7 @@
         </div>
         
         <div class="back-button-container">
-            <button class="back-button" onclick="location.href='master2.php'">戻る</button>
+            <button class="back-button" onclick="location.href='Admin_top.php'">戻る</button>
         </div>
     </div>
 </body>

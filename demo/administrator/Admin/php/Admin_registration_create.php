@@ -9,7 +9,7 @@
 <body>
     <div class="breadcrumb">
         <a href="Admin_top.php" class="breadcrumb-link">メニュー></a>
-        <a href="tournament-list.php" class="breadcrumb-link">大会登録・名称変更></a>
+        <a href="Admin_selection.php" class="breadcrumb-link">大会登録・名称変更></a>
         <a href="#" class="breadcrumb-link">大会登録></a>
     </div>
     
@@ -26,7 +26,7 @@
         
         <div class="button-container">
             <button class="action-button" onclick="history.back()">キャンセル</button>
-            <button class="action-button" onclick="location.href='tournament-category-select.php'">部門選択へ</button>
+            <button class="action-button" onclick="location.href='Admin_registration_selection_create.php'">部門作成へ</button>
         </div>
     </div>
 </body>

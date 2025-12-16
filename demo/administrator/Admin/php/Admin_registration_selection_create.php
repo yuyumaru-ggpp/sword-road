@@ -8,10 +8,9 @@
 </head>
 <body>
     <div class="breadcrumb">
-        <a href="master2.php" class="breadcrumb-link">メニュー></a>
-        <a href="tournament-list.php" class="breadcrumb-link">大会登録・名称変更></a>
-        <a href="tournament-register.php" class="breadcrumb-link">大会登録></a>
-        <a href="tournament-category-select.php" class="breadcrumb-link">部門選択></a>
+        <a href="Admin_top.php" class="breadcrumb-link">メニュー></a>
+        <a href="Admin_selection.php" class="breadcrumb-link">大会登録・名称変更></a>
+        <a href="Admin_registration.php" class="breadcrumb-link">大会登録></a>
         <a href="#" class="breadcrumb-link">部門作成></a>
     </div>
     
@@ -24,7 +23,7 @@
         
         <div class="button-container">
             <button class="action-button" onclick="history.back()">戻る</button>
-            <button class="action-button" onclick="location.href='tournament-register-confirm.php'">作成</button>
+            <button class="action-button" onclick="location.href='Admin_registration_check1.php'">作成</button>
         </div>
     </div>
 </body>

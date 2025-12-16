@@ -8,9 +8,9 @@
 </head>
 <body>
     <div class="breadcrumb">
-        <a href="master2.php" class="breadcrumb-link">メニュー></a>
-        <a href="tournament-list.php" class="breadcrumb-link">大会登録・名称変更></a>
-        <a href="tournament-setting.php" class="breadcrumb-link">〇〇大会></a>
+        <a href="Admin_top.php" class="breadcrumb-link">メニュー></a>
+        <a href="Admin_selection.php" class="breadcrumb-link">大会登録・名称変更></a>
+        <a href="Admin_registration" class="breadcrumb-link">〇〇大会></a>
         <a href="#" class="breadcrumb-link">パスワード変更</a>
     </div>
     
@@ -24,7 +24,7 @@
         </div>
         
         <div class="button-container">
-            <button class="action-button" onclick="alert('パスワードを変更しました'); location.href='tournament-setting.php'">決定</button>
+            <button class="action-button" onclick="alert('パスワードを変更しました'); location.href='Admin_selection.php'">決定</button>
             <button class="action-button" onclick="history.back()">キャンセル</button>
         </div>
     </div>
