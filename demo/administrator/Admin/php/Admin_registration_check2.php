@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>登録確認</title>
-    <link rel="stylesheet" href="tournament-register-confirm-style.css">
+    <link rel="stylesheet" href="../css/Admin_registration_check1.css">
 </head>
 <body>
     <div class="container">
-        <h1 class="title">以下の内容で作成します</h1>
+        <h1 class="title">以下の内容で登録します</h1>
         
         <div class="confirm-content">
             <div class="info-row">
@@ -27,7 +27,7 @@
         
         <div class="button-container">
             <button class="action-button" onclick="history.back()">戻る</button>
-            <button class="action-button" onclick="alert('作成しました'); localStorage.removeItem('selectedCategories'); location.href='tournament-category-select.php'">作成</button>
+            <button class="action-button" onclick="alert('登録しました'); localStorage.removeItem('selectedCategories'); location.href='tournament-list.php'">登録</button>
         </div>
     </div>
     
