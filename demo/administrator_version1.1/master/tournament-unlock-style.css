@@ -88,6 +88,10 @@ body {
     background-color: #2563eb;
 }
 
+.search-button:active {
+    background-color: #1d4ed8;
+}
+
 .tournament-list-container {
     background-color: white;
     border: 2px solid #d1d5db;
@@ -95,7 +99,7 @@ body {
     padding: 1rem;
     margin-bottom: 2rem;
     height: 400px;
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 
 .tournament-list {
@@ -108,12 +112,19 @@ body {
     display: flex;
     align-items: center;
     gap: 2rem;
-    padding: 0.75rem 0;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+}
+
+.tournament-row:hover {
+    background-color: #f9fafb;
 }
 
 .tournament-id {
     font-size: 1.125rem;
     min-width: 80px;
+    font-weight: 500;
 }
 
 .tournament-name {
@@ -124,6 +135,7 @@ body {
 .lock-status {
     font-size: 1.125rem;
     min-width: 100px;
+    font-weight: 600;
 }
 
 .lock-icon {
@@ -131,12 +143,18 @@ body {
     background: none;
     border: none;
     cursor: pointer;
-    padding: 0.25rem;
-    transition: opacity 0.2s;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s;
 }
 
 .lock-icon:hover {
-    opacity: 0.7;
+    background-color: #e5e7eb;
+    transform: scale(1.1);
+}
+
+.lock-icon:active {
+    transform: scale(0.95);
 }
 
 .back-button-container {
@@ -149,11 +167,18 @@ body {
     background: none;
     border: none;
     cursor: pointer;
-    transition: color 0.2s;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: all 0.2s;
 }
 
 .back-button:hover {
-    color: #666;
+    background-color: #e5e7eb;
+    color: #374151;
+}
+
+.back-button:active {
+    background-color: #d1d5db;
 }
 
 /* スクロールバーのスタイリング */
@@ -173,4 +198,67 @@ body {
 
 .tournament-list-container::-webkit-scrollbar-thumb:hover {
     background: #9ca3af;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    body {
+        padding: 1rem;
+    }
+
+    .title {
+        font-size: 1.5rem;
+        text-align: center;
+        padding-right: 0;
+    }
+
+    .search-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-button {
+        width: 100%;
+    }
+
+    .tournament-row {
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .tournament-id,
+    .tournament-name,
+    .lock-status {
+        font-size: 1rem;
+    }
+
+    .tournament-id {
+        min-width: 60px;
+    }
+
+    .lock-status {
+        min-width: 80px;
+    }
+
+    .tournament-list-container {
+        height: 300px;
+    }
+}
+
+@media (max-width: 480px) {
+    .tournament-row {
+        padding: 0.5rem;
+    }
+
+    .tournament-id {
+        width: 100%;
+    }
+
+    .tournament-name {
+        width: 100%;
+    }
+
+    .lock-status {
+        width: auto;
+    }
 }
