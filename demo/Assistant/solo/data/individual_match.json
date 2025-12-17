@@ -3,9 +3,9 @@
         "name": "",
         "number": "",
         "scores": [
-            "▼",
-            "▼",
-            "▼"
+            "ド",
+            "ド",
+            "反"
         ],
         "selected": 1
     },
@@ -19,5 +19,5 @@
         ],
         "selected": 0
     },
-    "special": "none"
+    "special": "extend"
 }
