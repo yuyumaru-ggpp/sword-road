@@ -12,7 +12,7 @@
             <h1 class="title">管理者画面</h1>
             
             <div class="url-section">
-                <h2 class="section-title">全体</h2>
+                <h2 class="section-title">大会運営者</h2>
                 <a href="Admin/login.php" class="url-link">https://www.example.com/all.html</a>
             </div>
             
