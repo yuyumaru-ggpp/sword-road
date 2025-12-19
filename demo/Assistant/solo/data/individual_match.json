@@ -1,0 +1,23 @@
+{
+    "upper": {
+        "name": "",
+        "number": "",
+        "scores": [
+            "ド",
+            "ド",
+            "反"
+        ],
+        "selected": 1
+    },
+    "lower": {
+        "name": "",
+        "number": "",
+        "scores": [
+            "▲",
+            "▲",
+            "▲"
+        ],
+        "selected": 0
+    },
+    "special": "extend"
+}
