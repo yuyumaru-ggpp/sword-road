@@ -9,7 +9,7 @@
                     "▼",
                     "▼"
                 ],
-                "selected": 0
+                "selected": -1
             },
             "lower": {
                 "team": "",
@@ -21,7 +21,7 @@
                 ],
                 "selected": -1
             },
-            "special": "ippon"
+            "special": "none"
         },
         "次鋒": {
             "upper": {
@@ -32,7 +32,7 @@
                     "▼",
                     "▼"
                 ],
-                "selected": 0
+                "selected": -1
             },
             "lower": {
                 "team": "",
@@ -44,7 +44,7 @@
                 ],
                 "selected": -1
             },
-            "special": "ippon"
+            "special": "none"
         },
         "中堅": {
             "upper": {
@@ -97,11 +97,11 @@
                 "team": "",
                 "name": "",
                 "scores": [
-                    "コ",
-                    "×",
-                    "メ"
+                    "▼",
+                    "▼",
+                    "▼"
                 ],
-                "selected": 0
+                "selected": -1
             },
             "lower": {
                 "team": "",

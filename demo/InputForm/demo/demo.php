@@ -10,8 +10,8 @@
 <body>
     <h1>入力の練習</h1>
     <h2>どちらか選択してください</h2>
-    <a href="./solo/solo.php">個人戦</a>
-    <a href =" ./team/Elementary.php">団体戦</a>
+    <a href="./solo/solodemo.php">個人戦</a>
+    <a href =" ./team/teamdemo.php">団体戦</a>
     <a href = "../index.php">戻る</a>
 </body>
 </html>

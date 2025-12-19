@@ -392,7 +392,7 @@ $match_number = htmlspecialchars($_SESSION['match_number']);
         
         <div class="action-buttons">
             <button class="action-button" id="confirmButton">決定</button>
-            <button class="action-button" onclick="history.back()">戻る</button>
+            <button class="action-button" onclick="history.back()">説明に戻る</button>
         </div>
     </div>
     
@@ -586,7 +586,7 @@ $match_number = htmlspecialchars($_SESSION['match_number']);
                 return;
             }
             
-            location.href = 'team-match-detail.php';
+            location.href = 'demo-action.php';
         });
     </script>
 </body>

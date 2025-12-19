@@ -17,7 +17,7 @@
 
     <div class="menu-links" id="menuLinks">
         <a href="./administrator_version1.1/master.php">管理者用ログイン画面</a>
-        <a href="./InputForm/index.php">入力補助員用ログイン画面</a>
+        <a href="./InputForm/login/login.php">入力補助員用ログイン画面</a>
     </div>
 
     <div class="title">

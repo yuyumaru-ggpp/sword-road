@@ -35,57 +35,69 @@ body {
     font-size: 2rem;
     font-weight: normal;
     text-align: center;
-    margin-bottom: 4rem;
-}
-
-.button-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 440px);
-    gap: 2rem;
-    justify-content: center;
     margin-bottom: 3rem;
 }
 
-.action-button {
-    padding: 2rem 1.5rem;
-    font-size: 1.25rem;
+.tournament-form {
     background-color: white;
-    border: 2px solid #d1d5db;
+    padding: 3rem;
     border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.2s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.action-button:hover {
-    background-color: #f9fafb;
+.form-group {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
 }
 
-.lock-button-container {
+.form-group label {
+    font-size: 1.25rem;
+    color: #374151;
+    font-weight: 500;
+    text-align: right;
+}
+
+.form-input {
+    width: 100%;
+    padding: 1rem 1.25rem;
+    font-size: 1.125rem;
+    border: 2px solid #d1d5db;
+    border-radius: 6px;
+    transition: border-color 0.2s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #2563eb;
+}
+
+.form-input::placeholder {
+    color: #9ca3af;
+}
+
+.button-container {
     display: flex;
     justify-content: center;
-    margin-bottom: 4rem;
+    margin-top: 3rem;
 }
 
-.lock-button {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 2rem 2rem;
-    font-size: 1.25rem;
-    background-color: white;
-    border: 2px solid #d1d5db;
+.save-button {
+    padding: 1.25rem 5rem;
+    font-size: 1.5rem;
+    background-color: #2563eb;
+    color: white;
+    border: none;
     border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.2s;
-    width: 440px;
+    font-weight: 500;
 }
 
-.lock-button:hover {
-    background-color: #f9fafb;
-}
-
-.lock-icon {
-    font-size: 1.5rem;
+.save-button:hover {
+    background-color: #1d4ed8;
 }
 
 .back-link {
