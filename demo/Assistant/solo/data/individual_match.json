@@ -3,16 +3,12 @@
         "name": "",
         "number": "",
         "scores": [
-            "ド",
-            "ド",
-            "反"
+            "コ",
+            "コ",
+            "メ"
         ],
-<<<<<<< HEAD:demo/InputForm/solo/data/individual_match.json
         "selected": -1,
         "decision": false
-=======
-        "selected": 1
->>>>>>> ff4ed25b0838c43525ec4a674413e1eb094e8ec0:demo/Assistant/solo/data/individual_match.json
     },
     "lower": {
         "name": "",
@@ -22,12 +18,8 @@
             "▲",
             "▲"
         ],
-<<<<<<< HEAD:demo/InputForm/solo/data/individual_match.json
         "selected": -1,
         "decision": false
-=======
-        "selected": 0
->>>>>>> ff4ed25b0838c43525ec4a674413e1eb094e8ec0:demo/Assistant/solo/data/individual_match.json
     },
-    "special": "extend"
+    "special": "ippon"
 }

@@ -143,6 +143,65 @@ body {
     background:#f5f5f5;
 }
 
+/* 不戦勝結果画面のスタイル */
+.result-container {
+    display:none;
+}
+
+.result-container.active {
+    display:block;
+}
+
+.result-header {
+    text-align:center;
+    font-size:clamp(1.8rem, 4vw, 3rem);
+    font-weight:bold;
+    color:#ef4444;
+    margin-bottom:3rem;
+}
+
+.winner-display {
+    text-align:center;
+    padding:3rem;
+    background:#f0fdf4;
+    border:3px solid #22c55e;
+    border-radius:12px;
+    margin-bottom:3rem;
+}
+
+.winner-label {
+    font-size:clamp(1.2rem, 2.5vw, 1.8rem);
+    color:#666;
+    margin-bottom:1rem;
+}
+
+.winner-number {
+    font-size:clamp(3rem, 6vw, 5rem);
+    font-weight:bold;
+    color:#22c55e;
+}
+
+.loser-display {
+    text-align:center;
+    padding:2rem;
+    background:#fef2f2;
+    border:3px solid #ef4444;
+    border-radius:12px;
+    margin-bottom:3rem;
+}
+
+.loser-label {
+    font-size:clamp(1rem, 2vw, 1.5rem);
+    color:#666;
+    margin-bottom:0.5rem;
+}
+
+.loser-number {
+    font-size:clamp(2rem, 4vw, 3rem);
+    font-weight:bold;
+    color:#ef4444;
+}
+
 @media (max-width:768px) {
     .match-row {
         flex-direction:column;
@@ -169,7 +228,8 @@ body {
 </style>
 </head>
 <body>
-<div class="container">
+<!-- 選手選択画面 -->
+<div class="container" id="selectionScreen">
     <div class="header">
         <span>個人戦</span>
         <span>〇〇大会</span>
@@ -202,10 +262,39 @@ body {
     </div>
 </div>
 
+<!-- 不戦勝結果画面 -->
+<div class="container result-container" id="forfeitScreen">
+    <div class="header">
+        <span>個人戦</span>
+        <span>〇〇大会</span>
+        <span>〇〇部門</span>
+    </div>
+
+    <div class="result-header">不戦勝</div>
+
+    <div class="winner-display">
+        <div class="winner-label">勝者（不戦勝）</div>
+        <div class="winner-number" id="winnerNumber">-</div>
+    </div>
+
+    <div class="loser-display">
+        <div class="loser-label">敗者（不戦敗）</div>
+        <div class="loser-number" id="loserNumber">-</div>
+    </div>
+
+    <div class="action-buttons">
+        <button class="action-button confirm-button" id="saveButton">結果を保存</button>
+        <button class="action-button back-button" id="backToSelection">選手選択に戻る</button>
+    </div>
+</div>
+
 <script>
 const upperBtn = document.getElementById('upperForfeit');
 const lowerBtn = document.getElementById('lowerForfeit');
+const selectionScreen = document.getElementById('selectionScreen');
+const forfeitScreen = document.getElementById('forfeitScreen');
 
+// 不戦勝ボタンの切り替え
 upperBtn.addEventListener('click', () => {
     if (upperBtn.classList.contains('selected')) {
         upperBtn.classList.remove('selected');
@@ -224,6 +313,7 @@ lowerBtn.addEventListener('click', () => {
     }
 });
 
+// 決定ボタン
 document.getElementById('confirmButton').addEventListener('click', () => {
     const upperSelected = upperBtn.classList.contains('selected');
     const lowerSelected = lowerBtn.classList.contains('selected');
@@ -236,21 +326,49 @@ document.getElementById('confirmButton').addEventListener('click', () => {
         return;
     }
     
-    // 不戦勝情報と選手番号を保存
-    const matchData = {
-        upperPlayer: upperPlayer,
-        lowerPlayer: lowerPlayer,
-        forfeit: {
-            upper: upperSelected,
-            lower: lowerSelected
-        }
-    };
+    // 不戦勝が選択されている場合
+    if (upperSelected || lowerSelected) {
+        const winner = upperSelected ? upperPlayer : lowerPlayer;
+        const loser = upperSelected ? lowerPlayer : upperPlayer;
+        
+        document.getElementById('winnerNumber').textContent = winner;
+        document.getElementById('loserNumber').textContent = loser;
+        
+        // 画面切り替え
+        selectionScreen.style.display = 'none';
+        forfeitScreen.classList.add('active');
+    } else {
+        // 通常の試合（この部分は実際のページ遷移に置き換え可能）
+        alert('通常の試合画面に遷移します\n\n上段: ' + upperPlayer + '\n下段: ' + lowerPlayer);
+        // window.location.href = 'individual-match-detail.php';
+    }
+});
+
+// 選手選択に戻るボタン
+document.getElementById('backToSelection').addEventListener('click', () => {
+    forfeitScreen.classList.remove('active');
+    selectionScreen.style.display = 'block';
     
-    // セッションストレージにデータを保存
-    sessionStorage.setItem('matchData', JSON.stringify(matchData));
+    // 不戦勝ボタンの選択状態をリセット
+    upperBtn.classList.remove('selected');
+    lowerBtn.classList.remove('selected');
+});
+
+// 結果を保存ボタン
+document.getElementById('saveButton').addEventListener('click', () => {
+    const winner = document.getElementById('winnerNumber').textContent;
+    const loser = document.getElementById('loserNumber').textContent;
     
-    // 試合詳細画面に遷移
-    window.location.href = 'individual-match-detail.php';
+    // ここで実際のデータ保存処理を実行
+    alert('不戦勝の結果を保存しました\n\n勝者: ' + winner + '\n敗者: ' + loser);
+    
+    // 実際の実装では以下のような処理になります
+    // const resultData = {
+    //     winner: winner,
+    //     loser: loser,
+    //     matchType: 'forfeit'
+    // };
+    // window.location.href = 'save-result.php?data=' + JSON.stringify(resultData);
 });
 </script>
 </body>

@@ -586,7 +586,14 @@ $match_number = htmlspecialchars($_SESSION['match_number']);
                 return;
             }
             
-            location.href = 'team-match-detail.php';
+            // 不戦勝が選択されているかどうかで遷移先を分岐
+            if (selectedWinner) {
+                // 不戦勝が選択されている場合は不戦勝結果画面へ
+                location.href = 'forfeit-result.php';
+            } else {
+                // 通常の試合詳細画面へ
+                location.href = 'team-match-detail.php';
+            }
         });
     </script>
 </body>
