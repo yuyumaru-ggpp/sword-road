@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>選手変更 - 部門選択</title>
-    <link rel="stylesheet" href="player-category-style.css">
+    <link rel="stylesheet" href="../css/player-category-style.css">
 </head>
 <body>
     <div class="breadcrumb">

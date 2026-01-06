@@ -71,7 +71,7 @@
 <body>
   <div class="login-container">
     <h2>ログイン画面</h2>
-    <form action="tournament-detail.php" method="POST">
+    <form action="php/tournament-detail.php" method="POST">
         <input type="text" name="user_id" placeholder="IDを入力してください" required />
         <input type="password" name="password" placeholder="パスワードを入力してください" required />
         <div class="button-group">

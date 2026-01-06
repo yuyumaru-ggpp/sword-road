@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>管理者画面 - 大会名</title>
-    <link rel="stylesheet" href="tournament-detail-style.css">
+    <link rel="stylesheet" href="../css/tournament-detail-style.css">
 </head>
 <body>
     <div class="menu-link">
@@ -29,7 +29,7 @@
         
         
         <div class="back-link">
-            <a href="../master.php" class="back-text">← 戻る</a>
+            <a href="../../master.php" class="back-text">← 戻る</a>
         </div>
     </div>
 </body>

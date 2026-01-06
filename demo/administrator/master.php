@@ -18,7 +18,7 @@
             
             <div class="url-section">
                 <h2 class="section-title">大会の記録編集</h2>
-                <a href="Tournament/login.php" class="url-link">https://www.example.com/edit.html</a>
+                <a href="Tournament_record_keeper/login.php" class="url-link">https://www.example.com/edit.html</a>
             </div>
             
             <div class="back-button-container">
