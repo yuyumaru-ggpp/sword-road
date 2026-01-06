@@ -1,3 +1,12 @@
+<?php
+session_start();
+
+// ログインしていなければログイン画面へ
+if (!isset($_SESSION['admin_user'])) {
+    header("Location: ../login.php");
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -33,7 +42,7 @@
         </div>
 
         <div class="back-link">
-            <a href="../master.php" class="back-text">← 戻る</a>
+            <a href="../../master.php" class="back-text">← 戻る</a>
         </div>
     </div>
 
