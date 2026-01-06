@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>選手登録・個人戦</title>
-    <link rel="stylesheet" href="player-register-style.css">
+    <link rel="stylesheet" href="../css/player-register-style.css">
 </head>
 <body>
     <div class="breadcrumb">
