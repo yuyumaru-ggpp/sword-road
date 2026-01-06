@@ -4,11 +4,10 @@
         "number": "",
         "scores": [
             "コ",
-            "コ",
-            "メ"
+            "メ",
+            "▼"
         ],
-        "selected": -1,
-        "decision": false
+        "selected": 0
     },
     "lower": {
         "name": "",
@@ -18,8 +17,7 @@
             "▲",
             "▲"
         ],
-        "selected": -1,
-        "decision": false
+        "selected": -1
     },
-    "special": "ippon"
+    "special": "extend"
 }

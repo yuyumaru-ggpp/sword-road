@@ -392,7 +392,7 @@ $match_number = htmlspecialchars($_SESSION['match_number']);
         
         <div class="action-buttons">
             <button class="action-button" id="confirmButton">決定</button>
-            <button class="action-button" onclick="history.back()">戻る</button>
+            <button class="action-button" onclick="history.back()">説明に戻る</button>
         </div>
     </div>
     
@@ -586,14 +586,7 @@ $match_number = htmlspecialchars($_SESSION['match_number']);
                 return;
             }
             
-            // 不戦勝が選択されているかどうかで遷移先を分岐
-            if (selectedWinner) {
-                // 不戦勝が選択されている場合は不戦勝結果画面へ
-                location.href = 'forfeit-result.php';
-            } else {
-                // 通常の試合詳細画面へ
-                location.href = 'team-match-detail.php';
-            }
+            location.href = 'demo-action.php';
         });
     </script>
 </body>

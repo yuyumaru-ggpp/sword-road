@@ -1,0 +1,142 @@
+{
+    "positions": {
+        "先鋒": {
+            "upper": {
+                "team": "",
+                "name": "",
+                "scores": [
+                    "▼",
+                    "×",
+                    "▼"
+                ],
+                "selected": -1
+            },
+            "lower": {
+                "team": "",
+                "name": "",
+                "scores": [
+                    "▲",
+                    "▲",
+                    "▲"
+                ],
+                "selected": -1
+            },
+            "special": "none"
+        },
+        "次鋒": {
+            "upper": {
+                "team": "",
+                "name": "",
+                "scores": [
+                    "▼",
+                    "▼",
+                    "▼"
+                ],
+                "selected": -1
+            },
+            "lower": {
+                "team": "",
+                "name": "",
+                "scores": [
+                    "▲",
+                    "▲",
+                    "▲"
+                ],
+                "selected": -1
+            },
+            "special": "none"
+        },
+        "中堅": {
+            "upper": {
+                "team": "",
+                "name": "",
+                "scores": [
+                    "▼",
+                    "▼",
+                    "▼"
+                ],
+                "selected": -1
+            },
+            "lower": {
+                "team": "",
+                "name": "",
+                "scores": [
+                    "▲",
+                    "▲",
+                    "▲"
+                ],
+                "selected": -1
+            },
+            "special": "none"
+        },
+        "副将": {
+            "upper": {
+                "team": "",
+                "name": "",
+                "scores": [
+                    "×",
+                    "メ",
+                    "▼"
+                ],
+                "selected": 0
+            },
+            "lower": {
+                "team": "",
+                "name": "",
+                "scores": [
+                    "▲",
+                    "▲",
+                    "▲"
+                ],
+                "selected": 2
+            },
+            "special": "none"
+        },
+        "大将": {
+            "upper": {
+                "team": "",
+                "name": "",
+                "scores": [
+                    "▼",
+                    "▼",
+                    "▼"
+                ],
+                "selected": -1
+            },
+            "lower": {
+                "team": "",
+                "name": "",
+                "scores": [
+                    "▲",
+                    "▲",
+                    "▲"
+                ],
+                "selected": 1
+            },
+            "special": "none"
+        },
+        "代表決定戦": {
+            "upper": {
+                "team": "",
+                "name": "",
+                "scores": [
+                    "▼",
+                    "▼",
+                    "▼"
+                ],
+                "selected": 0
+            },
+            "lower": {
+                "team": "",
+                "name": "",
+                "scores": [
+                    "▲",
+                    "▲",
+                    "▲"
+                ],
+                "selected": -1
+            },
+            "special": "none"
+        }
+    }
+}
