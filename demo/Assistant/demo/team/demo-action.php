@@ -517,7 +517,7 @@ body {
                     <div class="dropdown-container">
                         <button class="score-dropdown">▼</button>
                         <div class="dropdown-menu">
-                            <?php foreach(['▼','×','メ','コ','ド','反','ツ','〇'] as $val): ?>
+                            <?php foreach(['×','メ','コ','ド','反','ツ','〇'] as $val): ?>
                             <div class="dropdown-item" data-val="<?=$val?>"><?=$val?></div>
                             <?php endforeach; ?>
                         </div>
@@ -715,14 +715,14 @@ document.getElementById('repButton').onclick=()=>{ saveLocal(); current=5; load(
 document.getElementById('submitButton').onclick=async()=>{
     saveLocal();
 
-    if(!confirm('送信しますか？')){
+    if(!confirm('練習を終えますか？')){
     return;
 }
     try{
         const r=await fetch(location.href,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
         const j=await r.json();
         if(j.status==='ok'){
-            window.location.href = 'match-confirm.php';
+            window.location.href = '../demo.php';
         }else{
             alert('保存失敗');
         }

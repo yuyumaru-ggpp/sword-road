@@ -6,7 +6,7 @@
                 "name": "",
                 "scores": [
                     "▼",
-                    "×",
+                    "▼",
                     "▼"
                 ],
                 "selected": -1
@@ -15,9 +15,9 @@
                 "team": "",
                 "name": "",
                 "scores": [
-                    "▲",
-                    "▲",
-                    "▲"
+                    "▼",
+                    "▼",
+                    "▼"
                 ],
                 "selected": -1
             },
@@ -28,9 +28,9 @@
                 "team": "",
                 "name": "",
                 "scores": [
-                    "▼",
-                    "▼",
-                    "▼"
+                    "ド",
+                    "コ",
+                    "反"
                 ],
                 "selected": -1
             },
@@ -42,7 +42,7 @@
                     "▲",
                     "▲"
                 ],
-                "selected": -1
+                "selected": 0
             },
             "special": "none"
         },
@@ -74,11 +74,11 @@
                 "team": "",
                 "name": "",
                 "scores": [
-                    "×",
-                    "メ",
+                    "▼",
+                    "▼",
                     "▼"
                 ],
-                "selected": 0
+                "selected": -1
             },
             "lower": {
                 "team": "",
@@ -88,7 +88,7 @@
                     "▲",
                     "▲"
                 ],
-                "selected": 2
+                "selected": -1
             },
             "special": "none"
         },
@@ -111,7 +111,7 @@
                     "▲",
                     "▲"
                 ],
-                "selected": 1
+                "selected": -1
             },
             "special": "none"
         },
@@ -124,7 +124,7 @@
                     "▼",
                     "▼"
                 ],
-                "selected": 0
+                "selected": -1
             },
             "lower": {
                 "team": "",

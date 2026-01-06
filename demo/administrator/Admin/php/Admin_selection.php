@@ -19,42 +19,50 @@
             <div class="tournament-list">
                 <div class="tournament-row" onclick="location.href='Admin_registration.php'">
                     <span class="tournament-id">ID</span>
-                    <span class="tournament-name">〇〇大会</span>
+                    <span class="tournament-name" onclick="location.href='tournament-setting.php?id=1'">〇〇大会</span>
+                    <button class="delete-button" onclick="confirmDelete(1, '〇〇大会')">削除</button>
                 </div>
                 
                 <div class="tournament-row" onclick="location.href='Admin_registration.php'">
                     <span class="tournament-id">ID</span>
-                    <span class="tournament-name">〇〇大会</span>
+                    <span class="tournament-name" onclick="location.href='tournament-setting.php?id=2'">〇〇大会</span>
+                    <button class="delete-button" onclick="confirmDelete(2, '〇〇大会')">削除</button>
                 </div>
                 
                 <div class="tournament-row" onclick="location.href='Admin_registration.php'">
                     <span class="tournament-id">ID</span>
-                    <span class="tournament-name">〇〇大会</span>
+                    <span class="tournament-name" onclick="location.href='tournament-setting.php?id=3'">〇〇大会</span>
+                    <button class="delete-button" onclick="confirmDelete(3, '〇〇大会')">削除</button>
                 </div>
                 
                 <div class="tournament-row" onclick="location.href='Admin_registration.php'">
                     <span class="tournament-id">ID</span>
-                    <span class="tournament-name">〇〇大会</span>
+                    <span class="tournament-name" onclick="location.href='tournament-setting.php?id=4'">〇〇大会</span>
+                    <button class="delete-button" onclick="confirmDelete(4, '〇〇大会')">削除</button>
                 </div>
                 
                 <div class="tournament-row" onclick="location.href='Admin_registration.php'">
                     <span class="tournament-id">ID</span>
-                    <span class="tournament-name">〇〇大会</span>
+                    <span class="tournament-name" onclick="location.href='tournament-setting.php?id=5'">〇〇大会</span>
+                    <button class="delete-button" onclick="confirmDelete(5, '〇〇大会')">削除</button>
                 </div>
                 
                 <div class="tournament-row" onclick="location.href='Admin_registration.php'">
                     <span class="tournament-id">ID</span>
-                    <span class="tournament-name">〇〇大会</span>
+                    <span class="tournament-name" onclick="location.href='tournament-setting.php?id=6'">〇〇大会</span>
+                    <button class="delete-button" onclick="confirmDelete(6, '〇〇大会')">削除</button>
                 </div>
                 
                 <div class="tournament-row" onclick="location.href='Admin_registration.php'">
                     <span class="tournament-id">ID</span>
-                    <span class="tournament-name">〇〇大会</span>
+                    <span class="tournament-name" onclick="location.href='tournament-setting.php?id=7'">〇〇大会</span>
+                    <button class="delete-button" onclick="confirmDelete(7, '〇〇大会')">削除</button>
                 </div>
                 
                 <div class="tournament-row" onclick="location.href='Admin_registration.php'">
                     <span class="tournament-id">ID</span>
-                    <span class="tournament-name">〇〇大会</span>
+                    <span class="tournament-name" onclick="location.href='tournament-setting.php?id=8'">〇〇大会</span>
+                    <button class="delete-button" onclick="confirmDelete(8, '〇〇大会')">削除</button>
                 </div>
             </div>
         </div>
@@ -64,5 +72,13 @@
             <button class="back-button" onclick="location.href='Admin_top.php'">戻る</button>
         </div>
     </div>
+
+    <script>
+        function confirmDelete(id, name) {
+            if (confirm(`「${name}」を削除してもよろしいですか?`)) {
+                window.location.href = `tournament-delete.php?id=${id}`;
+            }
+        }
+    </script>
 </body>
 </html>

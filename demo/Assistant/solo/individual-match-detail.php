@@ -2,8 +2,8 @@
 if (!is_dir('data')) mkdir('data', 0777, true);
 $jsonFile = 'data/individual_match.json';
 $data = [
-    'upper' => ['name'=>'','number'=>'','scores'=>['▼','▼','▼'],'selected'=>-1],
-    'lower' => ['name'=>'','number'=>'','scores'=>['▲','▲','▲'],'selected'=>-1],
+    'upper' => ['name'=>'','number'=>'','scores'=>['▼','▼','▼'],'selected'=>-1,'decision'=>false],
+    'lower' => ['name'=>'','number'=>'','scores'=>['▲','▲','▲'],'selected'=>-1,'decision'=>false],
     'special' => 'none'
 ];
 
@@ -118,35 +118,41 @@ body {
     display:flex; 
     flex-direction:column; 
     align-items:center; 
-    gap:clamp(0.25rem, 0.6vh, 0.5rem); 
+    gap:clamp(0.25rem, 0.6vh, 0.5rem);
 }
 
 .score-numbers { 
     display:flex; 
     gap:clamp(1rem, 3vw, 2.5rem); 
     font-size:clamp(1rem, 2.5vh, 1.5rem); 
-    font-weight:bold; 
+    font-weight:bold;
 }
 
 .score-numbers span { 
     width:clamp(35px, 6vw, 50px); 
-    text-align:center; 
+    height:clamp(35px, 6vw, 50px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+    box-sizing:border-box;
 }
 
 .radio-circles { 
     display:flex; 
-    gap:clamp(1rem, 3vw, 2.5rem); 
+    gap:clamp(1rem, 3vw, 2.5rem);
 }
 
 .radio-circle { 
-    width:clamp(28px, 5vw, 40px); 
-    height:clamp(28px, 5vw, 40px); 
+    width:clamp(35px, 6vw, 50px); 
+    height:clamp(35px, 6vw, 50px); 
     border-radius:50%; 
     background:#d1d5db; 
     cursor:pointer; 
     transition:all 0.2s; 
     box-shadow:0 2px 4px rgba(0,0,0,0.1); 
     flex-shrink:0;
+    box-sizing:border-box;
 }
 .radio-circle.selected { 
     background:#ef4444; 
@@ -154,6 +160,38 @@ body {
     box-shadow:0 0 0 3px rgba(239,68,68,0.3); 
 }
 .radio-circle:hover { opacity:0.9; }
+
+.decision-button {
+    padding:clamp(0.4rem, 1vh, 0.6rem) clamp(1rem, 2.5vw, 1.5rem);
+    font-size:clamp(0.85rem, 1.8vh, 1.1rem);
+    background:white;
+    border:2px solid #000;
+    border-radius:25px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:all 0.2s;
+    white-space:nowrap;
+}
+
+.decision-button:hover {
+    background:#fef3c7;
+}
+
+.decision-button.active {
+    background:#fbbf24;
+    border-color:#f59e0b;
+    color:white;
+}
+
+.decision-row {
+    display:none;
+    justify-content:center;
+    margin-top:clamp(0.5rem, 1vh, 1rem);
+}
+
+.decision-row.show {
+    display:flex;
+}
 
 .divider-section { 
     position:relative; 
@@ -173,22 +211,27 @@ body {
     left:50%; 
     transform:translate(-50%,-50%); 
     display:flex; 
-    align-items:center; 
-    gap:clamp(0.5rem, 1.5vw, 1.5rem); 
+    align-items:center;
     background:white; 
     padding:clamp(0.8rem, 1.5vh, 1.5rem) clamp(0.8rem, 2vw, 1.5rem); 
 }
 
 .score-dropdowns { 
     display:flex; 
-    gap:clamp(1rem, 3vw, 2.5rem); 
+    gap:clamp(1rem, 3vw, 2.5rem);
 }
 
-.dropdown-container { position:relative; }
+.dropdown-container { 
+    position:relative; 
+    width:clamp(35px, 6vw, 50px);
+    height:clamp(35px, 6vw, 50px);
+    flex-shrink:0;
+    box-sizing:border-box;
+}
 
 .score-dropdown { 
-    width:clamp(35px, 6vw, 50px); 
-    height:clamp(35px, 6vw, 50px); 
+    width:100%;
+    height:100%;
     font-size:clamp(1rem, 2.5vh, 1.5rem); 
     font-weight:bold; 
     background:white; 
@@ -198,8 +241,8 @@ body {
     display:flex; 
     align-items:center; 
     justify-content:center; 
-    transition:all 0.2s; 
-    flex-shrink:0;
+    transition:all 0.2s;
+    box-sizing:border-box;
 }
 .score-dropdown:hover { background:#fef3c7; }
 
@@ -229,6 +272,15 @@ body {
 }
 .dropdown-item:hover { background:#fee2e2; color:#dc2626; }
 .dropdown-item:active { background:#ef4444; color:white; }
+
+.draw-container-wrapper {
+    position:absolute;
+    top:50%;
+    left:calc(50% + clamp(8rem, 15vw, 12rem));
+    transform:translateY(-50%);
+    background:white;
+    padding:clamp(0.8rem, 1.5vh, 1.5rem) 0;
+}
 
 .draw-container { position:relative; }
 
@@ -297,7 +349,6 @@ body {
 .submit-button { background:#3b82f6; color:white; border:2px solid #3b82f6; }
 .submit-button:hover { background:#2563eb; }
 
-/* タブレット以下 */
 @media (max-width:768px) {
     .header {
         margin-bottom:2rem;
@@ -333,12 +384,16 @@ body {
     }
 }
 
-/* 小画面用の調整 */
 @media (max-height:700px) {
     .container { padding:0.5rem; }
     .header { margin-bottom:0.3rem; font-size:0.9rem; }
     .row { font-size:0.85rem; gap:0.3rem; }
-    .score-numbers, .radio-circles, .score-dropdowns { gap:0.8rem; }
+    .score-numbers { gap:0.8rem; }
+    .score-numbers span { width:30px; height:30px; }
+    .radio-circles { gap:0.8rem; }
+    .radio-circle { width:30px; height:30px; }
+    .score-dropdowns { gap:0.8rem; }
+    .dropdown-container { width:30px; height:30px; }
     .divider-section { margin:0.5rem 0; }
     .bottom-area { gap:0.3rem; margin-top:0.3rem; }
 }
@@ -353,7 +408,6 @@ body {
     </div>
 
     <div class="content-wrapper">
-        <!-- 上段 -->
         <div class="match-section upper-section">
             <div class="row">
                 <div class="label">名前</div>
@@ -377,9 +431,12 @@ body {
                     </div>
                 </div>
             </div>
+            
+            <div class="decision-row" id="upperDecisionRow">
+                <button class="decision-button" id="upperDecisionBtn">判定勝ち</button>
+            </div>
         </div>
 
-        <!-- 中央ライン -->
         <div class="divider-section">
             <hr class="divider">
             <div class="middle-controls">
@@ -388,13 +445,15 @@ body {
                     <div class="dropdown-container">
                         <button class="score-dropdown">▼</button>
                         <div class="dropdown-menu">
-                            <?php foreach(['×','コ','ド','反','ツ','〇'] as $val): ?>
+                            <?php foreach(['×','メ','コ','ド','反','ツ','〇'] as $val): ?>
                             <div class="dropdown-item" data-val="<?=$val?>"><?=$val?></div>
                             <?php endforeach; ?>
                         </div>
                     </div>
                     <?php endfor; ?>
                 </div>
+            </div>
+            <div class="draw-container-wrapper">
                 <div class="draw-container">
                     <button class="draw-button" id="drawButton">-</button>
                     <div class="draw-dropdown-menu" id="drawMenu">
@@ -407,8 +466,11 @@ body {
             </div>
         </div>
 
-        <!-- 下段 -->
         <div class="match-section">
+            <div class="decision-row" id="lowerDecisionRow">
+                <button class="decision-button" id="lowerDecisionBtn">判定勝ち</button>
+            </div>
+            
             <div class="row">
                 <div class="label">名前</div>
                 <div class="value lower-name">───</div>
@@ -440,7 +502,7 @@ body {
 
             <div class="bottom-buttons">
                 <button class="bottom-button back-button" onclick="history.back()">キャンセル</button>
-                <button class="bottom-button submit-button" id="submitButton">送信・保存</button>
+                <button class="bottom-button submit-button" id="submitButton">送信</button>
             </div>
         </div>
     </div>
@@ -448,6 +510,20 @@ body {
 
 <script>
 const data = <?=json_encode($data, JSON_UNESCAPED_UNICODE)?>;
+
+function updateDecisionButtonsVisibility() {
+    const drawText = document.getElementById('drawButton').textContent;
+    const showButtons = drawText === '延長';
+    
+    document.getElementById('upperDecisionRow').classList.toggle('show', showButtons);
+    document.getElementById('lowerDecisionRow').classList.toggle('show', showButtons);
+    
+    // 延長でない場合は判定勝ちの選択をリセット
+    if (!showButtons) {
+        document.getElementById('upperDecisionBtn').classList.remove('active');
+        document.getElementById('lowerDecisionBtn').classList.remove('active');
+    }
+}
 
 function load() {
     document.querySelector('.upper-name').textContent = data.upper.name||'───';
@@ -460,9 +536,14 @@ function load() {
     document.querySelectorAll('.upper-circles .radio-circle').forEach((c,i)=>c.classList.toggle('selected',data.upper.selected===i));
     document.querySelectorAll('.lower-circles .radio-circle').forEach((c,i)=>c.classList.toggle('selected',data.lower.selected===i));
 
+    document.getElementById('upperDecisionBtn').classList.toggle('active', data.upper.decision||false);
+    document.getElementById('lowerDecisionBtn').classList.toggle('active', data.lower.decision||false);
+
     const special = data.special||'none';
     const text = special==='ippon'?'一本勝':special==='extend'?'延長':special==='draw'?'引分け':'-';
     document.getElementById('drawButton').textContent=text;
+    
+    updateDecisionButtonsVisibility();
 }
 
 function saveLocal() {
@@ -472,9 +553,35 @@ function saveLocal() {
     const lSel = document.querySelector('.lower-circles .radio-circle.selected');
     data.lower.selected = lSel? +lSel.dataset.index : -1;
 
+    data.upper.decision = document.getElementById('upperDecisionBtn').classList.contains('active');
+    data.lower.decision = document.getElementById('lowerDecisionBtn').classList.contains('active');
+
     const dt = document.getElementById('drawButton').textContent;
     data.special = dt==='一本勝'?'ippon':dt==='延長'?'extend':dt==='引分け'?'draw':'none';
 }
+
+// 判定勝ちボタンの処理
+document.getElementById('upperDecisionBtn').addEventListener('click', function() {
+    const lowerBtn = document.getElementById('lowerDecisionBtn');
+    
+    if (this.classList.contains('active')) {
+        this.classList.remove('active');
+    } else {
+        this.classList.add('active');
+        lowerBtn.classList.remove('active');
+    }
+});
+
+document.getElementById('lowerDecisionBtn').addEventListener('click', function() {
+    const upperBtn = document.getElementById('upperDecisionBtn');
+    
+    if (this.classList.contains('active')) {
+        this.classList.remove('active');
+    } else {
+        this.classList.add('active');
+        upperBtn.classList.remove('active');
+    }
+});
 
 for (let i = 0; i < 3; i++) {
     const upper = document.querySelector(`.upper-circles .radio-circle[data-index="${i}"]`);
@@ -520,10 +627,12 @@ document.getElementById('drawButton').addEventListener('click',e=>{
     document.querySelectorAll('.dropdown-menu').forEach(m=>m.classList.remove('show'));
     document.getElementById('drawMenu').classList.toggle('show');
 });
+
 document.getElementById('drawMenu').querySelectorAll('.dropdown-item').forEach(item=>{
     item.addEventListener('click',()=>{
         document.getElementById('drawButton').textContent=item.textContent;
         document.getElementById('drawMenu').classList.remove('show');
+        updateDecisionButtonsVisibility();
     });
 });
 
@@ -531,8 +640,8 @@ document.addEventListener('click',()=>document.querySelectorAll('.dropdown-menu,
 
 document.getElementById('cancelButton').addEventListener('click',()=>{
     if(confirm('試合内容をリセットしますか？')){
-        data.upper={name:'',number:'',scores:['▼','▼','▼'],selected:-1};
-        data.lower={name:'',number:'',scores:['▲','▲','▲'],selected:-1};
+        data.upper={name:'',number:'',scores:['▼','▼','▼'],selected:-1,decision:false};
+        data.lower={name:'',number:'',scores:['▲','▲','▲'],selected:-1,decision:false};
         data.special='none';
         load();
     }
@@ -543,8 +652,16 @@ document.getElementById('submitButton').onclick=async()=>{
     try{
         const r=await fetch(location.href,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
         const j=await r.json();
-        alert(j.status==='ok'?'保存完了！':'保存失敗');
-    }catch(e){ alert('エラー発生'); console.error(e); }
+        if(j.status==='ok'){
+            alert('送信完了！');
+            window.location.href = 'match-confirm.php';
+        } else {
+            alert('保存失敗');
+        }
+    }catch(e){ 
+        alert('エラー発生'); 
+        console.error(e); 
+    }
 };
 
 load();
