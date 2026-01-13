@@ -37,7 +37,10 @@
                 </ul>
             </div>
             <div class="demo">
-                <a href = "./demo/demo.php">練習</a>
+                <a href="./demo/demo.php">練習</a>
+            </div>
+            <div class="back-button">
+                <a href="../index.php">戻る</a>
             </div>
         </div>
     </main>
