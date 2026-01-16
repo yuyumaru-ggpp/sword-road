@@ -1,52 +1,87 @@
 <?php
-$jsonFile = 'data/individual_match.json';
-$data = [];
+session_start();
 
-if (file_exists($jsonFile)) {
-    $json = file_get_contents($jsonFile);
-    $decoded = json_decode($json, true);
-    if ($decoded) $data = $decoded;
+/* ===============================
+   セッションチェック
+=============================== */
+if (
+    !isset(
+        $_SESSION['match_input'],
+        $_SESSION['tournament_id'],
+        $_SESSION['division_id'],
+        $_SESSION['match_number']
+    )
+) {
+    header('Location: match_input.php');
+    exit;
 }
 
-// 勝者を判定する関数
-function determineWinner($data) {
-    $redPoints = 0;
-    $whitePoints = 0;
-    
-    // 選択された本数をカウント
-    if (isset($data['red']['selected']) && $data['red']['selected'] >= 0) {
-        $redPoints++;
+$data = $_SESSION['match_input'];
+
+/* ===============================
+   DB接続
+=============================== */
+$dsn = "mysql:host=localhost;port=3307;dbname=kendo_support_system;charset=utf8mb4";
+$pdo = new PDO($dsn, "root", "root1234", [
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+]);
+
+/* ===============================
+   大会・部門名取得
+=============================== */
+$sql = "
+    SELECT t.title AS tournament_name, d.name AS division_name
+    FROM tournaments t
+    JOIN departments d ON d.tournament_id = t.id
+    WHERE d.id = :division_id
+";
+$stmt = $pdo->prepare($sql);
+$stmt->execute([':division_id' => $_SESSION['division_id']]);
+$info = $stmt->fetch(PDO::FETCH_ASSOC);
+
+/* ===============================
+   勝敗計算
+=============================== */
+function calcPoints($scores, $selected)
+{
+    $point = 0;
+    foreach ($scores as $i => $s) {
+        if ($s !== '▼' && $s !== '▲' && $s !== '×' && $selected == $i) {
+            $point++;
+        }
     }
-    if (isset($data['white']['selected']) && $data['white']['selected'] >= 0) {
-        $whitePoints++;
-    }
-    
-    // 特殊な結果を考慮
-    $special = $data['special'] ?? 'none';
-    if ($special === 'ippon') {
-        // 一本勝ちの場合、2本取ったことにする
-        if ($redPoints > $whitePoints) $redPoints++;
-        else if ($whitePoints > $redPoints) $whitePoints++;
-    }
-    
-    return [
-        'redPoints' => $redPoints,
-        'whitePoints' => $whitePoints
-    ];
+    return $point;
 }
 
-$result = determineWinner($data);
-$redName = $data['red']['name'] ?? '';
-$redTeam = $data['red']['team'] ?? '';
-$whiteName = $data['white']['name'] ?? '';
-$whiteTeam = $data['white']['team'] ?? '';
+$upperPoints = calcPoints($data['upper']['scores'], $data['upper']['selected']);
+$lowerPoints = calcPoints($data['lower']['scores'], $data['lower']['selected']);
+
+// 判定勝ちの場合
+if ($data['upper']['decision']) {
+    $upperPoints = 1;
+    $lowerPoints = 0;
+}
+if ($data['lower']['decision']) {
+    $upperPoints = 0;
+    $lowerPoints = 1;
+}
+
+// 一本勝の場合
+if ($data['special'] === 'ippon') {
+    if ($upperPoints > $lowerPoints) {
+        $upperPoints++;
+    } else if ($lowerPoints > $upperPoints) {
+        $lowerPoints++;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
+    <title>試合結果 確認</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>個人戦 変更確認</title>
     <style>
         * {
             margin: 0;
@@ -108,7 +143,7 @@ $whiteTeam = $data['white']['team'] ?? '';
             margin-bottom: 0.25rem;
         }
 
-        .team-name {
+        .player-number {
             font-size: 0.875rem;
             color: #6b7280;
         }
@@ -124,18 +159,6 @@ $whiteTeam = $data['white']['team'] ?? '';
             align-items: center;
             justify-content: center;
             font-size: 1.125rem;
-        }
-
-        .cell-divider {
-            height: 2px;
-            background-color: #000;
-            background-image: repeating-linear-gradient(
-                to right,
-                #000 0,
-                #000 8px,
-                transparent 8px,
-                transparent 16px
-            );
         }
 
         .total-cell {
@@ -176,6 +199,7 @@ $whiteTeam = $data['white']['team'] ?? '';
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <table class="result-table">
@@ -188,85 +212,89 @@ $whiteTeam = $data['white']['team'] ?? '';
                 </tr>
             </thead>
             <tbody>
+                <!-- 上段 -->
                 <tr>
-                    <td class="side-label">赤</td>
+                    <td class="side-label">上</td>
                     <td class="player-info">
-                        <div class="player-name"><?= htmlspecialchars($redName) ?></div>
-                        <div class="team-name"><?= htmlspecialchars($redTeam) ?></div>
+                        <div class="player-name"><?= htmlspecialchars($data['upper']['name']) ?></div>
+                        <div class="player-number">選手番号: <?= htmlspecialchars($data['upper']['number']) ?></div>
                     </td>
                     <td class="result-cell">
                         <div class="cell-content">
-                            <?php 
-                                $redScores = '';
-                                $redScoreData = $data['red']['scores'] ?? ['▼','▼','▼'];
-                                foreach ($redScoreData as $i => $score) {
-                                    if ($score !== '▼' && $score !== '▲') {
-                                        $class = (isset($data['red']['selected']) && $data['red']['selected'] == $i) ? 'winner' : '';
-                                        $redScores .= '<span class="score-item ' . $class . '">' . htmlspecialchars($score) . '</span>';
-                                    }
+                            <?php
+                            foreach ($data['upper']['scores'] as $i => $s) {
+                                if ($s !== '▼' && $s !== '▲' && $s !== '×') {
+                                    $class = ($data['upper']['selected'] == $i) ? 'winner' : '';
+                                    echo "<span class='score-item {$class}'>" . htmlspecialchars($s) . "</span>";
                                 }
-                                
-                                $special = $data['special'] ?? 'none';
-                                if ($special === 'ippon') $redScores .= ' 一本勝';
-                                else if ($special === 'extend') $redScores .= ' 延長';
-                                else if ($special === 'draw') $redScores .= ' 引分け';
-                                else if ($special === 'red_win') $redScores = '不戦勝';
-                                else if ($special === 'white_win') $redScores = '不戦敗';
-                                
-                                echo $redScores;
+                            }
+
+                            if ($data['upper']['decision']) {
+                                echo ' <span class="winner">判定勝</span>';
+                            }
+
+                            if ($data['special'] === 'ippon')
+                                echo ' 一本勝';
+                            if ($data['special'] === 'extend')
+                                echo ' 延長';
+                            if ($data['special'] === 'draw')
+                                echo ' 引分け';
                             ?>
                         </div>
-                        <div class="cell-divider"></div>
                     </td>
-                    <td class="total-cell"><?= $result['redPoints'] ?></td>
+                    <td class="total-cell"><?= $upperPoints ?></td>
                 </tr>
+
+                <!-- 下段 -->
                 <tr>
-                    <td class="side-label">白</td>
+                    <td class="side-label">下</td>
                     <td class="player-info">
-                        <div class="player-name"><?= htmlspecialchars($whiteName) ?></div>
-                        <div class="team-name"><?= htmlspecialchars($whiteTeam) ?></div>
+                        <div class="player-name"><?= htmlspecialchars($data['lower']['name']) ?></div>
+                        <div class="player-number">選手番号: <?= htmlspecialchars($data['lower']['number']) ?></div>
                     </td>
                     <td class="result-cell">
                         <div class="cell-content">
-                            <?php 
-                                $whiteScores = '';
-                                $whiteScoreData = $data['white']['scores'] ?? ['▼','▼','▼'];
-                                foreach ($whiteScoreData as $i => $score) {
-                                    if ($score !== '▼' && $score !== '▲') {
-                                        $class = (isset($data['white']['selected']) && $data['white']['selected'] == $i) ? 'winner' : '';
-                                        $whiteScores .= '<span class="score-item ' . $class . '">' . htmlspecialchars($score) . '</span>';
-                                    }
+                            <?php
+                            foreach ($data['lower']['scores'] as $i => $s) {
+                                if ($s !== '▼' && $s !== '▲' && $s !== '×') {
+                                    $class = ($data['lower']['selected'] == $i) ? 'winner' : '';
+                                    echo "<span class='score-item {$class}'>" . htmlspecialchars($s) . "</span>";
                                 }
-                                
-                                if ($special === 'ippon') $whiteScores .= ' 一本勝';
-                                else if ($special === 'extend') $whiteScores .= ' 延長';
-                                else if ($special === 'draw') $whiteScores .= ' 引分け';
-                                else if ($special === 'white_win') $whiteScores = '不戦勝';
-                                else if ($special === 'red_win') $whiteScores = '不戦敗';
-                                
-                                echo $whiteScores;
+                            }
+
+                            if ($data['lower']['decision']) {
+                                echo ' <span class="winner">判定勝</span>';
+                            }
+
+                            if ($data['special'] === 'ippon')
+                                echo ' 一本勝';
+                            if ($data['special'] === 'extend')
+                                echo ' 延長';
+                            if ($data['special'] === 'draw')
+                                echo ' 引分け';
                             ?>
                         </div>
                     </td>
-                    <td class="total-cell"><?= $result['whitePoints'] ?></td>
+                    <td class="total-cell"><?= $lowerPoints ?></td>
                 </tr>
             </tbody>
         </table>
-        
-        <form method="POST" action="complete.php" id="submitForm">
+
+        <form method="POST" action="complete.php">
             <div class="button-container">
-                <button type="button" class="action-button" onclick="history.back()">キャンセル</button>
-                <button type="submit" class="action-button">この結果で送信</button>
+                <button type="button" class="action-button" onclick="history.back()">戻る</button>
+                <button type="submit" class="action-button">この内容で確定</button>
             </div>
         </form>
     </div>
 
     <script>
-        document.getElementById('submitForm').addEventListener('submit', function(e) {
-            if (!confirm('この内容で送信してもよろしいですか？')) {
+        document.querySelector('form').addEventListener('submit', e => {
+            if (!confirm('この内容で試合結果を確定しますか?')) {
                 e.preventDefault();
             }
         });
     </script>
 </body>
+
 </html>
