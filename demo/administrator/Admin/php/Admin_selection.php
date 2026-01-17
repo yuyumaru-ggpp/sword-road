@@ -9,17 +9,18 @@ if (!isset($_SESSION['admin_user'])) {
 }
 
 // 大会一覧取得
-$sql = "SELECT id, title FROM tournaments ORDER BY id ASC";
+$sql = "SELECT id, title, event_date FROM tournaments ORDER BY event_date DESC";
 $stmt = $pdo->query($sql);
-$tournaments = $stmt->fetchAll();
+$tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
+
 <!DOCTYPE html>
 <html lang="ja">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>大会名、部門の登録・名称変更画面</title>
+    <title>大会詳細変更画面</title>
     <link rel="stylesheet" href="../css/Admin_selection.css">
 </head>
 
@@ -27,22 +28,25 @@ $tournaments = $stmt->fetchAll();
 
     <div class="breadcrumb">
         <a href="Admin_top.php" class="breadcrumb-link">メニュー ></a>
-        <a href="#" class="breadcrumb-link">大会、部門登録・名称変更 ></a>
+        <a href="#" class="breadcrumb-link">大会詳細変更 ></a>
     </div>
 
     <div class="container">
-        <h1 class="title">大会名、部門の登録・名称変更画面</h1>
+        <h1 class="title">大会詳細変更画面</h1>
 
         <div class="tournament-list-container">
             <div class="tournament-list">
 
                 <?php foreach ($tournaments as $t): ?>
-                    <div class="tournament-row" onclick="location.href='Admin_registration.php?id=<?= $t['id'] ?>'">
+                    <div class="tournament-row" onclick="location.href='tournament-detail.php?id=<?= $t['id'] ?>'">
                         <span class="tournament-id"><?= htmlspecialchars($t['id']) ?></span>
 
-                        <span class="tournament-name"
-                            onclick="event.stopPropagation(); location.href='tournament-setting.php?id=<?= $t['id'] ?>'">
+                        <span class="tournament-name">
                             <?= htmlspecialchars($t['title']) ?>
+                        </span>
+
+                        <span class="tournament-date">
+                            <?= htmlspecialchars($t['event_date']) ?>
                         </span>
 
                         <button class="delete-button"
