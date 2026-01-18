@@ -27,7 +27,7 @@ if (!isset($_SESSION['admin_user'])) {
         <div class="button-grid">
             <button class="menu-button" onclick="location.href='Admin_selection.php'">
                 <span class="icon">□</span>
-                <span class="button-text">大会、部門<br>登録・名称変更</span>
+                <span class="button-text">大会詳細変更</span>
             </button>
 
             <button class="menu-button" onclick="location.href='Admin_unlock.php'">

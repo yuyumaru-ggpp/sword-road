@@ -1,167 +1,297 @@
-<!DOCTYPE html>
+<?php
+// tournament-lock.php
+session_start();
+require_once '../../db_connect.php'; // 環境に合わせてパスを調整
+
+// ログ出力関数（開発用／本番は別ログ管理を推奨）
+function app_log($msg)
+{
+    $logfile = __DIR__ . '/logs/tournament_lock.log';
+    @mkdir(dirname($logfile), 0755, true);
+    $time = date('Y-m-d H:i:s');
+    @file_put_contents($logfile, "[$time] $msg\n", FILE_APPEND | LOCK_EX);
+}
+
+// CSRF トークン生成・検証
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(24));
+}
+$csrf_token = $_SESSION['csrf_token'];
+
+// 管理者チェック
+if (!isset($_SESSION['admin_user'])) {
+    $isAjax = (strpos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false)
+        || (stripos($_SERVER['CONTENT_TYPE'] ?? '', 'application/json') !== false);
+    if ($isAjax) {
+        // 出力バッファをクリアしてヘッダをセット
+        while (ob_get_level()) ob_end_clean();
+        header('Content-Type: application/json; charset=utf-8');
+        http_response_code(401);
+
+        // ログ用に安全にユーザ情報を整形
+        $adminUser = $_SESSION['admin_user'] ?? '';
+        $adminUserForLog = is_array($adminUser) ? json_encode($adminUser, JSON_UNESCAPED_UNICODE) : (string)$adminUser;
+        error_log("Unauthorized access attempt by user={$adminUserForLog}");
+
+        // エラーを返す（成功フラグは false にする）
+        echo json_encode(['success' => false, 'error' => '権限がありません'], JSON_UNESCAPED_UNICODE);
+        exit;
+    } else {
+        header('Location: ../login.php');
+        exit;
+    }
+}
+
+// JSON POST（AJAX）処理
+$raw = file_get_contents('php://input');
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $raw !== '') {
+    header('Content-Type: application/json; charset=utf-8');
+
+    // JSONパース
+    $input = json_decode($raw, true);
+    if ($input === null) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'JSONパースエラー']);
+        app_log("JSON parse error raw: " . substr($raw, 0, 1000));
+        exit;
+    }
+
+    // CSRF トークン検証
+    $client_csrf = $input['csrf_token'] ?? '';
+    if (!hash_equals($_SESSION['csrf_token'], (string)$client_csrf)) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'error' => 'CSRFトークン不正']);
+        app_log("CSRF token mismatch. session:{$_SESSION['csrf_token']} client:{$client_csrf}");
+        exit;
+    }
+
+    // 入力検証
+    $id = isset($input['id']) ? (int)$input['id'] : 0;
+    $set_locked = array_key_exists('set_locked', $input) ? (int)$input['set_locked'] : null;
+    if ($id <= 0 || ($set_locked !== 0 && $set_locked !== 1)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'パラメータ不正']);
+        app_log("Invalid params: " . json_encode($input));
+        exit;
+    }
+
+    // DB更新処理
+    try {
+        // 存在確認
+        $stmt = $pdo->prepare("SELECT is_locked FROM tournaments WHERE id = :id");
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        $current = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$current) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'error' => '大会が見つかりません']);
+            app_log("Not found id={$id}");
+            exit;
+        }
+
+        // 更新（updated_at カラムがある前提）
+        $upd = $pdo->prepare("UPDATE tournaments SET is_locked = :newState, updated_at = NOW() WHERE id = :id");
+        $upd->bindValue(':newState', $set_locked, PDO::PARAM_INT);
+        $upd->bindValue(':id', $id, PDO::PARAM_INT);
+        $ok = $upd->execute();
+
+        if ($ok) {
+            // 出力バッファをクリアしてヘッダ（念のため）
+            while (ob_get_level()) ob_end_clean();
+            header('Content-Type: application/json; charset=utf-8');
+
+            // ログ用に安全にユーザ情報を整形
+            $adminUser = $_SESSION['admin_user'] ?? '';
+            $adminUserForLog = is_array($adminUser) ? json_encode($adminUser, JSON_UNESCAPED_UNICODE) : (string)$adminUser;
+            app_log("Updated id={$id} is_locked={$set_locked} by user={$adminUserForLog}");
+
+            echo json_encode(['success' => true, 'is_locked' => $set_locked], JSON_UNESCAPED_UNICODE);
+            exit;
+        } else {
+            $err = $pdo->errorInfo();
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => 'DB更新に失敗しました']);
+            app_log("DB update failed id={$id} error=" . json_encode($err));
+            exit;
+        }
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'サーバエラーが発生しました']);
+        app_log("PDOException: " . $e->getMessage());
+        exit;
+    } catch (Throwable $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => '予期せぬエラーが発生しました']);
+        app_log("Throwable: " . $e->getMessage());
+        exit;
+    }
+}
+
+// GET 表示処理
+$q = trim($_GET['q'] ?? '');
+$sql = "SELECT id, title, is_locked, event_date FROM tournaments
+        WHERE ( :q_empty = 1 OR id = :id_exact OR title LIKE :q_like )
+        ORDER BY id DESC
+        LIMIT 200";
+$stmt = $pdo->prepare($sql);
+$id_exact = is_numeric($q) ? (int)$q : 0;
+$q_like = '%' . $q . '%';
+$stmt->bindValue(':q_empty', $q === '' ? 1 : 0, PDO::PARAM_INT);
+$stmt->bindValue(':id_exact', $id_exact, PDO::PARAM_INT);
+$stmt->bindValue(':q_like', $q_like, PDO::PARAM_STR);
+$stmt->execute();
+$tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+?>
+<!doctype html>
 <html lang="ja">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>大会のロック解除</title>
-    <link rel="stylesheet" href="../css/Admin_unlock.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>大会のロック管理</title>
+    <link rel="stylesheet" href="./Admin_unlock.css">
 </head>
+
 <body>
-    <div class="breadcrumb">
-        <a href="Admin_top.php" class="breadcrumb-link">メニュー></a>
-        <a href="#" class="breadcrumb-link">大会ロック解除></a>
-    </div>
-    
     <div class="container">
-        <h1 class="title">大会のロック</h1>
-        
-        <div class="search-container">
-            <div class="search-box">
-                <span class="search-icon">🔍</span>
-                <input type="text" id="searchInput" class="search-input" placeholder="IDまたは大会名">
-            </div>
-            <button class="search-button" onclick="searchTournaments()">検索</button>
-        </div>
-        
-        <div class="tournament-list-container">
-            <div class="tournament-list" id="tournamentList">
-                <!-- トーナメントリストがここに動的に生成されます -->
-            </div>
-        </div>
-        
-        <div class="back-button-container">
-            <button class="back-button" onclick="location.href='Admin_top.php'">戻る</button>
+        <header class="header">
+            <nav class="breadcrumb">メニュー ＞ 大会ロック管理 ＞</nav>
+            <h1 class="title">大会のロック管理</h1>
+        </header>
+
+        <form id="searchForm" class="search-area" method="GET" action="">
+            <input id="q" name="q" type="search" class="search-input" placeholder="🔍 ID または大会名" value="<?= htmlspecialchars($q) ?>">
+            <button type="submit" class="search-btn">検索</button>
+        </form>
+
+        <main class="list-container" id="listContainer" aria-live="polite">
+            <?php if (empty($tournaments)): ?>
+                <div class="empty">該当する大会はありません</div>
+            <?php else: ?>
+                <?php foreach ($tournaments as $t): ?>
+                    <div class="list-item" data-id="<?= htmlspecialchars($t['id']) ?>">
+                        <div class="col-id">ID <?= htmlspecialchars($t['id']) ?></div>
+                        <div class="col-title"><?= htmlspecialchars($t['title']) ?></div>
+                        <div class="col-status">
+                            <?php if ((int)$t['is_locked'] === 1): ?>
+                                <span class="lock-status locked">ロック中 🔒</span>
+                            <?php else: ?>
+                                <span class="lock-status unlocked">解除済み</span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="col-action">
+                            <label class="switch" title="クリックで切替">
+                                <!-- checked が true のときに「解除（右）」になる -->
+                                <input type="checkbox" class="toggle-input" <?= ((int)$t['is_locked'] === 0) ? 'checked' : '' ?> aria-checked="<?= ((int)$t['is_locked'] === 0) ? 'true' : 'false' ?>">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </main>
+
+        <div style="margin-top:12px;text-align:right">
+            <a class="btn-back" href="Admin_top.php">戻る</a>
         </div>
     </div>
+
+    <div id="toast" class="toast"></div>
 
     <script>
-        // 大会データ（実際にはPHPからJSONで取得することを想定）
-        let tournaments = [
-            { id: 19, name: '春季トーナメント', locked: true },
-            { id: 18, name: '冬季選手権大会', locked: true },
-            { id: 17, name: '秋の大会', locked: false },
-            { id: 16, name: '夏季大会', locked: true },
-            { id: 15, name: '新人戦', locked: false }
-        ];
+        (async function() {
+            const list = document.getElementById('listContainer');
+            const toast = document.getElementById('toast');
+            const csrfToken = <?= json_encode($csrf_token) ?>;
 
-        // ページ読み込み時に大会リストを表示
-        window.addEventListener('DOMContentLoaded', function() {
-            displayTournaments(tournaments);
-        });
-
-        // 大会リストを表示する関数
-        function displayTournaments(data) {
-            const listContainer = document.getElementById('tournamentList');
-            listContainer.innerHTML = '';
-
-            if (data.length === 0) {
-                listContainer.innerHTML = '<div style="text-align: center; padding: 2rem; color: #6b7280;">該当する大会が見つかりません</div>';
-                return;
+            function showToast(message, type = 'success') {
+                toast.textContent = message;
+                toast.className = 'toast ' + (type === 'success' ? 'success' : 'error');
+                toast.style.display = 'block';
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 3500);
             }
 
-            data.forEach(tournament => {
-                const row = document.createElement('div');
-                row.className = 'tournament-row';
+            list.addEventListener('change', async (e) => {
+                const input = e.target;
+                if (!input.classList.contains('toggle-input')) return;
 
-                const id = document.createElement('span');
-                id.className = 'tournament-id';
-                id.textContent = `ID ${tournament.id}`;
+                const item = input.closest('.list-item');
+                const id = item?.dataset?.id;
+                if (!id) return;
 
-                const name = document.createElement('span');
-                name.className = 'tournament-name';
-                name.textContent = tournament.name;
-
-                const status = document.createElement('span');
-                status.className = 'lock-status';
-                status.textContent = tournament.locked ? 'ロック中' : '解除済み';
-                status.style.color = tournament.locked ? '#ef4444' : '#10b981';
-
-                const button = document.createElement('button');
-                button.className = 'lock-icon';
-                button.textContent = tournament.locked ? '🔒' : '🔓';
-                button.title = tournament.locked ? 'クリックして解除' : 'クリックしてロック';
-                button.onclick = () => toggleLock(tournament.id);
-
-                row.appendChild(id);
-                row.appendChild(name);
-                row.appendChild(status);
-                row.appendChild(button);
-
-                listContainer.appendChild(row);
-            });
-        }
-
-        // ロック状態を切り替える関数
-        function toggleLock(tournamentId) {
-            const tournament = tournaments.find(t => t.id === tournamentId);
-            if (tournament) {
-                const action = tournament.locked ? '解除' : 'ロック';
-                if (confirm(`ID ${tournamentId} の大会を${action}しますか？`)) {
-                    tournament.locked = !tournament.locked;
-                    
-                    // 実際のシステムでは、ここでPHPにAjaxリクエストを送信
-                    // 例: updateTournamentLock(tournamentId, tournament.locked);
-                    
-                    displayTournaments(tournaments);
-                    
-                    alert(`大会を${action}しました`);
+                const newUnlocked = input.checked; // checked === unlocked
+                const set_locked = newUnlocked ? 0 : 1;
+                const action = newUnlocked ? '解除' : 'ロック';
+                if (!confirm(`大会ID ${id} を ${action} しますか？`)) {
+                    input.checked = !newUnlocked;
+                    return;
                 }
-            }
-        }
 
-        // 検索機能
-        function searchTournaments() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-            
-            if (searchTerm === '') {
-                displayTournaments(tournaments);
-                return;
-            }
+                input.disabled = true;
 
-            const filtered = tournaments.filter(tournament => {
-                const idMatch = tournament.id.toString().includes(searchTerm);
-                const nameMatch = tournament.name.toLowerCase().includes(searchTerm);
-                return idMatch || nameMatch;
-            });
+                try {
+                    const res = await fetch(window.location.pathname, {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            id: parseInt(id, 10),
+                            set_locked: set_locked,
+                            csrf_token: csrfToken
+                        })
+                    });
 
-            displayTournaments(filtered);
-        }
+                    // HTTP ステータスが OK でない場合は本文を取得してユーザー向けに表示（console は出さない）
+                    if (!res.ok) {
+                        const text = await res.text();
+                        let msg = `HTTP ${res.status}`;
+                        try {
+                            const parsed = JSON.parse(text);
+                            msg = parsed.error || msg;
+                        } catch {
+                            // HTML やプレーンテキストが返ってきた場合は先頭だけ見せる
+                            msg = text.slice(0, 200);
+                        }
+                        showToast(msg, 'error');
+                        input.checked = !newUnlocked;
+                        input.disabled = false;
+                        return;
+                    }
 
-        // Enterキーで検索
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('searchInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    searchTournaments();
+                    // 正常レスポンスを JSON として扱う
+                    const data = await res.json();
+                    if (data && data.success) {
+                        const statusEl = item.querySelector('.lock-status');
+                        if (data.is_locked === 1) {
+                            statusEl.textContent = 'ロック中 🔒';
+                            statusEl.classList.remove('unlocked');
+                            statusEl.classList.add('locked');
+                            input.setAttribute('aria-checked', 'false');
+                        } else {
+                            statusEl.textContent = '解除済み';
+                            statusEl.classList.remove('locked');
+                            statusEl.classList.add('unlocked');
+                            input.setAttribute('aria-checked', 'true');
+                        }
+                        showToast('更新しました', 'success');
+                    } else {
+                        showToast(data?.error || '処理に失敗しました', 'error');
+                        input.checked = !newUnlocked;
+                    }
+                } catch (err) {
+                    // ここでも console に出さず、ユーザーにだけ通知する
+                    showToast('通信エラーが発生しました', 'error');
+                    input.checked = !newUnlocked;
+                } finally {
+                    input.disabled = false;
                 }
             });
-        });
-
-        // PHPと連携する場合の例（コメントアウト）
-        /*
-        function updateTournamentLock(tournamentId, isLocked) {
-            fetch('update-tournament-lock.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    id: tournamentId,
-                    locked: isLocked
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    console.log('ロック状態を更新しました');
-                } else {
-                    console.error('エラー:', data.message);
-                }
-            })
-            .catch(error => {
-                console.error('通信エラー:', error);
-            });
-        }
-        */
+        })();
     </script>
 </body>
+
 </html>

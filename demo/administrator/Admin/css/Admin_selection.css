@@ -126,3 +126,8 @@ body {
 .tournament-list-container::-webkit-scrollbar-thumb:hover {
     background: #9ca3af;
 }
+.tournament-date {
+    margin-left: 20px;
+    color: #555;
+    font-size: 0.9em;
+}
