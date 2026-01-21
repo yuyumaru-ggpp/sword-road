@@ -1,3 +1,33 @@
+<?php
+session_start();
+
+// ログインチェック
+if (!isset($_SESSION['admin_user'])) {
+    header("Location: ../../login.php");
+    exit;
+}
+
+// 大会IDを取得
+$tournament_id = $_GET['id'] ?? null;
+if (!$tournament_id || !ctype_digit($tournament_id)) {
+    die("大会IDが指定されていません");
+}
+
+require_once '../../../db_connect.php';
+
+// 部門一覧取得（削除されていないもの）
+$sql = "SELECT id, name, distinction FROM departments
+        WHERE tournament_id = :tid AND del_flg = 0
+        ORDER BY id ASC";
+$stmt = $pdo->prepare($sql);
+$stmt->bindValue(':tid', $tournament_id, PDO::PARAM_INT);
+$stmt->execute();
+$departments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// distinction: 1 = 団体戦, 2 = 個人戦
+$individuals = array_filter($departments, fn($d) => (int)$d['distinction'] === 2);
+$teams = array_filter($departments, fn($d) => (int)$d['distinction'] === 1);
+?>
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -8,43 +38,48 @@
 </head>
 <body>
   <div class="container">
-    <!-- Updated breadcrumb navigation -->
     <div class="breadcrumb">
-      メニュー>登録・閲覧・削除>部門選択>
+      メニュー > 登録・閲覧・削除 > 部門選択 >
     </div>
 
-    <!-- Created two-column layout for individual and team competitions -->
     <div class="main-content">
       <div class="competition-columns">
-        <!-- Individual Competition Column -->
+
+        <!-- 個人戦 -->
         <div class="competition-column">
           <h2 class="competition-title">個人戦</h2>
           <div class="competition-list">
-            <!-- Converted competition items to clickable links -->
-            <a href="./Admin_addition_top.php" class="competition-item">小学生4年以下個人</a>
-            <a href="./Admin_addition_top.php" class="competition-item">小学生5年以上個人</a>
-            <a href="./Admin_addition_top.php" class="competition-item">中学生男子個人</a>
-            <a href="./Admin_addition_top.php" class="competition-item">中学生女子個人</a>
+            <?php if (empty($individuals)): ?>
+              <p>個人戦の部門は登録されていません。</p>
+            <?php else: ?>
+              <?php foreach ($individuals as $dept): ?>
+                <a href="./Admin_addition_top.php?id=<?= $tournament_id ?>&dept=<?= $dept['id'] ?>"
+                   class="competition-item"><?= htmlspecialchars($dept['name']) ?></a>
+              <?php endforeach; ?>
+            <?php endif; ?>
           </div>
         </div>
 
-        <!-- Team Competition Column -->
+        <!-- 団体戦 -->
         <div class="competition-column">
           <h2 class="competition-title">団体戦</h2>
           <div class="competition-list">
-            <!-- Converted competition items to clickable links -->
-            <a href="./Admin_addition_top.php" class="competition-item">小学生団体(5人制)</a>
-            <a href="./Admin_addition_top.php" class="competition-item">中学生男子団体(5人制)</a>
-            <a href="./Admin_addition_top.php" class="competition-item">中学生女子団体(5人制)</a>
-            <a href="./Admin_addition_top.php" class="competition-item">中学生女子団体(3人制)</a>
+            <?php if (empty($teams)): ?>
+              <p>団体戦の部門は登録されていません。</p>
+            <?php else: ?>
+              <?php foreach ($teams as $dept): ?>
+                <a href="./Admin_addition_top.php?id=<?= $tournament_id ?>&dept=<?= $dept['id'] ?>"
+                   class="competition-item"><?= htmlspecialchars($dept['name']) ?></a>
+              <?php endforeach; ?>
+            <?php endif; ?>
           </div>
         </div>
+
       </div>
     </div>
 
-    <!-- Single back button centered -->
     <div class="actions">
-      <button class="btn btn-back" onclick="history.back()">戻る</button>
+      <button class="back-button" onclick="location.href='Admin_addtion_selection_tournament.php'">戻る</button>
     </div>
   </div>
 </body>
