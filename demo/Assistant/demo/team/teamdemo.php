@@ -769,7 +769,7 @@ body {
 <script>
 function startSystem() {
     // 団体戦不戦勝入力画面に遷移
-    window.location.href = 'demo-team-forfeit.php';
+    window.location.href = 'match_input.php';
 }
 
 function goBack() {

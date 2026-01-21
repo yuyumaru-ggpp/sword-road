@@ -29,3 +29,5 @@
 [2026-01-18 14:26:19] Updated id=2 is_locked=0 by user={"id":1,"0":1,"user_id":"masaki","1":"masaki","password":"kendo","2":"kendo"}
 [2026-01-18 14:28:03] Updated id=3 is_locked=1 by user={"id":1,"0":1,"user_id":"masaki","1":"masaki","password":"kendo","2":"kendo"}
 [2026-01-18 14:28:08] Updated id=3 is_locked=0 by user={"id":1,"0":1,"user_id":"masaki","1":"masaki","password":"kendo","2":"kendo"}
+[2026-01-19 06:00:31] Updated id=3 is_locked=1 by user={"id":1,"0":1,"user_id":"masaki","1":"masaki","password":"kendo","2":"kendo"}
+[2026-01-19 06:00:33] Updated id=3 is_locked=0 by user={"id":1,"0":1,"user_id":"masaki","1":"masaki","password":"kendo","2":"kendo"}
