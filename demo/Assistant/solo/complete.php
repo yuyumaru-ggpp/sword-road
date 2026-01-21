@@ -4,7 +4,7 @@ session_start();
 /* ===============================
    POST & セッションチェック
 =============================== */
-if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_SESSION['match_input'])) {
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: match_input.php');
     exit;
 }
@@ -15,7 +15,7 @@ $data = $_SESSION['match_input'];
    DB接続
 =============================== */
 $dsn = "mysql:host=localhost;port=3307;dbname=kendo_support_system;charset=utf8mb4";
-$pdo = new PDO($dsn, "root", "root1234", [
+$pdo = new PDO($dsn, "root", "", [
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
 ]);
 
