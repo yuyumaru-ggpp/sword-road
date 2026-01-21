@@ -1,55 +1,201 @@
+<?php
+session_start();
+
+/* ===============================
+   必須セッションチェック
+=============================== */
+if (
+    !isset($_SESSION['tournament_id'], $_SESSION['division_id'], $_SESSION['match_number'])
+) {
+    header('Location: match_input.php');
+    exit;
+}
+
+$tournament_id = (int)$_SESSION['tournament_id'];
+$division_id   = (int)$_SESSION['division_id'];
+$match_number  = $_SESSION['match_number'];
+
+/* ===============================
+   DB接続
+=============================== */
+$dsn = "mysql:host=localhost;port=3308;dbname=kendo_support_system;charset=utf8mb4";
+$pdo = new PDO($dsn, "root", "", [
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+]);
+
+/* ===============================
+   大会・部門名取得
+=============================== */
+$sql = "
+    SELECT
+        t.title AS tournament_name,
+        d.name  AS division_name
+    FROM departments d
+    INNER JOIN tournaments t ON t.id = d.tournament_id
+    WHERE d.id = :division_id
+";
+$stmt = $pdo->prepare($sql);
+$stmt->execute([
+    ':division_id' => $division_id
+]);
+$info = $stmt->fetch();
+
+if (!$info) {
+    exit('部門情報が取得できません');
+}
+
+$error = '';
+
+
+/* ===============================
+   POST処理
+=============================== */
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    $upper_no = trim($_POST['upper_player'] ?? '');
+    $lower_no = trim($_POST['lower_player'] ?? '');
+    $forfeit  = $_POST['forfeit'] ?? '';
+
+    if ($upper_no === '' || $lower_no === '') {
+        $error = '選手番号を入力してください';
+    } else {
+
+        /* ===============================
+           部門に属する選手一覧を取得
+        =============================== */
+        $sql = "
+            SELECT
+                p.id,
+                p.player_number,
+                p.name
+            FROM players p
+            INNER JOIN teams t ON p.team_id = t.id
+            INNER JOIN departments d ON t.department_id = d.id
+            WHERE d.id = :division_id
+              AND p.substitute_flg = 0
+        ";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([
+            ':division_id' => $division_id
+        ]);
+
+        $players = [];
+        foreach ($stmt as $row) {
+            $players[(string)$row['player_number']] = [
+                'id'   => $row['id'],
+                'name' => $row['name']
+            ];
+        }
+
+        /* ===============================
+           存在チェック
+        =============================== */
+        if (!isset($players[$upper_no]) || !isset($players[$lower_no])) {
+            $error = '存在しない選手番号です';
+        } else {
+
+            $upper_id = $players[$upper_no]['id'];
+            $lower_id = $players[$lower_no]['id'];
+
+            /* ===============================
+               不戦勝
+            =============================== */
+            if ($forfeit === 'upper' || $forfeit === 'lower') {
+
+                $winner = ($forfeit === 'upper') ? 'A' : 'B';
+
+                $sql = "
+                    INSERT INTO individual_matches
+                        (department_id, department, match_field,
+                         player_a_id, player_b_id,
+                         started_at, final_winner)
+                    VALUES
+                        (:department_id, :department, 1,
+                         :player_a, :player_b,
+                         NOW(), :winner)
+                ";
+
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([
+                    ':department_id' => $division_id,
+                    ':department'    => $match_number,
+                    ':player_a'      => $upper_id,
+                    ':player_b'      => $lower_id,
+                    ':winner'        => $winner
+                ]);
+
+                unset($_SESSION['match_number']);
+
+                header('Location: match_complete.php');
+                exit;
+            }
+
+            /* ===============================
+               通常試合 → 詳細入力へ
+            =============================== */
+            $_SESSION['player_a_id']     = $upper_id;
+            $_SESSION['player_b_id']     = $lower_id;
+            $_SESSION['player_a_name']   = $players[$upper_no]['name'];
+            $_SESSION['player_b_name']   = $players[$lower_no]['name'];
+            $_SESSION['player_a_number'] = $upper_no;
+            $_SESSION['player_b_number'] = $lower_no;
+
+            header('Location: individual-match-detail.php');
+            exit;
+        }
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>個人戦選手選択</title>
+
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-body { 
-    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Sans','Meiryo',sans-serif; 
-    background:#f5f5f5; 
-    padding:1rem; 
+body {
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Sans','Meiryo',sans-serif;
+    background:#f5f5f5;
+    padding:1rem;
     min-height:100vh;
     display:flex;
     align-items:center;
     justify-content:center;
 }
-
-.container { 
+.container {
     max-width:1200px;
     width:100%;
-    background:white; 
-    padding:2rem; 
-    border-radius:8px; 
-    box-shadow:0 10px 30px rgba(0,0,0,0.1); 
+    background:white;
+    padding:2rem;
+    border-radius:8px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.1);
 }
-
-.header { 
-    display:flex; 
+.header {
+    display:flex;
     flex-wrap:wrap;
-    align-items:center; 
-    gap:1rem; 
+    gap:1rem;
+    font-size:clamp(1.2rem, 3vw, 2rem);
+    font-weight:bold;
     margin-bottom:3rem;
-    font-size:clamp(1.2rem, 3vw, 2rem); 
-    font-weight:bold; 
 }
-
 .notice {
     text-align:center;
-    font-size:clamp(1rem, 2vw, 1.3rem);
+    font-size:1.2rem;
     color:#666;
     margin-bottom:3rem;
 }
-
 .match-row {
     display:flex;
-    align-items:center;
-    justify-content:space-between;
     gap:2rem;
+    justify-content:space-between;
     margin-bottom:3rem;
+    align-items:center;
 }
-
 .player-section {
     flex:1;
     display:flex;
@@ -57,319 +203,165 @@ body {
     align-items:center;
     gap:1.5rem;
 }
-
 .player-label {
-    font-size:clamp(1.5rem, 3vw, 2.5rem);
+    font-size:2rem;
     font-weight:bold;
 }
-
 .player-input {
     width:100%;
     max-width:300px;
     padding:1rem;
-    font-size:clamp(1.2rem, 2.5vw, 1.8rem);
+    font-size:1.8rem;
     text-align:center;
     border:3px solid #ddd;
     border-radius:8px;
-    transition:border-color 0.2s;
 }
-
-.player-input:focus {
-    outline:none;
-    border-color:#3b82f6;
-}
-
 .forfeit-button {
     padding:1rem 3rem;
-    font-size:clamp(1.2rem, 2.5vw, 1.8rem);
+    font-size:1.5rem;
     font-weight:bold;
     background:white;
     border:3px solid #000;
     border-radius:50px;
     cursor:pointer;
     transition:all 0.2s;
-    white-space:nowrap;
 }
-
 .forfeit-button:hover {
-    background:#f5f5f5;
+    background:#f9fafb;
 }
-
 .forfeit-button.selected {
     background:#ef4444;
     color:white;
     border-color:#ef4444;
 }
-
 .vs-text {
-    font-size:clamp(2rem, 4vw, 3rem);
+    font-size:3rem;
     font-weight:bold;
+    flex-shrink:0;
 }
-
 .action-buttons {
     display:flex;
     justify-content:center;
     gap:2rem;
-    margin-top:2rem;
 }
-
 .action-button {
     padding:1rem 3rem;
-    font-size:clamp(1.2rem, 2.5vw, 1.5rem);
+    font-size:1.4rem;
     font-weight:bold;
     border-radius:50px;
     cursor:pointer;
     transition:all 0.2s;
-    white-space:nowrap;
 }
-
 .confirm-button {
     background:#3b82f6;
     color:white;
     border:3px solid #3b82f6;
 }
-
 .confirm-button:hover {
     background:#2563eb;
-    border-color:#2563eb;
 }
-
 .back-button {
     background:white;
     border:3px solid #000;
 }
-
 .back-button:hover {
-    background:#f5f5f5;
+    background:#f9fafb;
 }
-
-/* 不戦勝結果画面のスタイル */
-.result-container {
-    display:none;
-}
-
-.result-container.active {
-    display:block;
-}
-
-.result-header {
-    text-align:center;
-    font-size:clamp(1.8rem, 4vw, 3rem);
-    font-weight:bold;
+.error {
     color:#ef4444;
-    margin-bottom:3rem;
-}
-
-.winner-display {
     text-align:center;
-    padding:3rem;
-    background:#f0fdf4;
-    border:3px solid #22c55e;
-    border-radius:12px;
-    margin-bottom:3rem;
-}
-
-.winner-label {
-    font-size:clamp(1.2rem, 2.5vw, 1.8rem);
-    color:#666;
+    font-size:1.2rem;
     margin-bottom:1rem;
 }
-
-.winner-number {
-    font-size:clamp(3rem, 6vw, 5rem);
-    font-weight:bold;
-    color:#22c55e;
-}
-
-.loser-display {
-    text-align:center;
-    padding:2rem;
-    background:#fef2f2;
-    border:3px solid #ef4444;
-    border-radius:12px;
-    margin-bottom:3rem;
-}
-
-.loser-label {
-    font-size:clamp(1rem, 2vw, 1.5rem);
-    color:#666;
-    margin-bottom:0.5rem;
-}
-
-.loser-number {
-    font-size:clamp(2rem, 4vw, 3rem);
-    font-weight:bold;
-    color:#ef4444;
-}
-
-@media (max-width:768px) {
+@media (max-width: 768px) {
     .match-row {
         flex-direction:column;
-        gap:2rem;
     }
-    
     .vs-text {
-        order:0;
-    }
-    
-    .player-section {
-        width:100%;
-    }
-    
-    .action-buttons {
-        flex-direction:column;
-        width:100%;
-    }
-    
-    .action-button {
-        width:100%;
+        font-size:2rem;
     }
 }
 </style>
 </head>
+
 <body>
-<!-- 選手選択画面 -->
-<div class="container" id="selectionScreen">
+
+<div class="container">
     <div class="header">
         <span>個人戦</span>
-        <span>〇〇大会</span>
-        <span>〇〇部門</span>
+        <span><?= htmlspecialchars($info['tournament_name']) ?></span>
+        <span><?= htmlspecialchars($info['division_name']) ?></span>
     </div>
 
     <div class="notice">
-        ※不戦勝ボタンは勝った方の選手を押してください。
+        ※ 不戦勝の場合は勝者側の「不戦勝」ボタンを押してください
     </div>
 
-    <div class="match-row">
-        <div class="player-section">
-            <div class="player-label">選手番号</div>
-            <input type="text" class="player-input" id="upperPlayer" placeholder="番号を入力">
-            <button class="forfeit-button" id="upperForfeit">不戦勝</button>
+    <?php if ($error): ?>
+        <div class="error"><?= htmlspecialchars($error) ?></div>
+    <?php endif; ?>
+
+    <form method="POST">
+        <input type="hidden" name="forfeit" id="forfeitInput">
+
+        <div class="match-row">
+            <div class="player-section">
+                <div class="player-label">選手番号</div>
+                <input type="text" name="upper_player" class="player-input" id="upperPlayer" 
+                       value="<?= htmlspecialchars($_POST['upper_player'] ?? '') ?>" required>
+                <button type="button" class="forfeit-button" id="upperForfeit">不戦勝</button>
+            </div>
+
+            <div class="vs-text">対</div>
+
+            <div class="player-section">
+                <div class="player-label">選手番号</div>
+                <input type="text" name="lower_player" class="player-input" id="lowerPlayer"
+                       value="<?= htmlspecialchars($_POST['lower_player'] ?? '') ?>" required>
+                <button type="button" class="forfeit-button" id="lowerForfeit">不戦勝</button>
+            </div>
         </div>
 
-        <div class="vs-text">対</div>
-
-        <div class="player-section">
-            <div class="player-label">選手番号</div>
-            <input type="text" class="player-input" id="lowerPlayer" placeholder="番号を入力">
-            <button class="forfeit-button" id="lowerForfeit">不戦勝</button>
+        <div class="action-buttons">
+            <button type="submit" class="action-button confirm-button" id="confirmButton">決定</button>
+            <button type="button" class="action-button back-button" onclick="history.back()">戻る</button>
         </div>
-    </div>
-
-    <div class="action-buttons">
-        <button class="action-button confirm-button" id="confirmButton">決定</button>
-        <button class="action-button back-button" onclick="history.back()">戻る</button>
-    </div>
-</div>
-
-<!-- 不戦勝結果画面 -->
-<div class="container result-container" id="forfeitScreen">
-    <div class="header">
-        <span>個人戦</span>
-        <span>〇〇大会</span>
-        <span>〇〇部門</span>
-    </div>
-
-    <div class="result-header">不戦勝</div>
-
-    <div class="winner-display">
-        <div class="winner-label">勝者（不戦勝）</div>
-        <div class="winner-number" id="winnerNumber">-</div>
-    </div>
-
-    <div class="loser-display">
-        <div class="loser-label">敗者（不戦敗）</div>
-        <div class="loser-number" id="loserNumber">-</div>
-    </div>
-
-    <div class="action-buttons">
-        <button class="action-button confirm-button" id="saveButton">結果を保存</button>
-        <button class="action-button back-button" id="backToSelection">選手選択に戻る</button>
-    </div>
+    </form>
 </div>
 
 <script>
 const upperBtn = document.getElementById('upperForfeit');
 const lowerBtn = document.getElementById('lowerForfeit');
-const selectionScreen = document.getElementById('selectionScreen');
-const forfeitScreen = document.getElementById('forfeitScreen');
+const forfeitInput = document.getElementById('forfeitInput');
 
-// 不戦勝ボタンの切り替え
-upperBtn.addEventListener('click', () => {
+upperBtn.onclick = () => {
     if (upperBtn.classList.contains('selected')) {
         upperBtn.classList.remove('selected');
     } else {
         upperBtn.classList.add('selected');
         lowerBtn.classList.remove('selected');
     }
-});
+};
 
-lowerBtn.addEventListener('click', () => {
+lowerBtn.onclick = () => {
     if (lowerBtn.classList.contains('selected')) {
         lowerBtn.classList.remove('selected');
     } else {
         lowerBtn.classList.add('selected');
         upperBtn.classList.remove('selected');
     }
-});
+};
 
-// 決定ボタン
-document.getElementById('confirmButton').addEventListener('click', () => {
-    const upperSelected = upperBtn.classList.contains('selected');
-    const lowerSelected = lowerBtn.classList.contains('selected');
-    const upperPlayer = document.getElementById('upperPlayer').value.trim();
-    const lowerPlayer = document.getElementById('lowerPlayer').value.trim();
-    
-    // バリデーション
-    if (!upperPlayer || !lowerPlayer) {
-        alert('両方の選手番号を入力してください');
-        return;
-    }
-    
-    // 不戦勝が選択されている場合
-    if (upperSelected || lowerSelected) {
-        const winner = upperSelected ? upperPlayer : lowerPlayer;
-        const loser = upperSelected ? lowerPlayer : upperPlayer;
-        
-        document.getElementById('winnerNumber').textContent = winner;
-        document.getElementById('loserNumber').textContent = loser;
-        
-        // 画面切り替え
-        selectionScreen.style.display = 'none';
-        forfeitScreen.classList.add('active');
+document.querySelector('form').onsubmit = (e) => {
+    if (upperBtn.classList.contains('selected')) {
+        forfeitInput.value = 'upper';
+    } else if (lowerBtn.classList.contains('selected')) {
+        forfeitInput.value = 'lower';
     } else {
-        // 通常の試合（この部分は実際のページ遷移に置き換え可能）
-        alert('通常の試合画面に遷移します\n\n上段: ' + upperPlayer + '\n下段: ' + lowerPlayer);
-        // window.location.href = 'individual-match-detail.php';
+        forfeitInput.value = '';
     }
-});
-
-// 選手選択に戻るボタン
-document.getElementById('backToSelection').addEventListener('click', () => {
-    forfeitScreen.classList.remove('active');
-    selectionScreen.style.display = 'block';
-    
-    // 不戦勝ボタンの選択状態をリセット
-    upperBtn.classList.remove('selected');
-    lowerBtn.classList.remove('selected');
-});
-
-// 結果を保存ボタン
-document.getElementById('saveButton').addEventListener('click', () => {
-    const winner = document.getElementById('winnerNumber').textContent;
-    const loser = document.getElementById('loserNumber').textContent;
-    
-    // ここで実際のデータ保存処理を実行
-    alert('不戦勝の結果を保存しました\n\n勝者: ' + winner + '\n敗者: ' + loser);
-    
-    // 実際の実装では以下のような処理になります
-    // const resultData = {
-    //     winner: winner,
-    //     loser: loser,
-    //     matchType: 'forfeit'
-    // };
-    // window.location.href = 'save-result.php?data=' + JSON.stringify(resultData);
-});
+};
 </script>
+
 </body>
 </html>

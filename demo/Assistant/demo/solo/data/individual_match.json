@@ -3,11 +3,11 @@
         "name": "",
         "number": "",
         "scores": [
-            "コ",
-            "メ",
+            "▼",
+            "▼",
             "▼"
         ],
-        "selected": 0
+        "selected": -1
     },
     "lower": {
         "name": "",
@@ -19,5 +19,5 @@
         ],
         "selected": -1
     },
-    "special": "extend"
+    "special": "none"
 }

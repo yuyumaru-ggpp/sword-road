@@ -1,33 +1,86 @@
 <?php
-if (!is_dir('data')) mkdir('data', 0777, true);
-$jsonFile = 'data/individual_match.json';
-$data = [
-    'upper' => ['name'=>'','number'=>'','scores'=>['▼','▼','▼'],'selected'=>-1,'decision'=>false],
-    'lower' => ['name'=>'','number'=>'','scores'=>['▲','▲','▲'],'selected'=>-1,'decision'=>false],
-    'special' => 'none'
-];
+session_start();
 
-if (file_exists($jsonFile)) {
-    $json = file_get_contents($jsonFile);
-    $decoded = json_decode($json, true);
-    if ($decoded) $data = $decoded;
+/* ===============================
+   セッションチェック
+=============================== */
+if (
+    !isset(
+        $_SESSION['tournament_id'],
+        $_SESSION['division_id'],
+        $_SESSION['match_number'],
+        $_SESSION['player_a_id'],
+        $_SESSION['player_b_id']
+    )
+) {
+    header('Location: match_input.php');
+    exit;
 }
 
-if ($_SERVER['REQUEST_METHOD']==='POST') {
+$tournament_id = $_SESSION['tournament_id'];
+$division_id   = $_SESSION['division_id'];
+$match_number  = $_SESSION['match_number'];
+$player_a_id   = $_SESSION['player_a_id'];
+$player_b_id   = $_SESSION['player_b_id'];
+
+/* ===============================
+   DB接続
+=============================== */
+$dsn = "mysql:host=localhost;port=3308;dbname=kendo_support_system;charset=utf8mb4";
+$pdo = new PDO($dsn, "root", "", [
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+]);
+
+/* ===============================
+   大会・部門・選手情報取得
+=============================== */
+$sql = "
+    SELECT
+        t.title AS tournament_name,
+        d.name  AS division_name
+    FROM tournaments t
+    JOIN departments d ON d.tournament_id = t.id
+    WHERE d.id = :division_id
+";
+$stmt = $pdo->prepare($sql);
+$stmt->execute([':division_id' => $division_id]);
+$info = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$info) {
+    exit('試合情報が取得できません');
+}
+
+// セッションから選手情報を取得
+$upper_name = $_SESSION['player_a_name'] ?? '';
+$upper_no = $_SESSION['player_a_number'] ?? '';
+$lower_name = $_SESSION['player_b_name'] ?? '';
+$lower_no = $_SESSION['player_b_number'] ?? '';
+
+/* ===============================
+   POST（試合結果保存）
+=============================== */
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
     $input = json_decode(file_get_contents('php://input'), true);
-    if ($input) {
-        file_put_contents($jsonFile, json_encode($input, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
-        echo json_encode(['status'=>'ok']);
+    if (!$input) {
+        echo json_encode(['status' => 'ng', 'message' => 'Invalid input']);
         exit;
     }
+
+    // セッションに保存して確認画面へ
+    $_SESSION['match_input'] = $input;
+    
+    echo json_encode(['status' => 'ok']);
+    exit;
 }
 ?>
 <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>個人戦試合詳細</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body { 
@@ -399,30 +452,33 @@ body {
 }
 </style>
 </head>
+
 <body>
 <div class="container">
     <div class="header">
         <span>個人戦</span>
-        <span>〇〇大会</span>
-        <span>〇〇部門</span>
+        <span><?= htmlspecialchars($info['tournament_name']) ?></span>
+        <span><?= htmlspecialchars($info['division_name']) ?></span>
     </div>
 
     <div class="content-wrapper">
+        <!-- 上段 -->
         <div class="match-section upper-section">
             <div class="row">
                 <div class="label">名前</div>
-                <div class="value upper-name">───</div>
+                <div class="value upper-name"><?= htmlspecialchars($upper_name) ?></div>
             </div>
-            
             <div class="row">
                 <div class="label">選手番号</div>
-                <div class="value upper-number">───</div>
+                <div class="value upper-number"><?= htmlspecialchars($upper_no) ?></div>
             </div>
-            
+
             <div class="score-display">
                 <div class="score-group">
-                    <div class="score-numbers upper-numbers">
-                        <span>1</span><span>2</span><span>3</span>
+                    <div class="score-numbers upper-scores">
+                        <span>1</span>
+                        <span>2</span>
+                        <span>3</span>
                     </div>
                     <div class="radio-circles upper-circles">
                         <div class="radio-circle" data-index="0"></div>
@@ -431,85 +487,130 @@ body {
                     </div>
                 </div>
             </div>
-            
+
             <div class="decision-row" id="upperDecisionRow">
-                <button class="decision-button" id="upperDecisionBtn">判定勝ち</button>
+                <button type="button" class="decision-button" id="upperDecisionBtn">判定勝ち</button>
             </div>
         </div>
 
+        <!-- 中央 -->
         <div class="divider-section">
             <hr class="divider">
+            
             <div class="middle-controls">
-                <div class="score-dropdowns upper-scores">
-                    <?php for($i=0;$i<3;$i++): ?>
+                <div class="score-dropdowns">
                     <div class="dropdown-container">
-                        <button class="score-dropdown">▼</button>
+                        <div class="score-dropdown">▼</div>
                         <div class="dropdown-menu">
-                            <?php foreach(['×','メ','コ','ド','反','ツ','〇'] as $val): ?>
-                            <div class="dropdown-item" data-val="<?=$val?>"><?=$val?></div>
-                            <?php endforeach; ?>
+                            <div class="dropdown-item" data-val="▼">▼</div>
+                            <div class="dropdown-item" data-val="面">面</div>
+                            <div class="dropdown-item" data-val="小手">小手</div>
+                            <div class="dropdown-item" data-val="胴">胴</div>
+                            <div class="dropdown-item" data-val="突">突</div>
+                            <div class="dropdown-item" data-val="×">×</div>
                         </div>
                     </div>
-                    <?php endfor; ?>
+                    <div class="dropdown-container">
+                        <div class="score-dropdown">▼</div>
+                        <div class="dropdown-menu">
+                            <div class="dropdown-item" data-val="▼">▼</div>
+                            <div class="dropdown-item" data-val="面">面</div>
+                            <div class="dropdown-item" data-val="小手">小手</div>
+                            <div class="dropdown-item" data-val="胴">胴</div>
+                            <div class="dropdown-item" data-val="突">突</div>
+                            <div class="dropdown-item" data-val="×">×</div>
+                        </div>
+                    </div>
+                    <div class="dropdown-container">
+                        <div class="score-dropdown">▼</div>
+                        <div class="dropdown-menu">
+                            <div class="dropdown-item" data-val="▼">▼</div>
+                            <div class="dropdown-item" data-val="面">面</div>
+                            <div class="dropdown-item" data-val="小手">小手</div>
+                            <div class="dropdown-item" data-val="胴">胴</div>
+                            <div class="dropdown-item" data-val="突">突</div>
+                            <div class="dropdown-item" data-val="×">×</div>
+                        </div>
+                    </div>
                 </div>
             </div>
+
             <div class="draw-container-wrapper">
                 <div class="draw-container">
-                    <button class="draw-button" id="drawButton">-</button>
+                    <button type="button" class="draw-button" id="drawButton">-</button>
                     <div class="draw-dropdown-menu" id="drawMenu">
-                        <div class="dropdown-item">-</div>
-                        <div class="dropdown-item">引分け</div>
                         <div class="dropdown-item">一本勝</div>
                         <div class="dropdown-item">延長</div>
+                        <div class="dropdown-item">引分け</div>
+                        <div class="dropdown-item">-</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="match-section">
+        <!-- 下段 -->
+        <div class="match-section lower-section">
             <div class="decision-row" id="lowerDecisionRow">
-                <button class="decision-button" id="lowerDecisionBtn">判定勝ち</button>
+                <button type="button" class="decision-button" id="lowerDecisionBtn">判定勝ち</button>
             </div>
-            
-            <div class="row">
-                <div class="label">名前</div>
-                <div class="value lower-name">───</div>
-            </div>
-            
-            <div class="row">
-                <div class="label">選手番号</div>
-                <div class="value lower-number">───</div>
-            </div>
-            
+
             <div class="score-display">
                 <div class="score-group">
-                    <div class="score-numbers lower-numbers">
-                        <span>1</span><span>2</span><span>3</span>
-                    </div>
                     <div class="radio-circles lower-circles">
                         <div class="radio-circle" data-index="0"></div>
                         <div class="radio-circle" data-index="1"></div>
                         <div class="radio-circle" data-index="2"></div>
                     </div>
+                    <div class="score-numbers lower-scores">
+                        <span>1</span>
+                        <span>2</span>
+                        <span>3</span>
+                    </div>
                 </div>
             </div>
+
+            <div class="row">
+                <div class="label">名前</div>
+                <div class="value lower-name"><?= htmlspecialchars($lower_name) ?></div>
+            </div>
+            <div class="row">
+                <div class="label">選手番号</div>
+                <div class="value lower-number"><?= htmlspecialchars($lower_no) ?></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-area">
+        <div class="bottom-right-button">
+            <button type="button" class="cancel-button" id="cancelButton">入力内容をリセット</button>
         </div>
 
-        <div class="bottom-area">
-            <div class="bottom-right-button">
-                <button class="cancel-button" id="cancelButton">取り消し</button>
-            </div>
-
-            <div class="bottom-buttons">
-                <button class="bottom-button back-button" onclick="history.back()">キャンセル</button>
-                <button class="bottom-button submit-button" id="submitButton">送信</button>
-            </div>
+        <div class="bottom-buttons">
+            <button type="button" class="bottom-button back-button" onclick="history.back()">戻る</button>
+            <button type="button" class="bottom-button submit-button" id="submitButton">決定</button>
         </div>
     </div>
 </div>
 
 <script>
-const data = <?=json_encode($data, JSON_UNESCAPED_UNICODE)?>;
+/* ===== 初期データ ===== */
+const data = {
+    upper: {
+        name: "<?= htmlspecialchars($upper_name) ?>",
+        number: "<?= htmlspecialchars($upper_no) ?>",
+        scores: ['▼','▼','▼'],
+        selected: -1,
+        decision: false
+    },
+    lower: {
+        name: "<?= htmlspecialchars($lower_name) ?>",
+        number: "<?= htmlspecialchars($lower_no) ?>",
+        scores: ['▲','▲','▲'],
+        selected: -1,
+        decision: false
+    },
+    special: 'none'
+};
 
 function updateDecisionButtonsVisibility() {
     const drawText = document.getElementById('drawButton').textContent;
@@ -518,7 +619,6 @@ function updateDecisionButtonsVisibility() {
     document.getElementById('upperDecisionRow').classList.toggle('show', showButtons);
     document.getElementById('lowerDecisionRow').classList.toggle('show', showButtons);
     
-    // 延長でない場合は判定勝ちの選択をリセット
     if (!showButtons) {
         document.getElementById('upperDecisionBtn').classList.remove('active');
         document.getElementById('lowerDecisionBtn').classList.remove('active');
@@ -531,7 +631,7 @@ function load() {
     document.querySelector('.lower-name').textContent = data.lower.name||'───';
     document.querySelector('.lower-number').textContent = data.lower.number||'───';
 
-    document.querySelectorAll('.upper-scores .score-dropdown').forEach((b,i)=>b.textContent=(data.upper.scores&&data.upper.scores[i])||'▼');
+    document.querySelectorAll('.middle-controls .score-dropdown').forEach((b,i)=>b.textContent=(data.upper.scores&&data.upper.scores[i])||'▼');
 
     document.querySelectorAll('.upper-circles .radio-circle').forEach((c,i)=>c.classList.toggle('selected',data.upper.selected===i));
     document.querySelectorAll('.lower-circles .radio-circle').forEach((c,i)=>c.classList.toggle('selected',data.lower.selected===i));
@@ -547,7 +647,7 @@ function load() {
 }
 
 function saveLocal() {
-    data.upper.scores = Array.from(document.querySelectorAll('.upper-scores .score-dropdown')).map(b=>b.textContent);
+    data.upper.scores = Array.from(document.querySelectorAll('.middle-controls .score-dropdown')).map(b=>b.textContent);
     const uSel = document.querySelector('.upper-circles .radio-circle.selected');
     data.upper.selected = uSel? +uSel.dataset.index : -1;
     const lSel = document.querySelector('.lower-circles .radio-circle.selected');
@@ -639,9 +739,9 @@ document.getElementById('drawMenu').querySelectorAll('.dropdown-item').forEach(i
 document.addEventListener('click',()=>document.querySelectorAll('.dropdown-menu,.draw-dropdown-menu').forEach(m=>m.classList.remove('show')));
 
 document.getElementById('cancelButton').addEventListener('click',()=>{
-    if(confirm('試合内容をリセットしますか？')){
-        data.upper={name:'',number:'',scores:['▼','▼','▼'],selected:-1,decision:false};
-        data.lower={name:'',number:'',scores:['▲','▲','▲'],selected:-1,decision:false};
+    if(confirm('試合内容をリセットしますか?')){
+        data.upper={name:data.upper.name,number:data.upper.number,scores:['▼','▼','▼'],selected:-1,decision:false};
+        data.lower={name:data.lower.name,number:data.lower.number,scores:['▲','▲','▲'],selected:-1,decision:false};
         data.special='none';
         load();
     }
@@ -653,7 +753,6 @@ document.getElementById('submitButton').onclick=async()=>{
         const r=await fetch(location.href,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
         const j=await r.json();
         if(j.status==='ok'){
-            alert('送信完了！');
             window.location.href = 'match-confirm.php';
         } else {
             alert('保存失敗');
