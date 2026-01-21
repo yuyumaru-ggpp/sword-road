@@ -79,3 +79,30 @@ body {
 .action-button:hover {
     background-color: #f9fafb;
 }
+.input-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* 中央揃え */
+    margin-bottom: 5rem;
+}
+
+.input-label {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    color: #333;
+    width: 100%;
+    max-width: 550px;
+    text-align: center; /* ラベルも中央揃え */
+}
+
+.name-input {
+    width: 100%;
+    max-width: 550px;
+    padding: 1rem 1.5rem;
+    font-size: 1.125rem;
+    border: 2px solid #d1d5db;
+    border-radius: 50px;
+    outline: none;
+    transition: border-color 0.2s;
+    text-align: center; /* 入力文字も中央揃えにしたい場合 */
+}

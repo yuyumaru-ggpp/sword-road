@@ -2,10 +2,10 @@
 session_start();
 
 $user = "root";
-$pass = "root1234";
+$pass = "";
 $database = "kendo_support_system";
 $server = "localhost";
-$port = "3307";
+$port = "3308";
 
 $dsn = "mysql:host={$server};port={$port};dbname={$database};charset=utf8mb4";
 

@@ -11,10 +11,10 @@ $tournament_id = $_SESSION['tournament_id'];
 
 /* ---------- DB接続 ---------- */
 $user = "root";
-$pass = "root1234";
+$pass = "";
 $database = "kendo_support_system";
 $server = "localhost";
-$port = "3307";
+$port = "3308";
 
 $dsn = "mysql:host={$server};port={$port};dbname={$database};charset=utf8mb4";
 
@@ -52,10 +52,10 @@ $team_divisions = [];
 
 foreach ($divisions as $division) {
     if ((int)$division['distinction'] === 2) {
-    $individual_divisions[] = $division;  // ✅ 2は個人戦
-} else if ((int)$division['distinction'] === 1) {
-    $team_divisions[] = $division;        // ✅ 1は団体戦
-}
+        $individual_divisions[] = $division;  // ✅ 2は個人戦
+    } else if ((int)$division['distinction'] === 1) {
+        $team_divisions[] = $division;        // ✅ 1は団体戦
+    }
 }
 ?>
 
@@ -71,6 +71,11 @@ foreach ($divisions as $division) {
 <body>
 <main>
 <div class="contents">
+
+    <!-- 戻るボタン -->
+    <div class="back-button">
+        <a href="../Assistant/login.php">← 前の画面に戻る</a>
+    </div>
 
     <!-- 個人戦 -->
     <div class="individual">
