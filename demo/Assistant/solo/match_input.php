@@ -16,7 +16,7 @@ $user = "root";
 $pass = "";
 $database = "kendo_support_system";
 $server = "localhost";
-$port = "3308";
+$port = "3307";
 
 $dsn = "mysql:host={$server};port={$port};dbname={$database};charset=utf8mb4";
 

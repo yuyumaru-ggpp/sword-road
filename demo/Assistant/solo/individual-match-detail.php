@@ -27,7 +27,7 @@ $player_b_id   = $_SESSION['player_b_id'];
    DB接続
 =============================== */
 
-$dsn = "mysql:host=localhost;port=3308;dbname=kendo_support_system;charset=utf8mb4";
+$dsn = "mysql:host=localhost;port=3307;dbname=kendo_support_system;charset=utf8mb4";
 
 $pdo = new PDO($dsn, "root", "", [
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
