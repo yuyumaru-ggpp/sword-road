@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (!$tournament) {
     $error = "IDまたはパスワードが違います";
   } else {
-    // ▼ 平文比較（hashなら password_verify を使う）
+    // ▼ 平文比較(hashなら password_verify を使う)
     if ($password === $tournament['password']) {
 
       // セッションに大会情報保存
@@ -150,7 +150,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <div class="button-group">
         <button type="submit">決定</button>
-        <button type="button" onclick="history.back()">戻る</button>
+        <button type="button" onclick="location.href='../'">戻る</button>
       </div>
     </form>
   </div>

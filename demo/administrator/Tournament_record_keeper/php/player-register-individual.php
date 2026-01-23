@@ -8,7 +8,7 @@
 </head>
 <body>
     <div class="breadcrumb">
-        <a href="tournament-detail.html" class="breadcrumb-link">メニュー></a>
+        <a href="tournament-detail.php" class="breadcrumb-link">メニュー></a>
         <a href="player-category-select.php" class="breadcrumb-link">選手変更></a>
         <a href="#" class="breadcrumb-link">個人戦></a>
     </div>

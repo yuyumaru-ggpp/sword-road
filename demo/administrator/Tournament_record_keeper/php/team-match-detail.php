@@ -573,7 +573,7 @@ body {
 
             <div class="bottom-buttons">
                 <button class="bottom-button back-button" onclick="history.back()">キャンセル</button>
-                <button class="bottom-button submit-button" id="submitButton" style="display:none;">送信</button>
+                <button class="bottom-button submit-button" id="submitButton" style="display:none;">変更</button>
             </div>
         </div>
     </div>
@@ -715,7 +715,7 @@ document.getElementById('repButton').onclick=()=>{ saveLocal(); current=5; load(
 document.getElementById('submitButton').onclick=async()=>{
     saveLocal();
 
-    if(!confirm('送信しますか？')){
+    if(!confirm('以下の内容に変更しますか？')){
     return;
 }
     try{
