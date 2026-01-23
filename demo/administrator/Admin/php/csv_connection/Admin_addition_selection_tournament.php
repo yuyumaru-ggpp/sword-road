@@ -8,7 +8,7 @@
 </head>
 <body>
     <div class="breadcrumb">
-        <a href="Admin_top.php" class="breadcrumb-link">メニュー></a>
+        <a href="../Admin_top.php" class="breadcrumb-link">メニュー></a>
         <a href="#" class="breadcrumb-link">大会選択></a>
     </div>
     
@@ -60,7 +60,7 @@
         </div>
         
         <div class="action-buttons">
-            <button class="back-button" onclick="location.href='Admin_top.php'">戻る</button>
+            <button class="back-button" onclick="location.href='../../../Admin/php/Admin_top.php'">戻る</button>
         </div>
     </div>
 </body>

@@ -157,128 +157,253 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <title>個人戦選手選択</title>
 
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 body {
-    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Sans','Meiryo',sans-serif;
-    background:#f5f5f5;
-    padding:1rem;
-    min-height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
+    font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+    background-color: #ffffff;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: clamp(15px, 3vh, 30px);
+    overflow: hidden;
 }
+
 .container {
-    max-width:1200px;
-    width:100%;
-    background:white;
-    padding:2rem;
-    border-radius:8px;
-    box-shadow:0 10px 30px rgba(0,0,0,0.1);
+    max-width: 1000px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
 }
+
 .header {
-    display:flex;
-    flex-wrap:wrap;
-    gap:1rem;
-    font-size:clamp(1.2rem, 3vw, 2rem);
-    font-weight:bold;
-    margin-bottom:3rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(10px, 2vw, 20px);
+    font-size: clamp(16px, 2.5vw, 24px);
+    font-weight: bold;
+    margin-bottom: clamp(15px, 3vh, 30px);
+    align-items: center;
+    flex-shrink: 0;
 }
+
+.header span {
+    white-space: nowrap;
+}
+
 .notice {
-    text-align:center;
-    font-size:1.2rem;
-    color:#666;
-    margin-bottom:3rem;
+    text-align: center;
+    font-size: clamp(12px, 2vw, 16px);
+    color: #666;
+    margin-bottom: clamp(15px, 2vh, 25px);
+    line-height: 1.4;
+    flex-shrink: 0;
 }
+
+.content-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+}
+
 .match-row {
-    display:flex;
-    gap:2rem;
-    justify-content:space-between;
-    margin-bottom:3rem;
-    align-items:center;
+    display: flex;
+    gap: clamp(20px, 3vw, 40px);
+    justify-content: center;
+    align-items: center;
+    margin-bottom: clamp(20px, 3vh, 40px);
 }
+
 .player-section {
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:1.5rem;
+    flex: 1;
+    max-width: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(10px, 1.5vh, 18px);
 }
+
 .player-label {
-    font-size:2rem;
-    font-weight:bold;
+    font-size: clamp(18px, 2.5vw, 24px);
+    font-weight: bold;
 }
+
 .player-input {
-    width:100%;
-    max-width:300px;
-    padding:1rem;
-    font-size:1.8rem;
-    text-align:center;
-    border:3px solid #ddd;
-    border-radius:8px;
+    width: 100%;
+    padding: clamp(10px, 1.5vh, 15px);
+    font-size: clamp(18px, 2.5vw, 24px);
+    text-align: center;
+    border: 3px solid #ddd;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.2s;
 }
+
+.player-input:focus {
+    border-color: #3b82f6;
+}
+
 .forfeit-button {
-    padding:1rem 3rem;
-    font-size:1.5rem;
-    font-weight:bold;
-    background:white;
-    border:3px solid #000;
-    border-radius:50px;
-    cursor:pointer;
-    transition:all 0.2s;
+    padding: clamp(10px, 1.5vh, 15px) clamp(30px, 5vw, 50px);
+    font-size: clamp(16px, 2.5vw, 20px);
+    font-weight: bold;
+    background: white;
+    border: 3px solid #000;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
 }
+
 .forfeit-button:hover {
-    background:#f9fafb;
+    background: #f9fafb;
 }
+
+.forfeit-button:active {
+    transform: scale(0.98);
+}
+
 .forfeit-button.selected {
-    background:#ef4444;
-    color:white;
-    border-color:#ef4444;
+    background: #ef4444;
+    color: white;
+    border-color: #ef4444;
 }
+
 .vs-text {
-    font-size:3rem;
-    font-weight:bold;
-    flex-shrink:0;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: bold;
+    flex-shrink: 0;
 }
+
 .action-buttons {
-    display:flex;
-    justify-content:center;
-    gap:2rem;
+    display: flex;
+    justify-content: center;
+    gap: clamp(20px, 4vw, 40px);
+    flex-wrap: wrap;
 }
+
 .action-button {
-    padding:1rem 3rem;
-    font-size:1.4rem;
-    font-weight:bold;
-    border-radius:50px;
-    cursor:pointer;
-    transition:all 0.2s;
+    padding: clamp(12px, 2vh, 15px) clamp(40px, 6vw, 60px);
+    font-size: clamp(18px, 3vw, 22px);
+    font-weight: bold;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 3px solid;
+    white-space: nowrap;
 }
+
 .confirm-button {
-    background:#3b82f6;
-    color:white;
-    border:3px solid #3b82f6;
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
 }
+
 .confirm-button:hover {
-    background:#2563eb;
+    background: #2563eb;
+    border-color: #2563eb;
 }
+
+.confirm-button:active {
+    transform: scale(0.98);
+}
+
 .back-button {
-    background:white;
-    border:3px solid #000;
+    background: white;
+    border-color: #000;
 }
+
 .back-button:hover {
-    background:#f9fafb;
+    background: #f9fafb;
 }
+
+.back-button:active {
+    transform: scale(0.98);
+}
+
 .error {
-    color:#ef4444;
-    text-align:center;
-    font-size:1.2rem;
-    margin-bottom:1rem;
+    color: #ef4444;
+    text-align: center;
+    font-size: clamp(13px, 2vw, 16px);
+    margin-bottom: clamp(10px, 2vh, 20px);
+    font-weight: bold;
+    flex-shrink: 0;
 }
+
+/* タブレット以下 */
 @media (max-width: 768px) {
     .match-row {
-        flex-direction:column;
+        flex-direction: column;
+        gap: 30px;
     }
+
+    .player-section {
+        max-width: 100%;
+        width: 100%;
+    }
+
     .vs-text {
-        font-size:2rem;
+        font-size: clamp(28px, 6vw, 36px);
+    }
+
+    .action-buttons {
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
+    .action-button {
+        flex: 1;
+        min-width: 120px;
+    }
+}
+
+/* スマートフォン */
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+
+    .header {
+        gap: 8px 12px;
+        margin-bottom: 15px;
+    }
+
+    .notice {
+        margin-bottom: 15px;
+        font-size: 11px;
+    }
+
+    .match-row {
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .player-section {
+        gap: 10px;
+    }
+
+    .action-buttons {
+        gap: 12px;
+    }
+}
+
+/* 極小スマートフォン */
+@media (max-width: 360px) {
+    .action-buttons {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .action-button {
+        width: 100%;
     }
 }
 </style>
@@ -293,40 +418,44 @@ body {
         <span><?= htmlspecialchars($info['division_name']) ?></span>
     </div>
 
-    <div class="notice">
-        ※ 不戦勝の場合は勝者側の「不戦勝」ボタンを押してください
+    <div class="content-wrapper">
+        <div class="notice">
+            ※ 不戦勝の場合は勝者側の「不戦勝」ボタンを押してください
+        </div>
+
+        <?php if ($error): ?>
+            <div class="error"><?= htmlspecialchars($error) ?></div>
+        <?php endif; ?>
+
+        <form method="POST">
+            <input type="hidden" name="forfeit" id="forfeitInput">
+
+            <div class="match-row">
+                <div class="player-section">
+                    <div class="player-label">選手番号</div>
+                    <input type="text" name="upper_player" class="player-input" id="upperPlayer" 
+                           value="<?= htmlspecialchars($_POST['upper_player'] ?? '') ?>" 
+                           placeholder="番号を入力" autofocus>
+                    <button type="button" class="forfeit-button" id="upperForfeit">不戦勝</button>
+                </div>
+
+                <div class="vs-text">対</div>
+
+                <div class="player-section">
+                    <div class="player-label">選手番号</div>
+                    <input type="text" name="lower_player" class="player-input" id="lowerPlayer"
+                           value="<?= htmlspecialchars($_POST['lower_player'] ?? '') ?>"
+                           placeholder="番号を入力">
+                    <button type="button" class="forfeit-button" id="lowerForfeit">不戦勝</button>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button type="submit" class="action-button confirm-button" id="confirmButton">決定</button>
+                <button type="button" class="action-button back-button" onclick="history.back()">戻る</button>
+            </div>
+        </form>
     </div>
-
-    <?php if ($error): ?>
-        <div class="error"><?= htmlspecialchars($error) ?></div>
-    <?php endif; ?>
-
-    <form method="POST">
-        <input type="hidden" name="forfeit" id="forfeitInput">
-
-        <div class="match-row">
-            <div class="player-section">
-                <div class="player-label">選手番号</div>
-                <input type="text" name="upper_player" class="player-input" id="upperPlayer" 
-                       value="<?= htmlspecialchars($_POST['upper_player'] ?? '') ?>" required>
-                <button type="button" class="forfeit-button" id="upperForfeit">不戦勝</button>
-            </div>
-
-            <div class="vs-text">対</div>
-
-            <div class="player-section">
-                <div class="player-label">選手番号</div>
-                <input type="text" name="lower_player" class="player-input" id="lowerPlayer"
-                       value="<?= htmlspecialchars($_POST['lower_player'] ?? '') ?>" required>
-                <button type="button" class="forfeit-button" id="lowerForfeit">不戦勝</button>
-            </div>
-        </div>
-
-        <div class="action-buttons">
-            <button type="submit" class="action-button confirm-button" id="confirmButton">決定</button>
-            <button type="button" class="action-button back-button" onclick="history.back()">戻る</button>
-        </div>
-    </form>
 </div>
 
 <script>
@@ -337,22 +466,27 @@ const forfeitInput = document.getElementById('forfeitInput');
 upperBtn.onclick = () => {
     if (upperBtn.classList.contains('selected')) {
         upperBtn.classList.remove('selected');
+        forfeitInput.value = '';
     } else {
         upperBtn.classList.add('selected');
         lowerBtn.classList.remove('selected');
+        forfeitInput.value = 'upper';
     }
 };
 
 lowerBtn.onclick = () => {
     if (lowerBtn.classList.contains('selected')) {
         lowerBtn.classList.remove('selected');
+        forfeitInput.value = '';
     } else {
         lowerBtn.classList.add('selected');
         upperBtn.classList.remove('selected');
+        forfeitInput.value = 'lower';
     }
 };
 
 document.querySelector('form').onsubmit = (e) => {
+    // 送信前に最終確認
     if (upperBtn.classList.contains('selected')) {
         forfeitInput.value = 'upper';
     } else if (lowerBtn.classList.contains('selected')) {

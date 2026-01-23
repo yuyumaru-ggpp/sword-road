@@ -1,4 +1,3 @@
-<!-- match_input.php -->
 <?php
 session_start();
 
@@ -25,7 +24,7 @@ try {
     $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (Exception $e) {
-    exit("DB接続失敗：" . $e->getMessage());
+    exit("DB接続失敗:" . $e->getMessage());
 }
 
 /* ---------- 大会・部門情報取得 ---------- */
@@ -76,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = '試合番号を入力してください';
         } else {
 
-            // 重複チェック（departmentカラムを使用）
+            // 重複チェック(departmentカラムを使用)
             $sql = "
                 SELECT COUNT(*)
                 FROM individual_matches
@@ -120,46 +119,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         body {
             font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
             background-color: #ffffff;
-            padding: 40px;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: clamp(20px, 5vw, 40px);
         }
 
         .container {
             max-width: 800px;
+            width: 100%;
             margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
         }
 
         .header {
             display: flex;
-            gap: 40px;
-            font-size: 28px;
+            flex-wrap: wrap;
+            gap: clamp(15px, 3vw, 40px);
+            font-size: clamp(18px, 3.5vw, 28px);
             font-weight: bold;
-            margin-bottom: 80px;
+            margin-bottom: clamp(40px, 8vh, 80px);
+            align-items: center;
+        }
+
+        .header span {
+            white-space: nowrap;
         }
 
         .main-content {
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin-top: 100px;
+            justify-content: center;
+            flex: 1;
         }
 
         h2 {
-            font-size: 32px;
-            margin-bottom: 50px;
+            font-size: clamp(24px, 5vw, 32px);
+            margin-bottom: clamp(30px, 5vh, 50px);
             text-align: center;
+            line-height: 1.4;
         }
 
         .input-wrapper {
             width: 100%;
             max-width: 500px;
-            margin-bottom: 50px;
+            margin-bottom: clamp(30px, 5vh, 50px);
         }
 
         input[type="text"] {
             width: 100%;
-            padding: 20px 30px;
-            font-size: 20px;
+            padding: clamp(15px, 3vw, 20px) clamp(20px, 4vw, 30px);
+            font-size: clamp(18px, 3vw, 20px);
             text-align: center;
             border: 2px solid #999;
             border-radius: 50px;
@@ -177,29 +190,98 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         .button-group {
             display: flex;
-            gap: 60px;
-            margin-top: 40px;
+            gap: clamp(30px, 6vw, 60px);
+            justify-content: center;
+            margin-top: clamp(20px, 4vh, 40px);
+            flex-wrap: wrap;
         }
 
         button {
-            padding: 15px 70px;
-            font-size: 22px;
+            padding: clamp(12px, 2vh, 15px) clamp(40px, 8vw, 70px);
+            font-size: clamp(18px, 3vw, 22px);
             border: 2px solid #000;
             border-radius: 50px;
             background-color: #fff;
             cursor: pointer;
             transition: background-color 0.2s;
+            white-space: nowrap;
         }
 
         button:hover {
             background-color: #f0f0f0;
         }
 
+        button:active {
+            transform: scale(0.98);
+        }
+
         .error {
             color: #d32f2f;
             margin-top: 10px;
-            font-size: 16px;
+            font-size: clamp(14px, 2.5vw, 16px);
             text-align: center;
+        }
+
+        /* タブレット以下 */
+        @media (max-width: 768px) {
+            .header {
+                font-size: clamp(16px, 4vw, 20px);
+                gap: 10px 20px;
+            }
+
+            h2 {
+                font-size: clamp(20px, 5vw, 28px);
+            }
+
+            .button-group {
+                width: 100%;
+                max-width: 400px;
+            }
+
+            button {
+                flex: 1;
+                min-width: 120px;
+            }
+        }
+
+        /* スマートフォン */
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+            }
+
+            .header {
+                gap: 8px 15px;
+                margin-bottom: 30px;
+            }
+
+            h2 {
+                margin-bottom: 25px;
+            }
+
+            .input-wrapper {
+                margin-bottom: 25px;
+            }
+
+            .button-group {
+                gap: 15px;
+            }
+
+            button {
+                padding: 12px 30px;
+            }
+        }
+
+        /* 極小スマートフォン */
+        @media (max-width: 360px) {
+            .button-group {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            button {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -218,7 +300,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <form method="POST">
             <div class="input-wrapper">
-                <input type="text" name="match_number" placeholder="試合番号" value="<?php echo htmlspecialchars($_POST['match_number'] ?? ''); ?>">
+                <input type="text" name="match_number" placeholder="試合番号" value="<?php echo htmlspecialchars($_POST['match_number'] ?? ''); ?>" autofocus>
                 <?php if ($error): ?>
                     <div class="error"><?php echo htmlspecialchars($error); ?></div>
                 <?php endif; ?>
