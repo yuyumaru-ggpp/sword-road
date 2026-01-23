@@ -18,7 +18,9 @@ $match_number  = $_SESSION['match_number'];
 /* ===============================
    DB接続
 =============================== */
+
 $dsn = "mysql:host=localhost;port=3308;dbname=kendo_support_system;charset=utf8mb4";
+
 $pdo = new PDO($dsn, "root", "", [
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
@@ -45,90 +47,94 @@ if (!$info) {
     exit('部門情報が取得できません');
 }
 
-$error = '';
+/* ===============================
+   部門に属する選手一覧を取得（画面表示用）
+=============================== */
+$sql = "
+    SELECT
+        p.id,
+        p.player_number,
+        p.name,
+        t.name as team_name
+    FROM players p
+    INNER JOIN teams t ON p.team_id = t.id
+    INNER JOIN departments d ON t.department_id = d.id
+    WHERE d.id = :division_id
+      AND p.substitute_flg = 0
+    ORDER BY p.id
+";
 
+$stmt = $pdo->prepare($sql);
+$stmt->execute([
+    ':division_id' => $division_id
+]);
+$players = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$error = '';
 
 /* ===============================
    POST処理
 =============================== */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    $upper_no = trim($_POST['upper_player'] ?? '');
-    $lower_no = trim($_POST['lower_player'] ?? '');
+    $upper_id = trim($_POST['upper_player'] ?? '');
+    $lower_id = trim($_POST['lower_player'] ?? '');
     $forfeit  = $_POST['forfeit'] ?? '';
 
-    if ($upper_no === '' || $lower_no === '') {
-        $error = '選手番号を入力してください';
+    if ($upper_id === '' || $lower_id === '') {
+        $error = '選手を選択してください';
     } else {
 
-        /* ===============================
-           部門に属する選手一覧を取得
-        =============================== */
+        // 選手IDの存在チェック
         $sql = "
-            SELECT
-                p.id,
-                p.player_number,
-                p.name
+            SELECT p.id, p.name, p.player_number
             FROM players p
             INNER JOIN teams t ON p.team_id = t.id
             INNER JOIN departments d ON t.department_id = d.id
             WHERE d.id = :division_id
               AND p.substitute_flg = 0
+              AND p.id IN (:upper_id, :lower_id)
         ";
 
         $stmt = $pdo->prepare($sql);
         $stmt->execute([
-            ':division_id' => $division_id
+            ':division_id' => $division_id,
+            ':upper_id' => $upper_id,
+            ':lower_id' => $lower_id
         ]);
 
-        $players = [];
-        foreach ($stmt as $row) {
-            $players[(string)$row['player_number']] = [
-                'id'   => $row['id'],
-                'name' => $row['name']
-            ];
-        }
+        $found_players = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        /* ===============================
-           存在チェック
-        =============================== */
-        if (!isset($players[$upper_no]) || !isset($players[$lower_no])) {
-            $error = '存在しない選手番号です';
+        if (count($found_players) !== 2) {
+            $error = '選択された選手が見つかりません';
         } else {
 
-            $upper_id = $players[$upper_no]['id'];
-            $lower_id = $players[$lower_no]['id'];
+            // 選手情報を取得
+            $player_info = [];
+            foreach ($found_players as $p) {
+                $player_info[$p['id']] = [
+                    'name' => $p['name'],
+                    'number' => $p['player_number']
+                ];
+            }
 
             /* ===============================
                不戦勝
             =============================== */
             if ($forfeit === 'upper' || $forfeit === 'lower') {
 
-                $winner = ($forfeit === 'upper') ? 'A' : 'B';
+                // セッションに不戦勝情報を保存
+                $_SESSION['forfeit_data'] = [
+                    'upper_id' => $upper_id,
+                    'lower_id' => $lower_id,
+                    'upper_name' => $player_info[$upper_id]['name'],
+                    'lower_name' => $player_info[$lower_id]['name'],
+                    'upper_number' => $player_info[$upper_id]['number'],
+                    'lower_number' => $player_info[$lower_id]['number'],
+                    'winner' => ($forfeit === 'upper') ? 'A' : 'B'
+                ];
 
-                $sql = "
-                    INSERT INTO individual_matches
-                        (department_id, department, match_field,
-                         player_a_id, player_b_id,
-                         started_at, final_winner)
-                    VALUES
-                        (:department_id, :department, 1,
-                         :player_a, :player_b,
-                         NOW(), :winner)
-                ";
-
-                $stmt = $pdo->prepare($sql);
-                $stmt->execute([
-                    ':department_id' => $division_id,
-                    ':department'    => $match_number,
-                    ':player_a'      => $upper_id,
-                    ':player_b'      => $lower_id,
-                    ':winner'        => $winner
-                ]);
-
-                unset($_SESSION['match_number']);
-
-                header('Location: match_complete.php');
+                header('Location: solo-forfeit-confirm.php');
                 exit;
             }
 
@@ -137,10 +143,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             =============================== */
             $_SESSION['player_a_id']     = $upper_id;
             $_SESSION['player_b_id']     = $lower_id;
-            $_SESSION['player_a_name']   = $players[$upper_no]['name'];
-            $_SESSION['player_b_name']   = $players[$lower_no]['name'];
-            $_SESSION['player_a_number'] = $upper_no;
-            $_SESSION['player_b_number'] = $lower_no;
+            $_SESSION['player_a_name']   = $player_info[$upper_id]['name'];
+            $_SESSION['player_b_name']   = $player_info[$lower_id]['name'];
+            $_SESSION['player_a_number'] = $player_info[$upper_id]['number'];
+            $_SESSION['player_b_number'] = $player_info[$lower_id]['number'];
 
             header('Location: individual-match-detail.php');
             exit;
@@ -498,4 +504,4 @@ document.querySelector('form').onsubmit = (e) => {
 </script>
 
 </body>
-</html>
+</html> 

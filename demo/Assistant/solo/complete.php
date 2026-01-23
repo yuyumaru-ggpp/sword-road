@@ -4,7 +4,7 @@ session_start();
 /* ===============================
    POST & セッションチェック
 =============================== */
-if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_SESSION['match_input'])) {
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: match_input.php');
     exit;
 }

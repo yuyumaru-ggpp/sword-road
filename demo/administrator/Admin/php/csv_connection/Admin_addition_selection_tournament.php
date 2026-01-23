@@ -1,3 +1,19 @@
+<?php
+session_start();
+
+// ログインしていなければログイン画面へ
+if (!isset($_SESSION['admin_user'])) {
+    header("Location: ../../login.php");
+    exit;
+}
+
+require_once '../../../db_connect.php';
+
+// 大会一覧取得
+$sql = "SELECT id, title FROM tournaments ORDER BY id DESC";
+$stmt = $pdo->query($sql);
+$tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+?>
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -17,45 +33,19 @@
         
         <div class="tournament-list-container">
             <div class="tournament-list">
-                <div class="tournament-row" onclick="location.href='Admin_addition_selection_department.php'">
-                    <span class="tournament-id">ID</span>
-                    <span class="tournament-name">〇〇大会</span>
-                </div>
-                
-                <div class="tournament-row" onclick="location.href='Admin_addition_selection_department.php'">
-                    <span class="tournament-id">ID</span>
-                    <span class="tournament-name">〇〇大会</span>
-                </div>
-                
-                <div class="tournament-row" onclick="location.href='Admin_addition_selection_department.php'">
-                    <span class="tournament-id">ID</span>
-                    <span class="tournament-name">〇〇大会</span>
-                </div>
-                
-                <div class="tournament-row" onclick="location.href='Admin_addition_selection_department.php'">
-                    <span class="tournament-id">ID</span>
-                    <span class="tournament-name">〇〇大会</span>
-                </div>
-                
-                <div class="tournament-row" onclick="location.href='Admin_addition_selection_department.php'">
-                    <span class="tournament-id">ID</span>
-                    <span class="tournament-name">〇〇大会</span>
-                </div>
-                
-                <div class="tournament-row" onclick="location.href='Admin_addition_selection_department.php'">
-                    <span class="tournament-id">ID</span>
-                    <span class="tournament-name">〇〇大会</span>
-                </div>
-                
-                <div class="tournament-row" onclick="location.href='Admin_addition_selection_department.php'">
-                    <span class="tournament-id">ID</span>
-                    <span class="tournament-name">〇〇大会</span>
-                </div>
-                
-                <div class="tournament-row" onclick="location.href='Admin_addition_selection_department.php'">
-                    <span class="tournament-id">ID</span>
-                    <span class="tournament-name">〇〇大会</span>
-                </div>
+
+                <?php if (empty($tournaments)): ?>
+                    <p>大会が登録されていません。</p>
+                <?php else: ?>
+                    <?php foreach ($tournaments as $t): ?>
+                        <div class="tournament-row"
+                             onclick="location.href='Admin_addition_selection_department.php?id=<?= $t['id'] ?>'">
+                            <span class="tournament-id">ID <?= htmlspecialchars($t['id']) ?></span>
+                            <span class="tournament-name"><?= htmlspecialchars($t['title']) ?></span>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+
             </div>
         </div>
         
