@@ -74,7 +74,6 @@ $distinction = (int)$department['distinction']; // 1=団体戦, 2=個人戦
 
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary btn-upload">CSVを登録する</button>
-                        <button type="button" class="btn btn-secondary" onclick="history.back()">戻る</button>
                     </div>
                 </form>
             </div>
@@ -92,7 +91,7 @@ $distinction = (int)$department['distinction']; // 1=団体戦, 2=個人戦
                     登録済みチームを見る
                 </a>
             <?php endif; ?>
-            <button class="btn-back" onclick="location.href='./Admin_addition_selection_department.php'">戻る</button>
+            <button class="back-button" onclick="location.href='./Admin_addition_selection_department.php?id=<?= urlencode($tournament_id) ?>'">戻る</button>
         </div>
     </div>
 

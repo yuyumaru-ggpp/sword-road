@@ -79,7 +79,7 @@ $teams = array_filter($departments, fn($d) => (int)$d['distinction'] === 1);
     </div>
 
     <div class="actions">
-      <button class="back-button" onclick="location.href='Admin_addtion_selection_tournament.php'">戻る</button>
+      <button class="back-button" onclick="location.href='./Admin_addition_selection_tournament.php?id=<?= urlencode($tournament_id) ?>'">戻る</button>
     </div>
   </div>
 </body>

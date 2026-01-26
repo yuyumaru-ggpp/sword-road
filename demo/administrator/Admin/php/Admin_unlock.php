@@ -3,15 +3,6 @@
 session_start();
 require_once '../../db_connect.php'; // 環境に合わせてパスを調整
 
-// ログ出力関数（開発用／本番は別ログ管理を推奨）
-function app_log($msg)
-{
-    $logfile = __DIR__ . '/logs/tournament_lock.log';
-    @mkdir(dirname($logfile), 0755, true);
-    $time = date('Y-m-d H:i:s');
-    @file_put_contents($logfile, "[$time] $msg\n", FILE_APPEND | LOCK_EX);
-}
-
 // CSRF トークン生成・検証
 if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(24));

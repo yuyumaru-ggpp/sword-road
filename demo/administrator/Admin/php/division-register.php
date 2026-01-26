@@ -82,22 +82,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="checkbox-list">
 
               <div class="checkbox-item">
-                <input type="checkbox" name="divisions[]" id="individual-1" value="小学生4年以下個人|0">
+                <input type="checkbox" name="divisions[]" id="individual-1" value="小学生4年以下個人|2">
                 <label for="individual-1">小学生4年以下個人</label>
               </div>
 
               <div class="checkbox-item">
-                <input type="checkbox" name="divisions[]" id="individual-2" value="小学生5年以上個人|0">
+                <input type="checkbox" name="divisions[]" id="individual-2" value="小学生5年以上個人|2">
                 <label for="individual-2">小学生5年以上個人</label>
               </div>
 
               <div class="checkbox-item">
-                <input type="checkbox" name="divisions[]" id="individual-3" value="中学生男子個人|0">
+                <input type="checkbox" name="divisions[]" id="individual-3" value="中学生男子個人|2">
                 <label for="individual-3">中学生男子個人</label>
               </div>
 
               <div class="checkbox-item">
-                <input type="checkbox" name="divisions[]" id="individual-4" value="中学生女子個人|0">
+                <input type="checkbox" name="divisions[]" id="individual-4" value="中学生女子個人|2">
                 <label for="individual-4">中学生女子個人</label>
               </div>
 
