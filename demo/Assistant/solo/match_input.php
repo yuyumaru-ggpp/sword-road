@@ -15,7 +15,7 @@ $user = "root";
 $pass = "";
 $database = "kendo_support_system";
 $server = "localhost";
-$port = "3307";
+$port = "3308";
 
 $dsn = "mysql:host={$server};port={$port};dbname={$database};charset=utf8mb4";
 
@@ -116,171 +116,357 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             box-sizing: border-box;
         }
 
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
         body {
-            font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
-            background-color: #ffffff;
-            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
-            flex-direction: column;
-            padding: clamp(20px, 5vw, 40px);
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: backgroundMove 20s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes backgroundMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
         }
 
         .container {
-            max-width: 800px;
             width: 100%;
-            margin: 0 auto;
+            height: 100%;
             display: flex;
             flex-direction: column;
-            flex: 1;
+            padding: min(3vh, 20px);
+            position: relative;
+            z-index: 1;
         }
 
         .header {
-            display: flex;
-            flex-wrap: wrap;
-            gap: clamp(15px, 3vw, 40px);
-            font-size: clamp(18px, 3.5vw, 28px);
-            font-weight: bold;
-            margin-bottom: clamp(40px, 8vh, 80px);
-            align-items: center;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: min(3vw, 16px);
+            padding: min(2.5vh, 18px) min(3vw, 25px);
+            box-shadow: 
+                0 10px 40px rgba(0, 0, 0, 0.15),
+                0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+            margin-bottom: min(2vh, 15px);
+            animation: slideDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        .header span {
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: min(2vw, 12px);
+            align-items: center;
+            font-size: clamp(14px, 2.5vh, 20px);
+            font-weight: 700;
+            line-height: 1.3;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: min(1.2vh, 8px) min(2.5vw, 18px);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: min(2vw, 10px);
+            font-size: clamp(12px, 2vh, 16px);
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            white-space: nowrap;
+        }
+
+        .header-text {
+            color: #1f2937;
             white-space: nowrap;
         }
 
         .main-content {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: min(4vw, 24px);
+            padding: min(5vh, 40px) min(5vw, 35px) min(4vh, 30px);
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.5) inset;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             flex: 1;
+            min-height: 0;
+            animation: fadeIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        form {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         h2 {
-            font-size: clamp(24px, 5vw, 32px);
-            margin-bottom: clamp(30px, 5vh, 50px);
+            font-size: clamp(20px, 4vh, 32px);
+            font-weight: 800;
+            margin-bottom: min(5vh, 40px);
             text-align: center;
-            line-height: 1.4;
+            line-height: 1.3;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 0.02em;
         }
 
         .input-wrapper {
             width: 100%;
-            max-width: 500px;
-            margin-bottom: clamp(30px, 5vh, 50px);
+            margin-bottom: min(4vh, 30px);
+            position: relative;
         }
 
         input[type="text"] {
             width: 100%;
-            padding: clamp(15px, 3vw, 20px) clamp(20px, 4vw, 30px);
-            font-size: clamp(18px, 3vw, 20px);
+            padding: min(2.5vh, 18px) min(4vw, 28px);
+            font-size: clamp(18px, 3.5vh, 26px);
+            font-weight: 600;
             text-align: center;
-            border: 2px solid #999;
-            border-radius: 50px;
+            border: 3px solid transparent;
+            border-radius: min(3vw, 16px);
             outline: none;
-            background-color: #f5f5f5;
+            background: linear-gradient(white, white) padding-box,
+                        linear-gradient(135deg, #667eea, #764ba2) border-box;
+            box-shadow: 
+                0 10px 30px rgba(102, 126, 234, 0.15),
+                0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            color: #1f2937;
         }
 
         input[type="text"]:focus {
-            border-color: #666;
+            box-shadow: 
+                0 15px 40px rgba(102, 126, 234, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.9) inset;
+            transform: translateY(-2px);
         }
 
         input[type="text"]::placeholder {
-            color: #999;
+            color: #9ca3af;
+            font-weight: 500;
         }
 
         .button-group {
             display: flex;
-            gap: clamp(30px, 6vw, 60px);
+            gap: min(3vw, 20px);
             justify-content: center;
-            margin-top: clamp(20px, 4vh, 40px);
-            flex-wrap: wrap;
+            width: 100%;
         }
 
         button {
-            padding: clamp(12px, 2vh, 15px) clamp(40px, 8vw, 70px);
-            font-size: clamp(18px, 3vw, 22px);
-            border: 2px solid #000;
-            border-radius: 50px;
-            background-color: #fff;
+            flex: 1;
+            padding: min(2vh, 14px) min(4vw, 30px);
+            font-size: clamp(16px, 2.5vh, 20px);
+            font-weight: 700;
+            border: none;
+            border-radius: min(2.5vw, 14px);
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.05em;
             white-space: nowrap;
         }
 
-        button:hover {
-            background-color: #f0f0f0;
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        button:hover::before {
+            width: 300px;
+            height: 300px;
         }
 
         button:active {
-            transform: scale(0.98);
+            transform: scale(0.95);
+        }
+
+        button[value="back"] {
+            background: rgba(255, 255, 255, 0.95);
+            color: #667eea;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+        }
+
+        button[value="back"]:hover {
+            background: #fff;
+            border-color: #667eea;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+
+        button[value="submit"] {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+
+        button[value="submit"]:hover {
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            transform: translateY(-2px);
         }
 
         .error {
-            color: #d32f2f;
-            margin-top: 10px;
-            font-size: clamp(14px, 2.5vw, 16px);
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+            padding: min(1.5vh, 10px) min(2.5vw, 16px);
+            border-radius: min(2vw, 10px);
+            margin-top: min(1.5vh, 10px);
+            font-size: clamp(12px, 2vh, 14px);
+            font-weight: 600;
             text-align: center;
+            border: 2px solid rgba(239, 68, 68, 0.3);
+            animation: shake 0.5s;
         }
 
-        /* タブレット以下 */
-        @media (max-width: 768px) {
-            .header {
-                font-size: clamp(16px, 4vw, 20px);
-                gap: 10px 20px;
-            }
-
-            h2 {
-                font-size: clamp(20px, 5vw, 28px);
-            }
-
-            .button-group {
-                width: 100%;
-                max-width: 400px;
-            }
-
-            button {
-                flex: 1;
-                min-width: 120px;
-            }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
         }
 
-        /* スマートフォン */
-        @media (max-width: 480px) {
-            body {
-                padding: 15px;
+        /* 縦長画面（スマホ縦向き） */
+        @media (max-height: 700px) {
+            .container {
+                padding: 2vh 2vw;
             }
 
             .header {
-                gap: 8px 15px;
-                margin-bottom: 30px;
+                padding: 1.5vh 3vw;
+                margin-bottom: 1.5vh;
+            }
+
+            .main-content {
+                padding: 3vh 4vw 2.5vh;
             }
 
             h2 {
-                margin-bottom: 25px;
+                font-size: clamp(18px, 3.5vh, 26px);
+                margin-bottom: 3vh;
             }
 
             .input-wrapper {
-                margin-bottom: 25px;
+                margin-bottom: 2.5vh;
             }
 
-            .button-group {
-                gap: 15px;
+            input[type="text"] {
+                padding: 2vh 3vw;
+                font-size: clamp(16px, 3vh, 22px);
             }
 
             button {
-                padding: 12px 30px;
+                padding: 1.5vh 3vw;
+                font-size: clamp(14px, 2.2vh, 18px);
             }
         }
 
-        /* 極小スマートフォン */
-        @media (max-width: 360px) {
-            .button-group {
-                flex-direction: column;
-                width: 100%;
+        /* 極端に縦長の画面 */
+        @media (max-height: 600px) {
+            h2 {
+                font-size: clamp(16px, 3vh, 22px);
+                margin-bottom: 2vh;
             }
 
-            button {
-                width: 100%;
+            .input-wrapper {
+                margin-bottom: 2vh;
+            }
+
+            .error {
+                padding: 1vh 2vw;
+                margin-top: 1vh;
+                font-size: clamp(11px, 1.8vh, 13px);
+            }
+        }
+
+        /* 横長画面（タブレット横向きなど） */
+        @media (min-aspect-ratio: 4/3) and (max-height: 800px) {
+            .container {
+                max-width: 900px;
+                margin: 0 auto;
+            }
+
+            .header-content {
+                font-size: clamp(14px, 2.2vh, 18px);
+            }
+
+            h2 {
+                font-size: clamp(20px, 3.5vh, 28px);
+            }
+        }
+
+        /* 小型スマホ */
+        @media (max-width: 360px) {
+            .header-content {
+                gap: 8px;
+            }
+
+            .badge {
+                font-size: clamp(11px, 1.8vh, 14px);
+                padding: 6px 12px;
+            }
+
+            .header-text {
+                font-size: clamp(12px, 2.2vh, 16px);
+            }
+
+            .button-group {
+                gap: 12px;
             }
         }
     </style>
@@ -290,15 +476,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="container">
 
     <div class="header">
-        <span><?php echo ((int)$info['distinction'] === 2) ? '個人戦' : '団体戦'; ?></span>
-        <span><?php echo htmlspecialchars($info['tournament_name']); ?></span>
-        <span><?php echo htmlspecialchars($info['division_name']); ?></span>
+        <div class="header-content">
+            <span class="badge"><?php echo ((int)$info['distinction'] === 2) ? '個人戦' : '団体戦'; ?></span>
+            <span class="header-text"><?php echo htmlspecialchars($info['tournament_name']); ?></span>
+            <span class="header-text"><?php echo htmlspecialchars($info['division_name']); ?></span>
+        </div>
     </div>
 
     <div class="main-content">
-        <h2>試合番号を入力してください</h2>
-
         <form method="POST">
+            <h2>試合番号を入力してください</h2>
+
             <div class="input-wrapper">
                 <input type="text" name="match_number" placeholder="試合番号" value="<?php echo htmlspecialchars($_POST['match_number'] ?? ''); ?>" autofocus>
                 <?php if ($error): ?>
