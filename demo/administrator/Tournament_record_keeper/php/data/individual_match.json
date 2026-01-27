@@ -7,7 +7,8 @@
             "▼",
             "▼"
         ],
-        "selected": -1
+        "selected": -1,
+        "decision": false
     },
     "lower": {
         "name": "",
@@ -17,7 +18,8 @@
             "▲",
             "▲"
         ],
-        "selected": -1
+        "selected": -1,
+        "decision": false
     },
-    "special": "extend"
+    "special": "none"
 }

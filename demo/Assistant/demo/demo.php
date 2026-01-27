@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -8,10 +7,24 @@
     <link rel="stylesheet" href="demo.css">
 </head>
 <body>
-    <h1>入力の練習</h1>
-    <h2>どちらか選択してください</h2>
-    <a href="./solo/solodemo.php">個人戦</a>
-    <a href =" ./team/teamdemo.php">団体戦</a>
-    <a href = "../index.php">戻る</a>
+    <div class="container">
+        <div class="content-box">
+            <h1>入力の練習</h1>
+            <h2>どちらか選択してください</h2>
+            
+            <div class="options">
+                <a href="./solo/solodemo.php" class="option">
+                    <span>個人戦</span>
+                </a>
+                <a href="./team/teamdemo.php" class="option">
+                    <span>団体戦</span>
+                </a>
+            </div>
+
+            <div class="back-container">
+                <a href="../index.php" class="back-link">戻る</a>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
