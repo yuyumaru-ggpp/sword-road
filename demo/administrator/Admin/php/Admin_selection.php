@@ -48,11 +48,6 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <span class="tournament-date">
                             <?= htmlspecialchars($t['event_date']) ?>
                         </span>
-
-                        <button class="delete-button"
-                            onclick="event.stopPropagation(); confirmDelete(<?= $t['id'] ?>, '<?= htmlspecialchars($t['title'], ENT_QUOTES, 'UTF-8') ?>')">
-                            削除
-                        </button>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -63,15 +58,6 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <button class="back-button" onclick="location.href='Admin_top.php'">戻る</button>
         </div>
     </div>
-
-    <script>
-        function confirmDelete(id, name) {
-            if (confirm(`「${name}」を削除してもよろしいですか?`)) {
-                window.location.href = `tournament-delete.php?id=${id}`;
-            }
-        }
-    </script>
-
 </body>
 
 </html>
