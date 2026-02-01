@@ -1,678 +1,553 @@
 <?php
-if (!is_dir('data')) mkdir('data', 0777, true);
-$jsonFile = 'data/individual_match.json';
-$data = [
-    'upper' => ['name'=>'','number'=>'','scores'=>['▼','▼','▼'],'selected'=>-1,'decision'=>false],
-    'lower' => ['name'=>'','number'=>'','scores'=>['▲','▲','▲'],'selected'=>-1,'decision'=>false],
-    'special' => 'none'
+session_start();
+
+// db_connect のパスを環境に合わせて調整してください
+$dbPath = dirname(__DIR__, 3) . '/db_connect.php';
+if (!file_exists($dbPath)) {
+    header('Content-Type: text/plain; charset=utf-8', true, 500);
+    echo "db_connect.php が見つかりません: " . $dbPath;
+    exit;
+}
+require_once $dbPath;
+
+// ログインチェック（必要に応じて調整）
+if (!isset($_SESSION['admin_user'])) {
+    header("Location: ../../login.php");
+    exit;
+}
+
+// パラメータ取得
+$match_id = isset($_GET['match_id']) ? (int)$_GET['match_id'] : null;
+$tournament_id = isset($_GET['id']) ? (int)$_GET['id'] : null;
+$dept_id = isset($_GET['dept']) ? (int)$_GET['dept'] : null;
+
+if (!$match_id) {
+    die("match_id が指定されていません");
+}
+
+// ヘルパー: DB の勝者表現を統一して 'red' / 'white' / '' にする
+function normalizeWinner($v)
+{
+    if ($v === null) return '';
+    $s = mb_strtolower(trim((string)$v));
+    if ($s === '') return '';
+    if (in_array($s, ['red', 'r', '赤', 'aka', 'a'], true)) return 'red';
+    if (in_array($s, ['white', 'w', '白', 'shiro', 'b'], true)) return 'white';
+    return '';
+}
+
+// 試合情報取得（players.player_number を取得する想定）
+// 部門名が必要なら departments を JOIN して d.name を取得することを推奨
+try {
+    $sql = "SELECT im.match_id, im.department_id, im.team_match_id,
+                   im.match_field, im.order_id, im.player_a_id, im.player_b_id,
+                   im.started_at, im.ended_at,
+                   im.first_technique, im.first_winner,
+                   im.second_technique, im.second_winner,
+                   im.third_technique, im.third_winner,
+                   im.judgement, im.final_winner,
+                   pa.name AS player_a_name, pa.player_number AS player_a_number,
+                   pb.name AS player_b_name, pb.player_number AS player_b_number
+            FROM individual_matches im
+            LEFT JOIN players pa ON pa.id = im.player_a_id
+            LEFT JOIN players pb ON pb.id = im.player_b_id
+            WHERE im.match_id = :mid
+            LIMIT 1";
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $stmt = $pdo->prepare($sql);
+    $stmt->bindValue(':mid', $match_id, PDO::PARAM_INT);
+    $stmt->execute();
+    $match = $stmt->fetch(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    error_log($e->getMessage());
+    die("試合情報の取得に失敗しました");
+}
+
+if (!$match) {
+    die("指定された試合が見つかりません");
+}
+
+// 正規化して JS に渡す winners 配列を作る
+$uiWinners = [
+    normalizeWinner($match['first_winner'] ?? null),
+    normalizeWinner($match['second_winner'] ?? null),
+    normalizeWinner($match['third_winner'] ?? null)
 ];
+$uiFinalWinner = normalizeWinner($match['final_winner'] ?? null);
 
-if (file_exists($jsonFile)) {
-    $json = file_get_contents($jsonFile);
-    $decoded = json_decode($json, true);
-    if ($decoded) $data = $decoded;
-}
-
-if ($_SERVER['REQUEST_METHOD']==='POST') {
-    $input = json_decode(file_get_contents('php://input'), true);
-    if ($input) {
-        file_put_contents($jsonFile, json_encode($input, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
-        echo json_encode(['status'=>'ok']);
-        exit;
-    }
-}
+// JS に渡すデータ整形
+$uiData = [
+    'match_id' => (int)$match['match_id'],
+    'team_match_id' => isset($match['team_match_id']) ? (int)$match['team_match_id'] : null,
+    'player_a' => [
+        'id' => isset($match['player_a_id']) ? (int)$match['player_a_id'] : null,
+        'name' => $match['player_a_name'] ?? '',
+        'number' => $match['player_a_number'] ?? ''
+    ],
+    'player_b' => [
+        'id' => isset($match['player_b_id']) ? (int)$match['player_b_id'] : null,
+        'name' => $match['player_b_name'] ?? '',
+        'number' => $match['player_b_number'] ?? ''
+    ],
+    'scores_a' => [
+        $match['first_technique'] ?? '',
+        $match['second_technique'] ?? '',
+        $match['third_technique'] ?? ''
+    ],
+    'winners' => $uiWinners,
+    'final_winner' => $uiFinalWinner,
+    'judgement' => $match['judgement'] ?? '',
+    'started_at' => $match['started_at'] ?? null,
+    'ended_at' => $match['ended_at'] ?? null
+];
 ?>
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>個人戦試合詳細</title>
-<style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body { 
-    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Sans','Meiryo',sans-serif; 
-    background:#f5f5f5; 
-    padding:0.5rem; 
-    min-height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-}
-
-.container { 
-    max-width:1200px;
-    width:100%;
-    height:98vh;
-    max-height:900px;
-    background:white; 
-    padding:clamp(1rem, 2vh, 2rem) clamp(0.8rem, 2vh, 1.5rem); 
-    border-radius:8px; 
-    box-shadow:0 10px 30px rgba(0,0,0,0.1); 
-    position:relative; 
-    display:flex;
-    flex-direction:column;
-    overflow-y:auto;
-}
-
-.header { 
-    display:flex; 
-    flex-wrap:wrap;
-    align-items:center; 
-    gap:clamp(0.5rem, 1vh, 1rem); 
-    margin-bottom:clamp(1.5rem, 3vh, 2rem);
-    padding-top:clamp(0.3rem, 0.8vh, 0.8rem);
-    font-size:clamp(1rem, 2.5vh, 1.5rem); 
-    font-weight:bold; 
-}
-
-.content-wrapper {
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    justify-content:space-evenly;
-    min-height:0;
-}
-
-.match-section { 
-    display:flex;
-    flex-direction:column;
-    gap:clamp(0.2rem, 0.4vh, 0.5rem);
-    flex-shrink:0;
-}
-
-.upper-section {
-    margin-bottom:clamp(1.5rem, 3vh, 3rem);
-}
-
-.row { 
-    display:flex; 
-    align-items:center; 
-    font-size:clamp(0.9rem, 2vh, 1.2rem); 
-    gap:clamp(0.5rem, 1vw, 1rem);
-    margin-bottom:0;
-    flex-wrap:wrap;
-}
-
-.label { 
-    min-width:clamp(70px, 10vw, 100px); 
-    font-weight:bold; 
-}
-
-.value { 
-    min-width:clamp(100px, 15vw, 150px); 
-    word-break:break-all;
-}
-
-.score-display { 
-    display:flex; 
-    justify-content:center; 
-    align-items:center; 
-    width:100%;
-    padding:0;
-    margin:0;
-    margin-bottom:clamp(1rem, 2vh, 2rem);
-}
-
-.score-group { 
-    display:flex; 
-    flex-direction:column; 
-    align-items:center; 
-    gap:clamp(0.25rem, 0.6vh, 0.5rem);
-}
-
-.score-numbers { 
-    display:flex; 
-    gap:clamp(1rem, 3vw, 2.5rem); 
-    font-size:clamp(1rem, 2.5vh, 1.5rem); 
-    font-weight:bold;
-}
-
-.score-numbers span { 
-    width:clamp(35px, 6vw, 50px); 
-    height:clamp(35px, 6vw, 50px);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    flex-shrink:0;
-    box-sizing:border-box;
-}
-
-.radio-circles { 
-    display:flex; 
-    gap:clamp(1rem, 3vw, 2.5rem);
-}
-
-.radio-circle { 
-    width:clamp(35px, 6vw, 50px); 
-    height:clamp(35px, 6vw, 50px); 
-    border-radius:50%; 
-    background:#d1d5db; 
-    cursor:pointer; 
-    transition:all 0.2s; 
-    box-shadow:0 2px 4px rgba(0,0,0,0.1); 
-    flex-shrink:0;
-    box-sizing:border-box;
-}
-.radio-circle.selected { 
-    background:#ef4444; 
-    transform:scale(1.1); 
-    box-shadow:0 0 0 3px rgba(239,68,68,0.3); 
-}
-.radio-circle:hover { opacity:0.9; }
-
-.decision-button {
-    padding:clamp(0.4rem, 1vh, 0.6rem) clamp(1rem, 2.5vw, 1.5rem);
-    font-size:clamp(0.85rem, 1.8vh, 1.1rem);
-    background:white;
-    border:2px solid #000;
-    border-radius:25px;
-    font-weight:bold;
-    cursor:pointer;
-    transition:all 0.2s;
-    white-space:nowrap;
-}
-
-.decision-button:hover {
-    background:#fef3c7;
-}
-
-.decision-button.active {
-    background:#fbbf24;
-    border-color:#f59e0b;
-    color:white;
-}
-
-.decision-row {
-    display:none;
-    justify-content:center;
-    margin-top:clamp(0.5rem, 1vh, 1rem);
-}
-
-.decision-row.show {
-    display:flex;
-}
-
-.divider-section { 
-    position:relative; 
-    margin:clamp(2rem, 3.5vh, 3.5rem) 0; 
-    text-align:center; 
-    flex-shrink:0;
-}
-
-.divider { 
-    border:none; 
-    border-top:3px dashed #000; 
-}
-
-.middle-controls { 
-    position:absolute; 
-    top:50%; 
-    left:50%; 
-    transform:translate(-50%,-50%); 
-    display:flex; 
-    align-items:center;
-    background:white; 
-    padding:clamp(0.8rem, 1.5vh, 1.5rem) clamp(0.8rem, 2vw, 1.5rem); 
-}
-
-.score-dropdowns { 
-    display:flex; 
-    gap:clamp(1rem, 3vw, 2.5rem);
-}
-
-.dropdown-container { 
-    position:relative; 
-    width:clamp(35px, 6vw, 50px);
-    height:clamp(35px, 6vw, 50px);
-    flex-shrink:0;
-    box-sizing:border-box;
-}
-
-.score-dropdown { 
-    width:100%;
-    height:100%;
-    font-size:clamp(1rem, 2.5vh, 1.5rem); 
-    font-weight:bold; 
-    background:white; 
-    border:2px solid #000; 
-    border-radius:8px; 
-    cursor:pointer; 
-    display:flex; 
-    align-items:center; 
-    justify-content:center; 
-    transition:all 0.2s;
-    box-sizing:border-box;
-}
-.score-dropdown:hover { background:#fef3c7; }
-
-.dropdown-menu, .draw-dropdown-menu { 
-    display:none; 
-    position:absolute; 
-    background:white; 
-    border:2px solid #000; 
-    border-radius:8px; 
-    min-width:70px; 
-    max-height:clamp(200px, 40vh, 300px); 
-    overflow-y:auto; 
-    box-shadow:0 8px 20px rgba(0,0,0,0.2); 
-    z-index:1000; 
-    padding:8px 0; 
-}
-.dropdown-menu.show, .draw-dropdown-menu.show { display:block; }
-
-.dropdown-item { 
-    padding:clamp(8px, 1.5vh, 12px) clamp(12px, 2vw, 18px); 
-    font-size:clamp(0.95rem, 2vh, 1.3rem); 
-    font-weight:bold; 
-    text-align:center; 
-    cursor:pointer; 
-    user-select:none; 
-    transition:all 0.15s; 
-}
-.dropdown-item:hover { background:#fee2e2; color:#dc2626; }
-.dropdown-item:active { background:#ef4444; color:white; }
-
-.draw-container-wrapper {
-    position:absolute;
-    top:50%;
-    left:calc(50% + clamp(8rem, 15vw, 12rem));
-    transform:translateY(-50%);
-    background:white;
-    padding:clamp(0.8rem, 1.5vh, 1.5rem) 0;
-}
-
-.draw-container { position:relative; }
-
-.draw-button { 
-    padding:clamp(0.4rem, 1vh, 0.6rem) clamp(0.8rem, 2vw, 1.3rem); 
-    font-size:clamp(0.85rem, 1.8vh, 1.1rem); 
-    background:white; 
-    border:2px solid #000; 
-    border-radius:8px; 
-    font-weight:bold; 
-    cursor:pointer; 
-    white-space:nowrap;
-}
-.draw-button:hover { background:#fef3c7; }
-
-.draw-dropdown-menu { 
-    right:auto;
-    left:50%;
-    transform:translateX(-50%);
-    top:calc(100% + 4px);
-}
-
-.dropdown-menu::-webkit-scrollbar, .draw-dropdown-menu::-webkit-scrollbar { width:6px; }
-.dropdown-menu::-webkit-scrollbar-track, .draw-dropdown-menu::-webkit-scrollbar-track { background:#f1f1f1; border-radius:10px; }
-.dropdown-menu::-webkit-scrollbar-thumb, .draw-dropdown-menu::-webkit-scrollbar-thumb { background:#c0c0c0; border-radius:10px; }
-
-.bottom-area {
-    display:flex;
-    flex-direction:column;
-    gap:clamp(0.8rem, 1.5vh, 1.5rem);
-    margin-top:clamp(0.8rem, 1.5vh, 1.5rem);
-    flex-shrink:0;
-}
-
-.bottom-right-button { 
-    display:flex;
-    justify-content:flex-end;
-}
-
-.cancel-button { 
-    padding:clamp(0.4rem, 1vh, 0.6rem) clamp(1.2rem, 3vw, 2rem); 
-    font-size:clamp(0.85rem, 1.8vh, 1.1rem); 
-    background:white; 
-    border:2px solid #000; 
-    border-radius:25px; 
-    font-weight:bold; 
-    cursor:pointer; 
-}
-
-.bottom-buttons { 
-    display:flex; 
-    justify-content:center; 
-    gap:clamp(0.8rem, 2vw, 1.5rem); 
-}
-
-.bottom-button { 
-    padding:clamp(0.5rem, 1.2vh, 0.7rem) clamp(1.5rem, 4vw, 2.5rem); 
-    font-size:clamp(0.9rem, 2vh, 1.2rem); 
-    border-radius:25px; 
-    font-weight:bold; 
-    cursor:pointer; 
-    white-space:nowrap;
-}
-
-.back-button { background:white; border:2px solid #000; }
-.submit-button { background:#3b82f6; color:white; border:2px solid #3b82f6; }
-.submit-button:hover { background:#2563eb; }
-
-@media (max-width:768px) {
-    .header {
-        margin-bottom:2rem;
-    }
-    
-    .middle-controls { 
-        flex-wrap:wrap;
-        justify-content:center;
-        gap:0.5rem;
-        padding:1.5rem 1rem;
-    }
-    
-    .label {
-        width:100%;
-    }
-    
-    .value {
-        width:100%;
-    }
-    
-    .divider-section {
-        margin:3rem 0;
-    }
-    
-    .score-display {
-        padding:0;
-        margin-bottom:1.5rem;
-    }
-    
-    .match-section {
-        gap:0.8rem;
-        padding-bottom:1rem;
-    }
-}
-
-@media (max-height:700px) {
-    .container { padding:0.5rem; }
-    .header { margin-bottom:0.3rem; font-size:0.9rem; }
-    .row { font-size:0.85rem; gap:0.3rem; }
-    .score-numbers { gap:0.8rem; }
-    .score-numbers span { width:30px; height:30px; }
-    .radio-circles { gap:0.8rem; }
-    .radio-circle { width:30px; height:30px; }
-    .score-dropdowns { gap:0.8rem; }
-    .dropdown-container { width:30px; height:30px; }
-    .divider-section { margin:0.5rem 0; }
-    .bottom-area { gap:0.3rem; margin-top:0.3rem; }
-}
-</style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>試合詳細</title>
+    <link rel="stylesheet" href="../../css/result_change/match-detail-style.css">
+    <style>
+    </style>
 </head>
-<body>
-<div class="container">
-    <div class="header">
-        <span>個人戦</span>
-        <span>〇〇大会</span>
-        <span>〇〇部門</span>
-    </div>
 
-    <div class="content-wrapper">
-        <div class="match-section upper-section">
-            <div class="row">
-                <div class="label">名前</div>
-                <div class="value upper-name">───</div>
-            </div>
-            
-            <div class="row">
-                <div class="label">選手番号</div>
-                <div class="value upper-number">───</div>
-            </div>
-            
-            <div class="score-display">
-                <div class="score-group">
-                    <div class="score-numbers upper-numbers">
-                        <span>1</span><span>2</span><span>3</span>
-                    </div>
-                    <div class="radio-circles upper-circles">
-                        <div class="radio-circle" data-index="0"></div>
-                        <div class="radio-circle" data-index="1"></div>
-                        <div class="radio-circle" data-index="2"></div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="decision-row" id="upperDecisionRow">
-                <button class="decision-button" id="upperDecisionBtn">判定勝ち</button>
-            </div>
+<body>
+    <div class="container">
+        <div class="header">
+            <div><strong><?= !empty($uiData['team_match_id']) ? '団体内個人戦' : '個人戦' ?></strong></div>
+            <div>大会ID: <?= htmlspecialchars($tournament_id ?? '', ENT_QUOTES, 'UTF-8') ?></div>
+            <div>部門ID: <?= htmlspecialchars($dept_id ?? '', ENT_QUOTES, 'UTF-8') ?></div>
         </div>
 
-        <div class="divider-section">
-            <hr class="divider">
-            <div class="middle-controls">
-                <div class="score-dropdowns upper-scores">
-                    <?php for($i=0;$i<3;$i++): ?>
-                    <div class="dropdown-container">
-                        <button class="score-dropdown">▼</button>
-                        <div class="dropdown-menu">
-                            <?php foreach(['▼','×','メ','コ','ド','反','ツ','〇'] as $val): ?>
-                            <div class="dropdown-item" data-val="<?=$val?>"><?=$val?></div>
-                            <?php endforeach; ?>
+        <div class="content-wrapper">
+
+            <!-- 上段選手 -->
+            <div class="match-section upper-section">
+                <div class="row">
+                    <div class="label">名前</div>
+                    <div class="value upper-name">───</div>
+                </div>
+                <div class="row">
+                    <div class="label">選手番号</div>
+                    <div class="value upper-number">───</div>
+                </div>
+
+                <div class="score-display">
+                    <div class="score-group">
+                        <div class="score-numbers upper-numbers">
+                            <span>1</span><span>2</span><span>3</span>
+                        </div>
+                        <div class="radio-circles upper-circles">
+                            <div class="radio-item" data-index="0">
+                                <div class="radio-circle" data-index="0"></div>
+                                <div class="radio-label"></div>
+                            </div>
+                            <div class="radio-item" data-index="1">
+                                <div class="radio-circle" data-index="1"></div>
+                                <div class="radio-label"></div>
+                            </div>
+                            <div class="radio-item" data-index="2">
+                                <div class="radio-circle" data-index="2"></div>
+                                <div class="radio-label"></div>
+                            </div>
                         </div>
                     </div>
-                    <?php endfor; ?>
+                </div>
+
+                <div class="decision-row" id="upperDecisionRow">
+                    <button class="decision-button" id="upperDecisionBtn">判定勝ち</button>
                 </div>
             </div>
-            <div class="draw-container-wrapper">
-                <div class="draw-container">
-                    <button class="draw-button" id="drawButton">-</button>
-                    <div class="draw-dropdown-menu" id="drawMenu">
-                        <div class="dropdown-item">-</div>
-                        <div class="dropdown-item">引分け</div>
-                        <div class="dropdown-item">一本勝</div>
-                        <div class="dropdown-item">延長</div>
+
+            <!-- 技・判定 -->
+            <div class="divider-section">
+                <div class="middle-controls">
+                    <div class="score-dropdowns upper-scores">
+                        <?php for ($i = 0; $i < 3; $i++): ?>
+                            <div class="dropdown-container" style="display:inline-block; position:relative; margin-right:6px;">
+                                <button type="button" class="score-dropdown">▼</button>
+                                <div class="dropdown-menu">
+                                    <?php foreach (['▼', '×', 'メ', 'コ', 'ド', '反', 'ツ', '〇'] as $val): ?>
+                                        <div class="dropdown-item" data-val="<?= htmlspecialchars($val, ENT_QUOTES, 'UTF-8') ?>">
+                                            <?= htmlspecialchars($val, ENT_QUOTES, 'UTF-8') ?>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        <?php endfor; ?>
+                    </div>
+                </div>
+
+                <div class="draw-container-wrapper" style="display:inline-block; margin-left:1rem; position:relative;">
+                    <div class="draw-container">
+                        <button type="button" class="draw-button" id="drawButton">-</button>
+                        <div class="draw-dropdown-menu" id="drawMenu" style="position:absolute; left:0; top:100%;">
+                            <div class="dropdown-item" data-val="-">-</div>
+                            <div class="dropdown-item" data-val="引分け">引分け</div>
+                            <div class="dropdown-item" data-val="一本勝">一本勝</div>
+                            <div class="dropdown-item" data-val="延長">延長</div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="match-section">
-            <div class="decision-row" id="lowerDecisionRow">
-                <button class="decision-button" id="lowerDecisionBtn">判定勝ち</button>
-            </div>
-            
-            <div class="row">
-                <div class="label">名前</div>
-                <div class="value lower-name">───</div>
-            </div>
-            
-            <div class="row">
-                <div class="label">選手番号</div>
-                <div class="value lower-number">───</div>
-            </div>
-            
-            <div class="score-display">
-                <div class="score-group">
-                    <div class="score-numbers lower-numbers">
-                        <span>1</span><span>2</span><span>3</span>
-                    </div>
-                    <div class="radio-circles lower-circles">
-                        <div class="radio-circle" data-index="0"></div>
-                        <div class="radio-circle" data-index="1"></div>
-                        <div class="radio-circle" data-index="2"></div>
+            <!-- 下段選手 -->
+            <div class="match-section lower-section">
+                <div class="decision-row" id="lowerDecisionRow">
+                    <button class="decision-button" id="lowerDecisionBtn">判定勝ち</button>
+                </div>
+
+                <div class="row">
+                    <div class="label">名前</div>
+                    <div class="value lower-name">───</div>
+                </div>
+                <div class="row">
+                    <div class="label">選手番号</div>
+                    <div class="value lower-number">───</div>
+                </div>
+
+                <div class="score-display">
+                    <div class="score-group">
+                        <div class="score-numbers lower-numbers">
+                            <span>1</span><span>2</span><span>3</span>
+                        </div>
+                        <div class="radio-circles lower-circles">
+                            <div class="radio-item" data-index="0">
+                                <div class="radio-circle" data-index="0"></div>
+                                <div class="radio-label"></div>
+                            </div>
+                            <div class="radio-item" data-index="1">
+                                <div class="radio-circle" data-index="1"></div>
+                                <div class="radio-label"></div>
+                            </div>
+                            <div class="radio-item" data-index="2">
+                                <div class="radio-circle" data-index="2"></div>
+                                <div class="radio-label"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="bottom-area">
-            <div class="bottom-right-button">
-                <button class="cancel-button" id="cancelButton">取り消し</button>
-            </div>
-
-            <div class="bottom-buttons">
-                <button class="bottom-button back-button" onclick="history.back()">キャンセル</button>
-                <button class="bottom-button submit-button" id="submitButton">変更</button>
+            <!-- ボタン -->
+            <div class="bottom-area">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div><button class="bottom-button" id="cancelButton">取り消し</button></div>
+                    <div class="bottom-buttons">
+                        <button type="button" class="bottom-button back-button" onclick="history.back()">キャンセル</button>
+                        <button type="button" class="bottom-button submit-button" id="submitButton">変更</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-const data = <?=json_encode($data, JSON_UNESCAPED_UNICODE)?>;
+    <script>
+        // 安全に JS に埋める
+        const UI_DATA = <?= json_encode($uiData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>;
+    </script>
 
-function updateDecisionButtonsVisibility() {
-    const drawText = document.getElementById('drawButton').textContent;
-    const showButtons = drawText === '延長';
-    
-    document.getElementById('upperDecisionRow').classList.toggle('show', showButtons);
-    document.getElementById('lowerDecisionRow').classList.toggle('show', showButtons);
-    
-    // 延長でない場合は判定勝ちの選択をリセット
-    if (!showButtons) {
-        document.getElementById('upperDecisionBtn').classList.remove('active');
-        document.getElementById('lowerDecisionBtn').classList.remove('active');
-    }
-}
+    <script>
+        (function() {
+            // data を let で初期化。UI_DATA が falsy の場合はデフォルトを使う
+            let data = (typeof UI_DATA !== 'undefined' && UI_DATA) ? UI_DATA : {
+                match_id: null,
+                team_match_id: null,
+                player_a: {
+                    id: null,
+                    name: '',
+                    number: ''
+                },
+                player_b: {
+                    id: null,
+                    name: '',
+                    number: ''
+                },
+                scores_a: ['▼', '▼', '▼'],
+                winners: ['', '', ''],
+                final_winner: '',
+                judgement: '',
+                started_at: null,
+                ended_at: null
+            };
 
-function load() {
-    document.querySelector('.upper-name').textContent = data.upper.name||'───';
-    document.querySelector('.upper-number').textContent = data.upper.number||'───';
-    document.querySelector('.lower-name').textContent = data.lower.name||'───';
-    document.querySelector('.lower-number').textContent = data.lower.number||'───';
+            // DOM 要素取得（存在チェックを厳密に）
+            const upperNameEl = document.querySelector('.upper-name');
+            const upperNumberEl = document.querySelector('.upper-number');
+            const lowerNameEl = document.querySelector('.lower-name');
+            const lowerNumberEl = document.querySelector('.lower-number');
+            const upperScoreDropdowns = document.querySelectorAll('.upper-scores .score-dropdown');
+            const upperRadioItems = document.querySelectorAll('.upper-circles .radio-item');
+            const lowerRadioItems = document.querySelectorAll('.lower-circles .radio-item');
+            const upperDecisionBtn = document.getElementById('upperDecisionBtn');
+            const lowerDecisionBtn = document.getElementById('lowerDecisionBtn');
+            const drawButton = document.getElementById('drawButton');
+            const drawMenu = document.getElementById('drawMenu');
+            const submitButton = document.getElementById('submitButton');
+            const cancelButton = document.getElementById('cancelButton');
 
-    document.querySelectorAll('.upper-scores .score-dropdown').forEach((b,i)=>b.textContent=(data.upper.scores&&data.upper.scores[i])||'▼');
-
-    document.querySelectorAll('.upper-circles .radio-circle').forEach((c,i)=>c.classList.toggle('selected',data.upper.selected===i));
-    document.querySelectorAll('.lower-circles .radio-circle').forEach((c,i)=>c.classList.toggle('selected',data.lower.selected===i));
-
-    document.getElementById('upperDecisionBtn').classList.toggle('active', data.upper.decision||false);
-    document.getElementById('lowerDecisionBtn').classList.toggle('active', data.lower.decision||false);
-
-    const special = data.special||'none';
-    const text = special==='ippon'?'一本勝':special==='extend'?'延長':special==='draw'?'引分け':'-';
-    document.getElementById('drawButton').textContent=text;
-    
-    updateDecisionButtonsVisibility();
-}
-
-function saveLocal() {
-    data.upper.scores = Array.from(document.querySelectorAll('.upper-scores .score-dropdown')).map(b=>b.textContent);
-    const uSel = document.querySelector('.upper-circles .radio-circle.selected');
-    data.upper.selected = uSel? +uSel.dataset.index : -1;
-    const lSel = document.querySelector('.lower-circles .radio-circle.selected');
-    data.lower.selected = lSel? +lSel.dataset.index : -1;
-
-    data.upper.decision = document.getElementById('upperDecisionBtn').classList.contains('active');
-    data.lower.decision = document.getElementById('lowerDecisionBtn').classList.contains('active');
-
-    const dt = document.getElementById('drawButton').textContent;
-    data.special = dt==='一本勝'?'ippon':dt==='延長'?'extend':dt==='引分け'?'draw':'none';
-}
-
-// 判定勝ちボタンの処理
-document.getElementById('upperDecisionBtn').addEventListener('click', function() {
-    const lowerBtn = document.getElementById('lowerDecisionBtn');
-    
-    if (this.classList.contains('active')) {
-        this.classList.remove('active');
-    } else {
-        this.classList.add('active');
-        lowerBtn.classList.remove('active');
-    }
-});
-
-document.getElementById('lowerDecisionBtn').addEventListener('click', function() {
-    const upperBtn = document.getElementById('upperDecisionBtn');
-    
-    if (this.classList.contains('active')) {
-        this.classList.remove('active');
-    } else {
-        this.classList.add('active');
-        upperBtn.classList.remove('active');
-    }
-});
-
-for (let i = 0; i < 3; i++) {
-    const upper = document.querySelector(`.upper-circles .radio-circle[data-index="${i}"]`);
-    const lower = document.querySelector(`.lower-circles .radio-circle[data-index="${i}"]`);
-
-    upper.addEventListener('click', () => {
-        if (upper.classList.contains('selected')) {
-            upper.classList.remove('selected');
-        } else {
-            upper.classList.add('selected');
-            lower.classList.remove('selected');
-        }
-    });
-
-    lower.addEventListener('click', () => {
-        if (lower.classList.contains('selected')) {
-            lower.classList.remove('selected');
-        } else {
-            lower.classList.add('selected');
-            upper.classList.remove('selected');
-        }
-    });
-}
-
-document.querySelectorAll('.dropdown-container').forEach(container=>{
-    const btn=container.querySelector('.score-dropdown');
-    const menu=container.querySelector('.dropdown-menu');
-    btn.addEventListener('click',e=>{
-        e.stopPropagation();
-        document.querySelectorAll('.dropdown-menu,.draw-dropdown-menu').forEach(m=>m.classList.remove('show'));
-        menu.classList.toggle('show');
-    });
-    menu.querySelectorAll('.dropdown-item').forEach(item=>{
-        item.addEventListener('click',()=>{
-            btn.textContent=item.dataset.val||item.textContent;
-            menu.classList.remove('show');
-        });
-    });
-});
-
-document.getElementById('drawButton').addEventListener('click',e=>{
-    e.stopPropagation();
-    document.querySelectorAll('.dropdown-menu').forEach(m=>m.classList.remove('show'));
-    document.getElementById('drawMenu').classList.toggle('show');
-});
-
-document.getElementById('drawMenu').querySelectorAll('.dropdown-item').forEach(item=>{
-    item.addEventListener('click',()=>{
-        document.getElementById('drawButton').textContent=item.textContent;
-        document.getElementById('drawMenu').classList.remove('show');
-        updateDecisionButtonsVisibility();
-    });
-});
-
-document.addEventListener('click',()=>document.querySelectorAll('.dropdown-menu,.draw-dropdown-menu').forEach(m=>m.classList.remove('show')));
-
-document.getElementById('cancelButton').addEventListener('click',()=>{
-    if(confirm('試合内容をリセットしますか？')){
-        data.upper={name:'',number:'',scores:['▼','▼','▼'],selected:-1,decision:false};
-        data.lower={name:'',number:'',scores:['▲','▲','▲'],selected:-1,decision:false};
-        data.special='none';
-        load();
-    }
-});
-
-document.getElementById('submitButton').onclick = async () => {
-    saveLocal();
-    try {
-        const r = await fetch(location.href, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        const j = await r.json();
-
-        if (j.status === 'ok') {
-            if (confirm('以下の内容に変更しますか？')) {
-                window.location.href = 'match-confirm.php';
+            function safeText(v) {
+                return (v === null || typeof v === 'undefined') ? '' : String(v);
             }
-            // キャンセル時は何もしない
-        } else {
-            alert('保存失敗');
-        }
-    } catch (e) {
-        alert('エラー発生');
-        console.error(e);
-    }
-};
 
+            function closeAllMenus() {
+                document.querySelectorAll('.dropdown-menu, .draw-dropdown-menu').forEach(m => m.classList.remove('show'));
+            }
 
-load();
-</script>
+            function updateDecisionButtonsVisibility() {
+                const drawText = drawButton ? drawButton.textContent.trim() : '';
+                const show = drawText === '延長';
+                const upperRow = document.getElementById('upperDecisionRow');
+                const lowerRow = document.getElementById('lowerDecisionRow');
+                if (upperRow) upperRow.classList.toggle('show', show);
+                if (lowerRow) lowerRow.classList.toggle('show', show);
+                if (!show) {
+                    if (upperDecisionBtn) upperDecisionBtn.classList.remove('active');
+                    if (lowerDecisionBtn) lowerDecisionBtn.classList.remove('active');
+                    data.final_winner = '';
+                }
+            }
+
+            function reflectWinnersToUI() {
+                const winners = Array.isArray(data.winners) ? data.winners.slice(0, 3) : ['', '', ''];
+
+                upperRadioItems.forEach((item, i) => {
+                    const circle = item.querySelector('.radio-circle');
+                    if (!circle) return;
+                    circle.classList.toggle('selected', winners[i] === 'red');
+                    const label = item.querySelector('.radio-label');
+                    if (label) label.textContent = safeText(data.player_a.name);
+                    item.dataset.index = i;
+                });
+
+                lowerRadioItems.forEach((item, i) => {
+                    const circle = item.querySelector('.radio-circle');
+                    if (!circle) return;
+                    circle.classList.toggle('selected', winners[i] === 'white');
+                    const label = item.querySelector('.radio-label');
+                    if (label) label.textContent = safeText(data.player_b.name);
+                    item.dataset.index = i;
+                });
+
+                if (upperDecisionBtn) upperDecisionBtn.classList.toggle('active', data.final_winner === 'red');
+                if (lowerDecisionBtn) lowerDecisionBtn.classList.toggle('active', data.final_winner === 'white');
+
+                if (drawButton && data.judgement) {
+                    if (data.judgement.indexOf('引分') !== -1) drawButton.textContent = '引分け';
+                    else if (data.judgement.indexOf('一本') !== -1) drawButton.textContent = '一本勝';
+                    else if (data.judgement.indexOf('延長') !== -1) drawButton.textContent = '延長';
+                }
+                updateDecisionButtonsVisibility();
+            }
+
+            function load() {
+                if (upperNameEl) upperNameEl.textContent = safeText(data.player_a.name) || '───';
+                if (upperNumberEl) upperNumberEl.textContent = safeText(data.player_a.number) || '───';
+                if (lowerNameEl) lowerNameEl.textContent = safeText(data.player_b.name) || '───';
+                if (lowerNumberEl) lowerNumberEl.textContent = safeText(data.player_b.number) || '───';
+
+                upperScoreDropdowns.forEach((btn, i) => {
+                    if (btn) btn.textContent = (data.scores_a && data.scores_a[i]) ? data.scores_a[i] : '▼';
+                });
+
+                reflectWinnersToUI();
+            }
+
+            function saveLocal() {
+                data.scores_a = Array.from(upperScoreDropdowns).map(b => b ? b.textContent.trim() : '▼');
+                const winners = ['', '', ''];
+                upperRadioItems.forEach((item, i) => {
+                    const c = item.querySelector('.radio-circle');
+                    if (c && c.classList.contains('selected')) winners[i] = 'red';
+                });
+                lowerRadioItems.forEach((item, i) => {
+                    const c = item.querySelector('.radio-circle');
+                    if (c && c.classList.contains('selected')) winners[i] = 'white';
+                });
+                data.winners = winners;
+                data.final_winner = (upperDecisionBtn && upperDecisionBtn.classList.contains('active')) ? 'red' : (lowerDecisionBtn && lowerDecisionBtn.classList.contains('active')) ? 'white' : '';
+                const dt = drawButton ? drawButton.textContent.trim() : '-';
+                data.judgement = dt === '一本勝' ? '一本勝' : dt === '延長' ? '延長' : dt === '引分け' ? '引分け' : '';
+            }
+
+            // 判定ボタン（排他）
+            if (upperDecisionBtn && lowerDecisionBtn) {
+                upperDecisionBtn.addEventListener('click', () => {
+                    if (upperDecisionBtn.classList.contains('active')) {
+                        upperDecisionBtn.classList.remove('active');
+                        data.final_winner = '';
+                    } else {
+                        upperDecisionBtn.classList.add('active');
+                        lowerDecisionBtn.classList.remove('active');
+                        data.final_winner = 'red';
+                    }
+                    saveLocal();
+                });
+                lowerDecisionBtn.addEventListener('click', () => {
+                    if (lowerDecisionBtn.classList.contains('active')) {
+                        lowerDecisionBtn.classList.remove('active');
+                        data.final_winner = '';
+                    } else {
+                        lowerDecisionBtn.classList.add('active');
+                        upperDecisionBtn.classList.remove('active');
+                        data.final_winner = 'white';
+                    }
+                    saveLocal();
+                });
+            }
+
+            // 勝者サークル（上/下）クリック処理（排他）
+            upperRadioItems.forEach((item, i) => {
+                const circle = item.querySelector('.radio-circle');
+                if (!circle) return;
+                circle.addEventListener('click', () => {
+                    const was = circle.classList.contains('selected');
+                    if (was) {
+                        circle.classList.remove('selected');
+                        data.winners[i] = '';
+                    } else {
+                        circle.classList.add('selected');
+                        const lowerItem = document.querySelector(`.lower-circles .radio-item[data-index="${i}"]`);
+                        if (lowerItem) {
+                            const lc = lowerItem.querySelector('.radio-circle');
+                            if (lc) lc.classList.remove('selected');
+                        }
+                        data.winners[i] = 'red';
+                    }
+                    saveLocal();
+                });
+            });
+            lowerRadioItems.forEach((item, i) => {
+                const circle = item.querySelector('.radio-circle');
+                if (!circle) return;
+                circle.addEventListener('click', () => {
+                    const was = circle.classList.contains('selected');
+                    if (was) {
+                        circle.classList.remove('selected');
+                        data.winners[i] = '';
+                    } else {
+                        circle.classList.add('selected');
+                        const upperItem = document.querySelector(`.upper-circles .radio-item[data-index="${i}"]`);
+                        if (upperItem) {
+                            const uc = upperItem.querySelector('.radio-circle');
+                            if (uc) uc.classList.remove('selected');
+                        }
+                        data.winners[i] = 'white';
+                    }
+                    saveLocal();
+                });
+            });
+
+            // ドロップダウン（技選択）
+            document.querySelectorAll('.dropdown-container').forEach(container => {
+                const btn = container.querySelector('.score-dropdown');
+                const menu = container.querySelector('.dropdown-menu');
+                if (!btn || !menu) return;
+                btn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    closeAllMenus();
+                    menu.classList.toggle('show');
+                });
+                menu.querySelectorAll('.dropdown-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        btn.textContent = item.dataset.val || item.textContent;
+                        menu.classList.remove('show');
+                        saveLocal();
+                    });
+                });
+            });
+
+            // 引き分け/延長メニュー
+            if (drawButton && drawMenu) {
+                drawButton.addEventListener('click', e => {
+                    e.stopPropagation();
+                    closeAllMenus();
+                    drawMenu.classList.toggle('show');
+                });
+                drawMenu.querySelectorAll('.dropdown-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        drawButton.textContent = item.textContent;
+                        drawMenu.classList.remove('show');
+                        saveLocal();
+                        updateDecisionButtonsVisibility();
+                    });
+                });
+            }
+
+            document.addEventListener('click', () => closeAllMenus());
+
+            // 取り消し（リセット）
+            if (cancelButton) {
+                cancelButton.addEventListener('click', () => {
+                    if (!confirm('試合内容をリセットしますか？')) return;
+                    data.scores_a = ['▼', '▼', '▼'];
+                    data.winners = ['', '', ''];
+                    data.final_winner = '';
+                    data.judgement = '';
+                    load();
+                });
+            }
+
+            // 送信処理
+            if (submitButton) {
+                submitButton.addEventListener('click', async () => {
+                    saveLocal();
+                    const winners = (data.winners || ['', '', '']).map(v => v || '');
+                    const payload = {
+                        match_id: data.match_id,
+                        first_technique: (data.scores_a && data.scores_a[0]) ? data.scores_a[0] : '',
+                        second_technique: (data.scores_a && data.scores_a[1]) ? data.scores_a[1] : '',
+                        third_technique: (data.scores_a && data.scores_a[2]) ? data.scores_a[2] : '',
+                        first_winner: winners[0] || '',
+                        second_winner: winners[1] || '',
+                        third_winner: winners[2] || '',
+                        final_winner: data.final_winner || '',
+                        judgement: data.judgement || '',
+                        started_at: data.started_at || null,
+                        ended_at: data.ended_at || null
+                    };
+
+                    if (!payload.match_id) {
+                        alert('match_id が設定されていません。ページを再読み込みしてください。');
+                        return;
+                    }
+
+                    const btn = submitButton;
+                    btn.disabled = true;
+                    const originalText = btn.textContent;
+                    btn.textContent = '保存中...';
+
+                    try {
+                        const res = await fetch('match-update.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(payload)
+                        });
+                        const json = await res.json();
+                        if (json.status === 'ok') {
+                            alert('保存しました');
+                            location.reload();
+                        } else {
+                            alert('保存に失敗しました: ' + (json.message || 'サーバーエラー'));
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        alert('通信エラーが発生しました');
+                    } finally {
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                    }
+                });
+            }
+
+            // 初期化
+            load();
+        })();
+    </script>
 </body>
-</html>s
+
+</html>
