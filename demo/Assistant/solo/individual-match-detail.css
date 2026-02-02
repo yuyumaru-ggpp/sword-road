@@ -7,22 +7,24 @@
     box-sizing: border-box;
 }
 
-html, body {
+html {
     height: 100%;
-    overflow: hidden;
 }
 
 body {
+    min-height: 100%;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-attachment: fixed;
     display: flex;
     position: relative;
     padding: 0;
+    margin: 0;
 }
 
 body::before {
     content: '';
-    position: absolute;
+    position: fixed;
     top: -50%;
     left: -50%;
     width: 200%;
@@ -31,6 +33,7 @@ body::before {
     background-size: 50px 50px;
     animation: backgroundMove 20s linear infinite;
     pointer-events: none;
+    z-index: 0;
 }
 
 @keyframes backgroundMove {
@@ -43,7 +46,6 @@ body::before {
 =================================== */
 .container {
     width: 100%;
-    height: 100%;
     max-width: 1200px;
     margin: 0 auto;
     background: rgba(255, 255, 255, 0.98);
@@ -54,7 +56,7 @@ body::before {
     z-index: 1;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
+    min-height: 100vh;
 }
 
 /* ===================================
@@ -72,6 +74,7 @@ body::before {
     font-size: clamp(13px, 2vh, 17px);
     font-weight: 700;
     animation: slideDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    flex-shrink: 0;
 }
 
 @keyframes slideDown {
@@ -109,7 +112,6 @@ body::before {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: 0;
     animation: fadeIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
 }
 
@@ -153,6 +155,19 @@ body::before {
     font-weight: 600;
     color: #1f2937;
     word-break: break-all;
+}
+
+/* 上段の選手情報を赤色に */
+.upper-section .value {
+    color: #ef4444;
+    font-weight: 700;
+}
+
+/* 下段の選手情報を白色に */
+.lower-section .value {
+    color: #ffffff;
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 /* ===================================
@@ -471,28 +486,24 @@ body::before {
    スクロールバー
 =================================== */
 .dropdown-menu::-webkit-scrollbar,
-.draw-dropdown-menu::-webkit-scrollbar,
-.container::-webkit-scrollbar {
+.draw-dropdown-menu::-webkit-scrollbar {
     width: 6px;
 }
 
 .dropdown-menu::-webkit-scrollbar-track,
-.draw-dropdown-menu::-webkit-scrollbar-track,
-.container::-webkit-scrollbar-track {
+.draw-dropdown-menu::-webkit-scrollbar-track {
     background: rgba(102, 126, 234, 0.1);
     border-radius: 10px;
 }
 
 .dropdown-menu::-webkit-scrollbar-thumb,
-.draw-dropdown-menu::-webkit-scrollbar-thumb,
-.container::-webkit-scrollbar-thumb {
+.draw-dropdown-menu::-webkit-scrollbar-thumb {
     background: rgba(102, 126, 234, 0.5);
     border-radius: 10px;
 }
 
 .dropdown-menu::-webkit-scrollbar-thumb:hover,
-.draw-dropdown-menu::-webkit-scrollbar-thumb:hover,
-.container::-webkit-scrollbar-thumb:hover {
+.draw-dropdown-menu::-webkit-scrollbar-thumb:hover {
     background: rgba(102, 126, 234, 0.7);
 }
 
@@ -586,40 +597,30 @@ body::before {
     }
 
     .container {
-        padding: min(1.5vh, 12px);
+        padding: 8px;
+        min-height: auto;
     }
 
     .header {
-        margin-bottom: min(1.5vh, 12px);
+        margin-bottom: 8px;
+        padding: 8px 12px;
         justify-content: center;
     }
-
-    .divider-section {
-        min-height: min(18vh, 120px);
-        margin: min(3vh, 24px) 0;
+    
+    .content-wrapper {
+        justify-content: flex-start;
+        gap: 6px;
     }
-
-    .middle-controls {
-        position: static;
-        transform: none;
-        flex-direction: column;
-        gap: min(1.5vh, 12px);
-        padding: min(1.5vh, 12px);
-        margin-bottom: min(1.5vh, 12px);
+    
+    .match-section {
+        gap: 5px;
+        padding-bottom: 6px;
     }
-
-    .draw-container-wrapper {
-        position: static;
-        transform: none;
-        padding: min(1.5vh, 12px);
-        display: flex;
-        justify-content: center;
-    }
-
+    
     .row {
         flex-direction: column;
         align-items: flex-start;
-        gap: 5px;
+        gap: 4px;
     }
 
     .label, .value {
@@ -627,27 +628,62 @@ body::before {
     }
 
     .score-display {
-        padding: min(1.5vh, 12px) 0;
-        margin-bottom: min(1.5vh, 12px);
+        padding: 8px 0;
+        margin: 5px 0;
     }
 
-    .match-section {
-        gap: min(1.2vh, 10px);
-        padding-bottom: min(1.5vh, 12px);
+    .divider-section {
+        min-height: auto;
+        margin: 10px 0;
+        padding: 60px 0;
+    }
+
+    .middle-controls {
+        position: static;
+        transform: none;
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px;
+        margin-bottom: 8px;
+    }
+
+    .draw-container-wrapper {
+        position: static;
+        transform: none;
+        padding: 8px;
+        display: flex;
+        justify-content: center;
+        margin-top: 8px;
+    }
+    
+    .decision-row {
+        margin-top: 6px;
+    }
+    
+    .decision-row.show {
+        margin-bottom: 6px;
+    }
+    
+    .bottom-area {
+        margin-top: 12px;
+        padding-top: 8px;
+        gap: 8px;
     }
 
     .bottom-right-button {
         justify-content: center;
+        margin-bottom: 8px;
     }
 
     .bottom-buttons {
         flex-direction: column;
-        gap: min(1.5vh, 12px);
+        gap: 8px;
     }
 
     .bottom-button {
         width: 100%;
         max-width: none;
+        padding: 10px 24px;
     }
 }
 
@@ -656,24 +692,51 @@ body::before {
 =================================== */
 @media (max-width: 480px) {
     .container {
-        padding: min(1.2vh, 10px);
+        padding: 6px;
     }
 
     .header {
-        gap: 8px;
+        gap: 6px;
+        padding: 6px 10px;
+        margin-bottom: 6px;
     }
 
     .score-numbers,
     .radio-circles,
     .score-dropdowns {
-        gap: min(4.5vw, 20px);
+        gap: 18px;
+    }
+    
+    .match-section {
+        gap: 4px;
+    }
+    
+    .score-display {
+        padding: 6px 0;
+        margin: 4px 0;
+    }
+    
+    .divider-section {
+        margin: 8px 0;
+        padding: 50px 0;
+    }
+    
+    .middle-controls {
+        padding: 6px;
+        gap: 6px;
+    }
+    
+    .bottom-area {
+        margin-top: 10px;
+        padding-top: 6px;
+        gap: 6px;
     }
 }
 
 /* ===================================
-   縦に短い画面対応
+   縦に短い画面対応（デスクトップのみ）
 =================================== */
-@media (max-height: 700px) {
+@media (max-height: 700px) and (min-width: 769px) {
     .container {
         padding: 1vh 1.5vw;
     }
@@ -704,9 +767,9 @@ body::before {
 }
 
 /* ===================================
-   極端に縦に短い画面
+   極端に縦に短い画面（デスクトップのみ）
 =================================== */
-@media (max-height: 600px) {
+@media (max-height: 600px) and (min-width: 769px) {
     .content-wrapper {
         justify-content: flex-start;
         gap: 0.8vh;
@@ -729,13 +792,9 @@ body::before {
 }
 
 /* ===================================
-   ランドスケープモード
+   ランドスケープモード（デスクトップのみ）
 =================================== */
-@media (max-height: 600px) and (orientation: landscape) {
-    .container {
-        max-height: none;
-    }
-
+@media (max-height: 600px) and (orientation: landscape) and (min-width: 769px) {
     .divider-section {
         margin: 0.8vh 0;
         min-height: 7vh;

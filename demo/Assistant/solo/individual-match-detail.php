@@ -83,6 +83,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <title>個人戦試合詳細</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="individual-match-detail.css">
+<style>
+/* 上段の選手情報を赤色に - 視認性向上 */
+.upper-section .value {
+    color: #ef4444 !important;
+    font-weight: 700 !important;
+    background: rgba(239, 68, 68, 0.15) !important;
+    padding: 4px 12px !important;
+    border-radius: 8px !important;
+    border: 2px solid rgba(239, 68, 68, 0.3) !important;
+    display: inline-block !important;
+}
+
+/* 下段の選手情報を白色に - 視認性向上 */
+.lower-section .value {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.6) 0%, rgba(118, 75, 162, 0.6) 100%) !important;
+    padding: 4px 12px !important;
+    border-radius: 8px !important;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8) !important;
+    display: inline-block !important;
+}
+</style>
 </head>
 
 <body>
@@ -135,33 +158,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="score-dropdown">▼</div>
                         <div class="dropdown-menu">
                             <div class="dropdown-item" data-val="▼">▼</div>
-                            <div class="dropdown-item" data-val="面">面</div>
-                            <div class="dropdown-item" data-val="小手">小手</div>
-                            <div class="dropdown-item" data-val="胴">胴</div>
-                            <div class="dropdown-item" data-val="突">突</div>
-                            <div class="dropdown-item" data-val="×">×</div>
+                            <div class="dropdown-item" data-val="メ">メ</div>
+                            <div class="dropdown-item" data-val="コ">コ</div>
+                            <div class="dropdown-item" data-val="ド">ド</div>
+                            <div class="dropdown-item" data-val="ツ">ツ</div>
+                            <div class="dropdown-item" data-val="反">反</div>
                         </div>
                     </div>
                     <div class="dropdown-container">
                         <div class="score-dropdown">▼</div>
                         <div class="dropdown-menu">
                             <div class="dropdown-item" data-val="▼">▼</div>
-                            <div class="dropdown-item" data-val="面">面</div>
-                            <div class="dropdown-item" data-val="小手">小手</div>
-                            <div class="dropdown-item" data-val="胴">胴</div>
-                            <div class="dropdown-item" data-val="突">突</div>
-                            <div class="dropdown-item" data-val="×">×</div>
+                            <div class="dropdown-item" data-val="メ">メ</div>
+                            <div class="dropdown-item" data-val="コ">コ</div>
+                            <div class="dropdown-item" data-val="ド">ド</div>
+                            <div class="dropdown-item" data-val="ツ">ツ</div>
+                            <div class="dropdown-item" data-val="反">反</div>
                         </div>
                     </div>
                     <div class="dropdown-container">
                         <div class="score-dropdown">▼</div>
                         <div class="dropdown-menu">
                             <div class="dropdown-item" data-val="▼">▼</div>
-                            <div class="dropdown-item" data-val="面">面</div>
-                            <div class="dropdown-item" data-val="小手">小手</div>
-                            <div class="dropdown-item" data-val="胴">胴</div>
-                            <div class="dropdown-item" data-val="突">突</div>
-                            <div class="dropdown-item" data-val="×">×</div>
+                            <div class="dropdown-item" data-val="メ">メ</div>
+                            <div class="dropdown-item" data-val="コ">コ</div>
+                            <div class="dropdown-item" data-val="ド">ド</div>
+                            <div class="dropdown-item" data-val="ツ">ツ</div>
+                            <div class="dropdown-item" data-val="反">反</div>
                         </div>
                     </div>
                 </div>
