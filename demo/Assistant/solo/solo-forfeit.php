@@ -188,7 +188,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <div class="match-container">
             <div class="player-card left">
-                <div class="player-label">上段選手</div>
+                <div class="player-label">赤選手</div>
                 <select name="upper_player" class="player-select" id="upperPlayer" required>
                     <option value="">選手を選択してください</option>
                     <?php foreach ($players as $player): ?>
@@ -205,7 +205,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <div class="player-card right">
-                <div class="player-label">下段選手</div>
+                <div class="player-label">白選手</div>
                 <select name="lower_player" class="player-select" id="lowerPlayer" required>
                     <option value="">選手を選択してください</option>
                     <?php foreach ($players as $player): ?>
