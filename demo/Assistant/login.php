@@ -1,24 +1,8 @@
 <?php
 session_start();
 
-$user = "root";
-$pass = "";
-$database = "kendo_support_system";
-$server = "localhost";
-$port = "3308";
-
-$dsn = "mysql:host={$server};port={$port};dbname={$database};charset=utf8mb4";
-
-try {
-  $pdo = new PDO($dsn, $user, $pass);
-  $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-  $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (Exception $e) {
-  exit("DB接続失敗：" . $e->getMessage());
-}
-
-$error = "";
-
+//DB接続
+require_once '../conect/db_connect.php'; 
 /* ---------- ログイン処理 ---------- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 

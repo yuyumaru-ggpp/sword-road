@@ -1,25 +1,17 @@
 <?php
-session_start();
+require_once 'team_db.php';
 
-/* セッションチェック */
-if (
-    !isset(
-        $_SESSION['tournament_id'],
-        $_SESSION['division_id'],
-        $_SESSION['match_number'],
-        $_SESSION['team_red_id'],
-        $_SESSION['team_white_id'],
-        $_SESSION['match_results']
-    )
-) {
-    header('Location: match_input.php');
-    exit;
-}
+// セッションチェック
+checkTeamSessionWithResults();
 
-$dsn = "mysql:host=localhost;port=3307;dbname=kendo_support_system;charset=utf8mb4";
-$pdo = new PDO($dsn, "root", "", [
-    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-]);
+// セッション変数を取得
+$vars = getTeamVariables();
+$tournament_id = $vars['tournament_id'];
+$division_id   = $vars['division_id'];
+$match_number  = $vars['match_number'];
+$team_red_id   = $vars['team_red_id'];
+$team_white_id = $vars['team_white_id'];
+
 
 /* 大会・部門情報取得 */
 $sql = "SELECT t.title AS tournament_name, d.name AS division_name
@@ -29,15 +21,21 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute([':division_id' => $_SESSION['division_id']]);
 $info = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// チーム名
-$team_red_name = $_SESSION['team_red_name'] ?? '';
-$team_white_name = $_SESSION['team_white_name'] ?? '';
+// チーム名を取得
+$sql = "SELECT name FROM teams WHERE id = :team_id";
+$stmt = $pdo->prepare($sql);
+
+$stmt->execute([':team_id' => $team_red_id]);
+$team_red_name = $stmt->fetchColumn();
+
+$stmt->execute([':team_id' => $team_white_id]);
+$team_white_name = $stmt->fetchColumn();
 
 // 試合に出た選手を取得
 $red_order = $_SESSION['team_red_order'] ?? [];
 $white_order = $_SESSION['team_white_order'] ?? [];
 
-$positions = ['先鋒', '次鋒', '中堅', '副将', '大将'];
+$positions = ['先鋒', '次鋒', '代表決定戦', '副将', '大将'];
 $red_players = [];
 $white_players = [];
 
@@ -62,6 +60,9 @@ foreach ($positions as $pos) {
         }
     }
 }
+
+// セッションから保存済みデータを取得
+$savedData = $_SESSION['match_results']['代表決定戦'] ?? null;
 
 /* POST処理 */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -283,6 +284,66 @@ body {
 .back-button { background:white; border:3px solid #000; }
 .submit-button { background:#22c55e; color:white; border:3px solid #22c55e; }
 .submit-button:hover { background:#16a34a; }
+
+/* 途中経過表示 */
+.score-summary {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    background: white;
+    border: 3px solid #000;
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    min-width: 200px;
+}
+
+.score-summary-title {
+    font-size: 1rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 0.75rem;
+    border-bottom: 2px solid #000;
+    padding-bottom: 0.5rem;
+}
+
+.score-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.score-summary-label {
+    font-weight: bold;
+    color: #374151;
+}
+
+.score-summary-values {
+    display: flex;
+    gap: 1rem;
+    font-weight: bold;
+}
+
+.score-red {
+    color: #dc2626;
+}
+
+.score-white {
+    color: #374151;
+}
+
+@media (max-width: 768px) {
+    .score-summary {
+        position: static;
+        margin: 1rem auto;
+        max-width: 300px;
+    }
+}
+
+
 </style>
 </head>
 <body>
@@ -326,10 +387,10 @@ body {
                     <div class="score-dropdown">▼</div>
                     <div class="dropdown-menu">
                         <div class="dropdown-item" data-val="▼">▼</div>
-                        <div class="dropdown-item" data-val="面">面</div>
-                        <div class="dropdown-item" data-val="小手">小手</div>
-                        <div class="dropdown-item" data-val="胴">胴</div>
-                        <div class="dropdown-item" data-val="突">突</div>
+                        <div class="dropdown-item" data-val="メ">メ</div>
+                        <div class="dropdown-item" data-val="コ">コ</div>
+                        <div class="dropdown-item" data-val="ド">ド</div>
+                        <div class="dropdown-item" data-val="ツ">ツ</div>
                         <div class="dropdown-item" data-val="×">×</div>
                     </div>
                 </div>
@@ -369,7 +430,57 @@ body {
 </div>
 
 <script>
-const data = {
+
+// 先取技の〇マーク表示更新
+function updateFirstPointDisplay() {
+    // すべての技から〇マークを削除
+    document.querySelectorAll('.score-dropdown').forEach(dropdown => {
+        dropdown.classList.remove('first-point');
+    });
+    
+    // 赤チームの先取技を探す
+    const redCircles = document.querySelectorAll('.red-circles .radio-circle');
+    const dropdowns = document.querySelectorAll('.middle-controls .score-dropdown');
+    
+    for (let i = 0; i < redCircles.length; i++) {
+        if (redCircles[i].classList.contains('selected')) {
+            if (dropdowns[i]) {
+                dropdowns[i].classList.add('first-point');
+            }
+            break; // 最初の1つだけ
+        }
+    }
+    
+    // 白チームの先取技を探す（赤チームで既に見つかっていない場合）
+    const whiteCircles = document.querySelectorAll('.white-circles .radio-circle');
+    let redHasFirst = false;
+    
+    for (let i = 0; i < redCircles.length; i++) {
+        if (redCircles[i].classList.contains('selected')) {
+            redHasFirst = true;
+            break;
+        }
+    }
+    
+    if (!redHasFirst) {
+        for (let i = 0; i < whiteCircles.length; i++) {
+            if (whiteCircles[i].classList.contains('selected')) {
+                if (dropdowns[i]) {
+                    dropdowns[i].classList.add('first-point');
+                }
+                break; // 最初の1つだけ
+            }
+        }
+    }
+}
+
+// セッションから保存済みデータを復元
+const savedData = <?= json_encode($savedData) ?>;
+
+const data = savedData ? {
+    red: savedData.red || { player_id: null, player_name: '', score: '▼', selected: false },
+    white: savedData.white || { player_id: null, player_name: '', score: '▲', selected: false }
+} : {
     red: { player_id: null, player_name: '', score: '▼', selected: false },
     white: { player_id: null, player_name: '', score: '▲', selected: false }
 };
@@ -378,6 +489,31 @@ const redSelect = document.getElementById('redPlayerSelect');
 const whiteSelect = document.getElementById('whitePlayerSelect');
 const redCircle = document.querySelector('.red-circle');
 const whiteCircle = document.querySelector('.white-circle');
+
+// データを画面に復元する関数
+function load() {
+    // 赤の選手を復元
+    if (data.red.player_id) {
+        redSelect.value = data.red.player_id;
+    }
+    
+    // 白の選手を復元
+    if (data.white.player_id) {
+        whiteSelect.value = data.white.player_id;
+    }
+    
+    // スコアを復元
+    const scoreDropdown = document.querySelector('.score-dropdown');
+    scoreDropdown.textContent = data.red.score;
+    
+    // 勝者サークルを復元
+    if (data.red.selected) {
+        redCircle.classList.add('selected');
+    }
+    if (data.white.selected) {
+        whiteCircle.classList.add('selected');
+    }
+}
 
 redSelect.addEventListener('change', (e) => {
     data.red.player_id = e.target.value;
@@ -454,6 +590,9 @@ document.getElementById('submitButton').onclick = async () => {
         } else { alert('保存失敗'); }
     } catch (e) { alert('エラー発生'); console.error(e); }
 };
+
+// ページ読み込み時にデータを復元
+load();
 </script>
 </body>
 </html>

@@ -1,33 +1,18 @@
 <?php
-session_start();
+require_once 'team_db.php';
 
-/* ===============================
-   POST & セッションチェック
-=============================== */
-if (
-    $_SERVER['REQUEST_METHOD'] !== 'POST' || 
-    !isset(
-        $_SESSION['tournament_id'],
-        $_SESSION['division_id'],
-        $_SESSION['match_number'],
-        $_SESSION['team_red_id'],
-        $_SESSION['team_white_id'],
-        $_SESSION['match_results']
-    )
-) {
-    header('Location: match_input.php');
-    exit;
-}
+// セッションチェック
+checkTeamSession();
 
-$matchResults = $_SESSION['match_results'];
+// セッション変数を取得
+$vars = getTeamVariables();
+$tournament_id = $vars['tournament_id'];
+$division_id   = $vars['division_id'];
+$match_number  = $vars['match_number'];
+$team_red_id   = $vars['team_red_id'];
+$team_white_id = $vars['team_white_id'];
 
-/* ===============================
-   DB接続
-=============================== */
-$dsn = "mysql:host=localhost;port=3307;dbname=kendo_support_system;charset=utf8mb4";
-$pdo = new PDO($dsn, "root", "", [
-    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-]);
+
 
 /* ===============================
    試合結果を解析・計算
@@ -41,29 +26,37 @@ function calcMatchResult($posData)
     $redPoint = 0;
     $whitePoint = 0;
     
-    // スコアから得点を計算
-    if (isset($posData['red']['scores']) && isset($posData['red']['selected'])) {
-        foreach ($posData['red']['scores'] as $i => $score) {
-            if ($score !== '▼' && $score !== '×' && $posData['red']['selected'] == $i) {
-                $redPoint++;
-            }
-        }
+    $scores = $posData['scores'] ?? [];
+    $redSelected = $posData['red']['selected'] ?? [];
+    $whiteSelected = $posData['white']['selected'] ?? [];
+    
+    if (!is_array($redSelected)) {
+        $redSelected = [];
+    }
+    if (!is_array($whiteSelected)) {
+        $whiteSelected = [];
     }
     
-    if (isset($posData['white']['scores']) && isset($posData['white']['selected'])) {
-        foreach ($posData['white']['scores'] as $i => $score) {
-            if ($score !== '▲' && $score !== '×' && $posData['white']['selected'] == $i) {
+    // スコアから得点を計算
+    foreach ($scores as $i => $score) {
+        if ($score !== '▼' && $score !== '▲' && $score !== '×' && $score !== '') {
+            if (in_array($i, $redSelected)) {
+                $redPoint++;
+            }
+            if (in_array($i, $whiteSelected)) {
                 $whitePoint++;
             }
         }
     }
     
-    // 一本勝の場合、勝者に+1
+    // 一本勝の場合、勝者を1本に固定
     if (isset($posData['special']) && $posData['special'] === 'ippon') {
         if ($redPoint > $whitePoint) {
-            $redPoint++;
+            $redPoint = 1;
+            $whitePoint = 0;
         } else if ($whitePoint > $redPoint) {
-            $whitePoint++;
+            $redPoint = 0;
+            $whitePoint = 1;
         }
     }
     
@@ -234,14 +227,22 @@ try {
         $secondWinner = null;
         $thirdWinner = null;
         
-        if ($redWinnerIndex == 0 || $whiteWinnerIndex == 0) {
-            $firstWinner = ($redWinnerIndex == 0) ? 'red' : 'white';
+        if (is_array($redSelected) && in_array(0, $redSelected)) {
+            $firstWinner = 'red';
+        } else if (is_array($whiteSelected) && in_array(0, $whiteSelected)) {
+            $firstWinner = 'white';
         }
-        if ($redWinnerIndex == 1 || $whiteWinnerIndex == 1) {
-            $secondWinner = ($redWinnerIndex == 1) ? 'red' : 'white';
+        
+        if (is_array($redSelected) && in_array(1, $redSelected)) {
+            $secondWinner = 'red';
+        } else if (is_array($whiteSelected) && in_array(1, $whiteSelected)) {
+            $secondWinner = 'white';
         }
-        if ($redWinnerIndex == 2 || $whiteWinnerIndex == 2) {
-            $thirdWinner = ($redWinnerIndex == 2) ? 'red' : 'white';
+        
+        if (is_array($redSelected) && in_array(2, $redSelected)) {
+            $thirdWinner = 'red';
+        } else if (is_array($whiteSelected) && in_array(2, $whiteSelected)) {
+            $thirdWinner = 'white';
         }
         
         // 判定（一本勝、延長、引分け）
@@ -301,10 +302,10 @@ try {
         
         $stmt = $pdo->prepare($sql);
         
-        // 赤が player_a、白が player_b
-        $firstTech = $redFirstTech ?? $whiteFirstTech;
-        $secondTech = $redSecondTech ?? $whiteSecondTech;
-        $thirdTech = $redThirdTech ?? $whiteThirdTech;
+        // 技は共通のscoresから取得
+        $firstTech = $redFirstTech;
+        $secondTech = $redSecondTech;
+        $thirdTech = $redThirdTech;
         
         $stmt->execute([
             ':department_id'    => $_SESSION['division_id'],

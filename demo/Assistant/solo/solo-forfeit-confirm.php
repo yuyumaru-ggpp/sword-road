@@ -41,15 +41,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         INSERT INTO individual_matches
             (department_id, department, match_field,
              player_a_id, player_b_id,
-             player_a_score, player_b_score,
-             started_at, ended_at, final_winner,
-             is_forfeit)
+             started_at, ended_at, final_winner)
         VALUES
             (:department_id, :department, 1,
              :player_a, :player_b,
-             :player_a_score, :player_b_score,
-             NOW(), NOW(), :winner,
-             1)
+             NOW(), NOW(), :winner)
     ";
 
     $stmt = $pdo->prepare($sql);
@@ -58,8 +54,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ':department'    => $_SESSION['match_number'],
         ':player_a'      => $data['upper_id'],
         ':player_b'      => $data['lower_id'],
-        ':player_a_score' => $data['upper_score'],
-        ':player_b_score' => $data['lower_score'],
         ':winner'        => $data['winner']
     ]);
 
@@ -232,9 +226,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </tr>
             </thead>
             <tbody>
-                <!-- 赤 -->
+                <!-- 上段 -->
                 <tr>
-                    <td class="side-label">赤</td>
+                    <td class="side-label">上</td>
                     <td class="player-info">
                         <div class="player-name"><?= htmlspecialchars($data['upper_name']) ?></div>
                         <div class="player-number">選手番号: <?= htmlspecialchars($data['upper_number']) ?></div>
@@ -249,9 +243,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <td class="total-cell"><?= $data['upper_score'] ?></td>
                 </tr>
 
-                <!-- 白 -->
+                <!-- 下段 -->
                 <tr>
-                    <td class="side-label">白</td>
+                    <td class="side-label">下</td>
                     <td class="player-info">
                         <div class="player-name"><?= htmlspecialchars($data['lower_name']) ?></div>
                         <div class="player-number">選手番号: <?= htmlspecialchars($data['lower_number']) ?></div>

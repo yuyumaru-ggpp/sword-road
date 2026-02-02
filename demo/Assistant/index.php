@@ -10,21 +10,7 @@ if (!isset($_SESSION['tournament_id'])) {
 $tournament_id = $_SESSION['tournament_id'];
 
 /* ---------- DB接続 ---------- */
-$user = "root";
-$pass = "";
-$database = "kendo_support_system";
-$server = "localhost";
-$port = "3308";
-
-$dsn = "mysql:host={$server};port={$port};dbname={$database};charset=utf8mb4";
-
-try {
-    $pdo = new PDO($dsn, $user, $pass);
-    $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (Exception $e) {
-    exit("DB接続失敗：" . $e->getMessage());
-}
+require_once '../conect/db_connect.php';
 
 /* ---------- 部門取得 ---------- */
 $sql = "
