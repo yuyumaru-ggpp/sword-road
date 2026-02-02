@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once 'team_db.php';
 
 /* ===============================
    セッションチェック
@@ -23,13 +23,6 @@ $match_number  = $_SESSION['match_number'];
 $team_red_id   = $_SESSION['team_red_id'];
 $team_white_id = $_SESSION['team_white_id'];
 
-/* ===============================
-   DB接続
-=============================== */
-$dsn = "mysql:host=localhost;port=3307;dbname=kendo_support_system;charset=utf8mb4";
-$pdo = new PDO($dsn, "root", "", [
-    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-]);
 
 /* ===============================
    大会・部門・チーム情報取得
@@ -132,6 +125,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         '副将' => $_POST['white_fukusho'] ?? null,
         '大将' => $_POST['white_taisho'] ?? null
     ];
+    
+    // チーム名をセッションに保存
+    $_SESSION['team_red_name'] = $team_red_name;
+    $_SESSION['team_white_name'] = $team_white_name;
+    
+    // match_resultsを初期化（重要！）
+    $_SESSION['match_results'] = [];
     
     header('Location: team-match-senpo.php');
     exit;
@@ -236,6 +236,17 @@ body {
     outline:none;
     border-color:#3b82f6;
 }
+.player-display {
+    flex:1;
+    padding:0.75rem 1rem;
+    font-size:1.1rem;
+    border:2px solid #d1d5db;
+    border-radius:8px;
+    text-align:center;
+    background:#f9fafb;
+    color:#374151;
+    font-weight:bold;
+}
 .player-select {
     flex:1;
     padding:0.75rem 1rem;
@@ -295,8 +306,8 @@ body {
     </div>
     
     <div class="note">
-        ※棄権する場合は空欄を選択してください<br>
-        ※初期状態でordersテーブルの登録内容が表示されます
+        ※選手名はordersテーブルの登録内容が表示されます<br>
+        ※選手変更は必ず本部に届けてから変更してください
     </div>
     
     <form method="POST">
@@ -307,62 +318,87 @@ body {
                 
                 <div class="position-row">
                     <div class="position-label">先鋒</div>
-                    <select name="red_senpo" class="player-select">
-                        <option value="">空欄（棄権）</option>
-                        <?php foreach ($red_players as $player): ?>
-                            <option value="<?= $player['id'] ?>" <?= (isset($red_initial_order[1]) && $red_initial_order[1] == $player['id']) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($player['name']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+                    <input type="hidden" name="red_senpo" value="<?= isset($red_initial_order[1]) ? $red_initial_order[1] : '' ?>">
+                    <div class="player-display"><?php 
+                        if (isset($red_initial_order[1])) {
+                            foreach ($red_players as $player) {
+                                if ($player['id'] == $red_initial_order[1]) {
+                                    echo htmlspecialchars($player['name']);
+                                    break;
+                                }
+                            }
+                        } else {
+                            echo '（未登録）';
+                        }
+                    ?></div>
                 </div>
                 
                 <div class="position-row">
                     <div class="position-label">次鋒</div>
-                    <select name="red_jiho" class="player-select">
-                        <option value="">空欄（棄権）</option>
-                        <?php foreach ($red_players as $player): ?>
-                            <option value="<?= $player['id'] ?>" <?= (isset($red_initial_order[2]) && $red_initial_order[2] == $player['id']) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($player['name']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+                    <input type="hidden" name="red_jiho" value="<?= isset($red_initial_order[2]) ? $red_initial_order[2] : '' ?>">
+                    <div class="player-display"><?php 
+                        if (isset($red_initial_order[2])) {
+                            foreach ($red_players as $player) {
+                                if ($player['id'] == $red_initial_order[2]) {
+                                    echo htmlspecialchars($player['name']);
+                                    break;
+                                }
+                            }
+                        } else {
+                            echo '（未登録）';
+                        }
+                    ?></div>
                 </div>
                 
                 <div class="position-row">
                     <div class="position-label">中堅</div>
-                    <select name="red_chuken" class="player-select">
-                        <option value="">空欄（棄権）</option>
-                        <?php foreach ($red_players as $player): ?>
-                            <option value="<?= $player['id'] ?>" <?= (isset($red_initial_order[3]) && $red_initial_order[3] == $player['id']) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($player['name']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+                    <input type="hidden" name="red_chuken" value="<?= isset($red_initial_order[3]) ? $red_initial_order[3] : '' ?>">
+                    <div class="player-display"><?php 
+                        if (isset($red_initial_order[3])) {
+                            foreach ($red_players as $player) {
+                                if ($player['id'] == $red_initial_order[3]) {
+                                    echo htmlspecialchars($player['name']);
+                                    break;
+                                }
+                            }
+                        } else {
+                            echo '（未登録）';
+                        }
+                    ?></div>
                 </div>
                 
                 <div class="position-row">
                     <div class="position-label">副将</div>
-                    <select name="red_fukusho" class="player-select">
-                        <option value="">空欄（棄権）</option>
-                        <?php foreach ($red_players as $player): ?>
-                            <option value="<?= $player['id'] ?>" <?= (isset($red_initial_order[4]) && $red_initial_order[4] == $player['id']) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($player['name']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+                    <input type="hidden" name="red_fukusho" value="<?= isset($red_initial_order[4]) ? $red_initial_order[4] : '' ?>">
+                    <div class="player-display"><?php 
+                        if (isset($red_initial_order[4])) {
+                            foreach ($red_players as $player) {
+                                if ($player['id'] == $red_initial_order[4]) {
+                                    echo htmlspecialchars($player['name']);
+                                    break;
+                                }
+                            }
+                        } else {
+                            echo '（未登録）';
+                        }
+                    ?></div>
                 </div>
                 
                 <div class="position-row">
                     <div class="position-label">大将</div>
-                    <select name="red_taisho" class="player-select">
-                        <option value="">空欄（棄権）</option>
-                        <?php foreach ($red_players as $player): ?>
-                            <option value="<?= $player['id'] ?>" <?= (isset($red_initial_order[5]) && $red_initial_order[5] == $player['id']) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($player['name']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+                    <input type="hidden" name="red_taisho" value="<?= isset($red_initial_order[5]) ? $red_initial_order[5] : '' ?>">
+                    <div class="player-display"><?php 
+                        if (isset($red_initial_order[5])) {
+                            foreach ($red_players as $player) {
+                                if ($player['id'] == $red_initial_order[5]) {
+                                    echo htmlspecialchars($player['name']);
+                                    break;
+                                }
+                            }
+                        } else {
+                            echo '（未登録）';
+                        }
+                    ?></div>
                 </div>
             </div>
             
@@ -372,62 +408,87 @@ body {
                 
                 <div class="position-row">
                     <div class="position-label">先鋒</div>
-                    <select name="white_senpo" class="player-select">
-                        <option value="">空欄（棄権）</option>
-                        <?php foreach ($white_players as $player): ?>
-                            <option value="<?= $player['id'] ?>" <?= (isset($white_initial_order[1]) && $white_initial_order[1] == $player['id']) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($player['name']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+                    <input type="hidden" name="white_senpo" value="<?= isset($white_initial_order[1]) ? $white_initial_order[1] : '' ?>">
+                    <div class="player-display"><?php 
+                        if (isset($white_initial_order[1])) {
+                            foreach ($white_players as $player) {
+                                if ($player['id'] == $white_initial_order[1]) {
+                                    echo htmlspecialchars($player['name']);
+                                    break;
+                                }
+                            }
+                        } else {
+                            echo '（未登録）';
+                        }
+                    ?></div>
                 </div>
                 
                 <div class="position-row">
                     <div class="position-label">次鋒</div>
-                    <select name="white_jiho" class="player-select">
-                        <option value="">空欄（棄権）</option>
-                        <?php foreach ($white_players as $player): ?>
-                            <option value="<?= $player['id'] ?>" <?= (isset($white_initial_order[2]) && $white_initial_order[2] == $player['id']) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($player['name']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+                    <input type="hidden" name="white_jiho" value="<?= isset($white_initial_order[2]) ? $white_initial_order[2] : '' ?>">
+                    <div class="player-display"><?php 
+                        if (isset($white_initial_order[2])) {
+                            foreach ($white_players as $player) {
+                                if ($player['id'] == $white_initial_order[2]) {
+                                    echo htmlspecialchars($player['name']);
+                                    break;
+                                }
+                            }
+                        } else {
+                            echo '（未登録）';
+                        }
+                    ?></div>
                 </div>
                 
                 <div class="position-row">
                     <div class="position-label">中堅</div>
-                    <select name="white_chuken" class="player-select">
-                        <option value="">空欄（棄権）</option>
-                        <?php foreach ($white_players as $player): ?>
-                            <option value="<?= $player['id'] ?>" <?= (isset($white_initial_order[3]) && $white_initial_order[3] == $player['id']) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($player['name']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+                    <input type="hidden" name="white_chuken" value="<?= isset($white_initial_order[3]) ? $white_initial_order[3] : '' ?>">
+                    <div class="player-display"><?php 
+                        if (isset($white_initial_order[3])) {
+                            foreach ($white_players as $player) {
+                                if ($player['id'] == $white_initial_order[3]) {
+                                    echo htmlspecialchars($player['name']);
+                                    break;
+                                }
+                            }
+                        } else {
+                            echo '（未登録）';
+                        }
+                    ?></div>
                 </div>
                 
                 <div class="position-row">
                     <div class="position-label">副将</div>
-                    <select name="white_fukusho" class="player-select">
-                        <option value="">空欄（棄権）</option>
-                        <?php foreach ($white_players as $player): ?>
-                            <option value="<?= $player['id'] ?>" <?= (isset($white_initial_order[4]) && $white_initial_order[4] == $player['id']) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($player['name']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+                    <input type="hidden" name="white_fukusho" value="<?= isset($white_initial_order[4]) ? $white_initial_order[4] : '' ?>">
+                    <div class="player-display"><?php 
+                        if (isset($white_initial_order[4])) {
+                            foreach ($white_players as $player) {
+                                if ($player['id'] == $white_initial_order[4]) {
+                                    echo htmlspecialchars($player['name']);
+                                    break;
+                                }
+                            }
+                        } else {
+                            echo '（未登録）';
+                        }
+                    ?></div>
                 </div>
                 
                 <div class="position-row">
                     <div class="position-label">大将</div>
-                    <select name="white_taisho" class="player-select">
-                        <option value="">空欄（棄権）</option>
-                        <?php foreach ($white_players as $player): ?>
-                            <option value="<?= $player['id'] ?>" <?= (isset($white_initial_order[5]) && $white_initial_order[5] == $player['id']) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($player['name']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+                    <input type="hidden" name="white_taisho" value="<?= isset($white_initial_order[5]) ? $white_initial_order[5] : '' ?>">
+                    <div class="player-display"><?php 
+                        if (isset($white_initial_order[5])) {
+                            foreach ($white_players as $player) {
+                                if ($player['id'] == $white_initial_order[5]) {
+                                    echo htmlspecialchars($player['name']);
+                                    break;
+                                }
+                            }
+                        } else {
+                            echo '（未登録）';
+                        }
+                    ?></div>
                 </div>
             </div>
         </div>
@@ -440,4 +501,4 @@ body {
 </div>
 
 </body>
-</html> 
+</html>

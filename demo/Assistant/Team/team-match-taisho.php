@@ -1,31 +1,18 @@
 <?php
-session_start();
+require_once 'team_db.php';
 
-/* セッションチェック */
-if (
-    !isset(
-        $_SESSION['tournament_id'],
-        $_SESSION['division_id'],
-        $_SESSION['match_number'],
-        $_SESSION['team_red_id'],
-        $_SESSION['team_white_id']
-    )
-) {
-    header('Location: match_input.php');
-    exit;
-}
+// セッションチェック
+checkTeamSessionWithResults();
 
-$tournament_id = $_SESSION['tournament_id'];
-$division_id   = $_SESSION['division_id'];
-$match_number  = $_SESSION['match_number'];
-$team_red_id   = $_SESSION['team_red_id'];
-$team_white_id = $_SESSION['team_white_id'];
+// セッション変数を取得
+$vars = getTeamVariables();
+$tournament_id = $vars['tournament_id'];
+$division_id   = $vars['division_id'];
+$match_number  = $vars['match_number'];
+$team_red_id   = $vars['team_red_id'];
+$team_white_id = $vars['team_white_id'];
 
 /* DB接続 */
-$dsn = "mysql:host=localhost;port=3307;dbname=kendo_support_system;charset=utf8mb4";
-$pdo = new PDO($dsn, "root", "", [
-    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-]);
 
 /* 大会・部門情報取得 */
 $sql = "
@@ -44,7 +31,7 @@ if (!$info) {
     exit('試合情報が取得できません');
 }
 
-// チーム情報
+// チーム名をセッションから取得
 $team_red_name = $_SESSION['team_red_name'] ?? '';
 $team_white_name = $_SESSION['team_white_name'] ?? '';
 
@@ -69,11 +56,15 @@ if (isset($white_order['大将'])) {
     $white_player_name = $stmt->fetchColumn();
 }
 
+// セッションから保存済みデータを取得
+$savedData = $_SESSION['match_results']['大将'] ?? null;
+
 /* POST処理 */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $input = json_decode(file_get_contents('php://input'), true);
     if (!$input) {
+        header('Content-Type: application/json');
         echo json_encode(['status' => 'ng', 'message' => 'Invalid input']);
         exit;
     }
@@ -84,6 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     $_SESSION['match_results']['大将'] = $input;
     
+    header('Content-Type: application/json');
     echo json_encode(['status' => 'ok']);
     exit;
 }
@@ -163,18 +155,21 @@ body {
 .row { 
     display:flex; 
     align-items:center; 
-    font-size:clamp(0.9rem, 2vh, 1.2rem); 
+    font-size:clamp(1.2rem, 2.5vh, 1.8rem); 
     gap:clamp(0.5rem, 1vw, 1rem);
-    margin-bottom:0;
+    margin-bottom:clamp(0.5rem, 1vh, 1rem);
     flex-wrap:wrap;
 }
 .label { 
     min-width:clamp(70px, 10vw, 100px); 
     font-weight:bold; 
+    font-size:clamp(1.2rem, 2.5vh, 1.8rem);
 }
 .value { 
     min-width:clamp(100px, 15vw, 150px); 
     word-break:break-all;
+    font-size:clamp(1.4rem, 3vh, 2.2rem);
+    font-weight:bold;
 }
 .score-display { 
     display:flex; 
@@ -366,6 +361,66 @@ body {
 .next-button:hover { background:#2563eb; }
 .submit-button { background:#22c55e; color:white; border:2px solid #22c55e; }
 .submit-button:hover { background:#16a34a; }
+
+/* 途中経過表示 */
+.score-summary {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    background: white;
+    border: 3px solid #000;
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    min-width: 200px;
+}
+
+.score-summary-title {
+    font-size: 1rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 0.75rem;
+    border-bottom: 2px solid #000;
+    padding-bottom: 0.5rem;
+}
+
+.score-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.score-summary-label {
+    font-weight: bold;
+    color: #374151;
+}
+
+.score-summary-values {
+    display: flex;
+    gap: 1rem;
+    font-weight: bold;
+}
+
+.score-red {
+    color: #dc2626;
+}
+
+.score-white {
+    color: #374151;
+}
+
+@media (max-width: 768px) {
+    .score-summary {
+        position: static;
+        margin: 1rem auto;
+        max-width: 300px;
+    }
+}
+
+
 </style>
 </head>
 <body>
@@ -411,10 +466,12 @@ body {
                         <div class="score-dropdown">▼</div>
                         <div class="dropdown-menu">
                             <div class="dropdown-item" data-val="▼">▼</div>
-                            <div class="dropdown-item" data-val="面">面</div>
-                            <div class="dropdown-item" data-val="小手">小手</div>
-                            <div class="dropdown-item" data-val="胴">胴</div>
-                            <div class="dropdown-item" data-val="突">突</div>
+                            <div class="dropdown-item" data-val="メ">メ</div>
+                            <div class="dropdown-item" data-val="コ">コ</div>
+                            <div class="dropdown-item" data-val="ド">ド</div>
+                            <div class="dropdown-item" data-val="ツ">ツ</div>
+                            <div class="dropdown-item" data-val="反">反</div>
+                            <div class="dropdown-item" data-val="判">判</div>
                             <div class="dropdown-item" data-val="×">×</div>
                         </div>
                     </div>
@@ -422,10 +479,12 @@ body {
                         <div class="score-dropdown">▼</div>
                         <div class="dropdown-menu">
                             <div class="dropdown-item" data-val="▼">▼</div>
-                            <div class="dropdown-item" data-val="面">面</div>
-                            <div class="dropdown-item" data-val="小手">小手</div>
-                            <div class="dropdown-item" data-val="胴">胴</div>
-                            <div class="dropdown-item" data-val="突">突</div>
+                            <div class="dropdown-item" data-val="メ">メ</div>
+                            <div class="dropdown-item" data-val="コ">コ</div>
+                            <div class="dropdown-item" data-val="ド">ド</div>
+                            <div class="dropdown-item" data-val="ツ">ツ</div>
+                            <div class="dropdown-item" data-val="反">反</div>
+                            <div class="dropdown-item" data-val="判">判</div>
                             <div class="dropdown-item" data-val="×">×</div>
                         </div>
                     </div>
@@ -433,10 +492,12 @@ body {
                         <div class="score-dropdown">▼</div>
                         <div class="dropdown-menu">
                             <div class="dropdown-item" data-val="▼">▼</div>
-                            <div class="dropdown-item" data-val="面">面</div>
-                            <div class="dropdown-item" data-val="小手">小手</div>
-                            <div class="dropdown-item" data-val="胴">胴</div>
-                            <div class="dropdown-item" data-val="突">突</div>
+                            <div class="dropdown-item" data-val="メ">メ</div>
+                            <div class="dropdown-item" data-val="コ">コ</div>
+                            <div class="dropdown-item" data-val="ド">ド</div>
+                            <div class="dropdown-item" data-val="ツ">ツ</div>
+                            <div class="dropdown-item" data-val="反">反</div>
+                            <div class="dropdown-item" data-val="判">判</div>
                             <div class="dropdown-item" data-val="×">×</div>
                         </div>
                     </div>
@@ -446,9 +507,11 @@ body {
                 <div class="draw-container">
                     <button type="button" class="draw-button" id="drawButton">-</button>
                     <div class="draw-dropdown-menu" id="drawMenu">
+                        <div class="dropdown-item">二本勝</div>
                         <div class="dropdown-item">一本勝</div>
-                        <div class="dropdown-item">延長</div>
-                        <div class="dropdown-item">引分け</div>
+                        <div class="dropdown-item">延長戦</div>
+                        <div class="dropdown-item">判定</div>
+                        <div class="dropdown-item">引き分け</div>
                         <div class="dropdown-item">-</div>
                     </div>
                 </div>
@@ -487,33 +550,157 @@ body {
 
         <div class="bottom-buttons">
             <button type="button" class="bottom-button back-button" onclick="history.back()">戻る</button>
-            <button type="button" class="bottom-button next-button" id="daihyoButton">代表決定戦へ</button>
-            <button type="button" class="bottom-button submit-button" id="submitButton">送信</button>
+            <button type="button" class="bottom-button submit-button" id="submitButton">送信（確認へ）</button>
         </div>
     </div>
 </div>
 
 <script>
-const data = {
-    red: { scores: ['▼','▼','▼'], selected: -1 },
-    white: { scores: ['▲','▲','▲'], selected: -1 },
+// セッションから試合結果データを取得
+const matchResults = <?= json_encode($_SESSION['match_results'] ?? []) ?>;
+
+// 途中経過を計算する関数
+function calculateProgress() {
+    let redWins = 0;
+    let whiteWins = 0;
+    let redPoints = 0;
+    let whitePoints = 0;
+    
+    const positions = ['先鋒', '次鋒', '中堅', '副将', '大将'];
+    
+    positions.forEach(pos => {
+        const result = matchResults[pos];
+        if (!result) return;
+        
+        const scores = result.scores || [];
+        const redSelected = result.red?.selected || [];
+        const whiteSelected = result.white?.selected || [];
+        
+        // 得点計算
+        let redPosPoints = 0;
+        let whitePosPoints = 0;
+        
+        redSelected.forEach(idx => {
+            if (scores[idx] && scores[idx] !== '▼' && scores[idx] !== '▲' && scores[idx] !== '×' && scores[idx] !== '') {
+                redPosPoints++;
+            }
+        });
+        
+        whiteSelected.forEach(idx => {
+            if (scores[idx] && scores[idx] !== '▼' && scores[idx] !== '▲' && scores[idx] !== '×' && scores[idx] !== '') {
+                whitePosPoints++;
+            }
+        });
+        
+        redPoints += redPosPoints;
+        whitePoints += whitePosPoints;
+        
+        // 勝者判定
+        if (redPosPoints > whitePosPoints) {
+            redWins++;
+        } else if (whitePosPoints > redPosPoints) {
+            whiteWins++;
+        }
+    });
+    
+    return { redWins, whiteWins, redPoints, whitePoints };
+}
+
+// 先取技の〇マーク表示更新
+function updateFirstPointDisplay() {
+    // すべての技から〇マークを削除
+    document.querySelectorAll('.score-dropdown').forEach(dropdown => {
+        dropdown.classList.remove('first-point');
+    });
+    
+    // 赤チームの先取技を探す
+    const redCircles = document.querySelectorAll('.red-circles .radio-circle');
+    const dropdowns = document.querySelectorAll('.middle-controls .score-dropdown');
+    
+    for (let i = 0; i < redCircles.length; i++) {
+        if (redCircles[i].classList.contains('selected')) {
+            if (dropdowns[i]) {
+                dropdowns[i].classList.add('first-point');
+            }
+            break; // 最初の1つだけ
+        }
+    }
+    
+    // 白チームの先取技を探す（赤チームで既に見つかっていない場合）
+    const whiteCircles = document.querySelectorAll('.white-circles .radio-circle');
+    let redHasFirst = false;
+    
+    for (let i = 0; i < redCircles.length; i++) {
+        if (redCircles[i].classList.contains('selected')) {
+            redHasFirst = true;
+            break;
+        }
+    }
+    
+    if (!redHasFirst) {
+        for (let i = 0; i < whiteCircles.length; i++) {
+            if (whiteCircles[i].classList.contains('selected')) {
+                if (dropdowns[i]) {
+                    dropdowns[i].classList.add('first-point');
+                }
+                break; // 最初の1つだけ
+            }
+        }
+    }
+}
+
+// セッションから保存済みデータを復元
+const savedData = <?= json_encode($savedData) ?>;
+
+const data = savedData ? {
+    red: savedData.red || { selected: [] },
+    white: savedData.white || { selected: [] },
+    scores: savedData.scores || ['▼','▼','▼'],
+    special: savedData.special || 'none'
+} : {
+    red: { selected: [] },
+    white: { selected: [] },
+    scores: ['▼','▼','▼'],
     special: 'none'
 };
 
 function load() {
-    document.querySelectorAll('.middle-controls .score-dropdown').forEach((b,i)=>b.textContent=data.red.scores[i]);
-    document.querySelectorAll('.red-circles .radio-circle').forEach((c,i)=>c.classList.toggle('selected',data.red.selected===i));
-    document.querySelectorAll('.white-circles .radio-circle').forEach((c,i)=>c.classList.toggle('selected',data.white.selected===i));
+    // スコアドロップダウンを復元
+    document.querySelectorAll('.middle-controls .score-dropdown').forEach((b,i) => {
+        b.textContent = data.scores[i];
+    });
+    
+    // 赤の勝ち技サークルを復元
+    document.querySelectorAll('.red-circles .radio-circle').forEach((c,i) => {
+        c.classList.toggle('selected', (data.red.selected || []).includes(i));
+    });
+    
+    // 白の勝ち技サークルを復元
+    document.querySelectorAll('.white-circles .radio-circle').forEach((c,i) => {
+        c.classList.toggle('selected', (data.white.selected || []).includes(i));
+    });
+    
+    // 特殊状態ボタンを復元
+    const drawButton = document.getElementById('drawButton');
+    if (data.special === 'ippon') {
+        drawButton.textContent = '一本勝';
+    } else if (data.special === 'extend') {
+        drawButton.textContent = '延長';
+    } else if (data.special === 'draw') {
+        drawButton.textContent = '引分け';
+    } else {
+        drawButton.textContent = '-';
+    }
 }
 
 function saveLocal() {
-    data.red.scores = Array.from(document.querySelectorAll('.middle-controls .score-dropdown')).map(b=>b.textContent);
-    const rSel = document.querySelector('.red-circles .radio-circle.selected');
-    data.red.selected = rSel? +rSel.dataset.index : -1;
-    const wSel = document.querySelector('.white-circles .radio-circle.selected');
-    data.white.selected = wSel? +wSel.dataset.index : -1;
+    data.scores = Array.from(document.querySelectorAll('.middle-controls .score-dropdown')).map(b=>b.textContent);
+    data.red.selected = Array.from(document.querySelectorAll('.red-circles .radio-circle.selected'))
+        .map(el => parseInt(el.dataset.index));
+    data.white.selected = Array.from(document.querySelectorAll('.white-circles .radio-circle.selected'))
+        .map(el => parseInt(el.dataset.index));
     const dt = document.getElementById('drawButton').textContent;
-    data.special = dt==='一本勝'?'ippon':dt==='延長'?'extend':dt==='引分け'?'draw':'none';
+    data.special = dt==='二本勝'?'nihon':dt==='一本勝'?'ippon':dt==='延長戦'?'extend':dt==='判定'?'hantei':dt==='引き分け'?'draw':'none';
 }
 
 for (let i = 0; i < 3; i++) {
@@ -522,11 +709,11 @@ for (let i = 0; i < 3; i++) {
     red.addEventListener('click', () => {
         if (red.classList.contains('selected')) red.classList.remove('selected');
         else { red.classList.add('selected'); white.classList.remove('selected'); }
-    });
+        });
     white.addEventListener('click', () => {
         if (white.classList.contains('selected')) white.classList.remove('selected');
         else { white.classList.add('selected'); red.classList.remove('selected'); }
-    });
+        });
 }
 
 document.querySelectorAll('.dropdown-container').forEach(container=>{
@@ -568,30 +755,43 @@ document.getElementById('cancelButton').addEventListener('click',()=>{
     }
 });
 
-// 代表決定戦へ
-document.getElementById('daihyoButton').onclick=async()=>{
-    saveLocal();
-    try{
-        const r=await fetch(location.href,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
-        const j=await r.json();
-        if(j.status==='ok'){
-            window.location.href = 'team-match-daihyo.php';
-        } else { alert('保存失敗'); }
-    }catch(e){ alert('エラー発生'); console.error(e); }
-};
-
-// 送信（確認画面へ）
+// 送信(確認画面へ) - 同点の場合は代表決定戦を確認
 document.getElementById('submitButton').onclick=async()=>{
     saveLocal();
+    
     try{
         const r=await fetch(location.href,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
         const j=await r.json();
+        
         if(j.status==='ok'){
-            window.location.href = 'team-match-confirm.php';
-        } else { alert('保存失敗'); }
-    }catch(e){ alert('エラー発生'); console.error(e); }
+            // 途中経過を計算（JavaScript側で実行）
+            const progress = calculateProgress();
+            
+            // 勝者数と得本数が両方同点かチェック
+            const isTie = (progress.redWins === progress.whiteWins && 
+                           progress.redPoints === progress.whitePoints);
+            
+            if (isTie) {
+                // 同点の場合は代表決定戦を確認
+                if (confirm('勝者数と得本数が同点です。代表決定戦を行いますか？')) {
+                    window.location.href = 'team-match-daihyo.php';
+                } else {
+                    window.location.href = 'team-match-confirm.php';
+                }
+            } else {
+                // 同点でない場合は確認画面へ
+                window.location.href = 'team-match-confirm.php';
+            }
+        } else { 
+            alert('保存失敗'); 
+        }
+    }catch(e){ 
+        alert('エラー発生: ' + e.message); 
+        console.error(e); 
+    }
 };
 
+// ページ読み込み時にデータを復元
 load();
 </script>
 </body>

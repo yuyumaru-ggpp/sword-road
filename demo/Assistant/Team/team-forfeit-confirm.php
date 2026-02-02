@@ -21,10 +21,7 @@ $data = $_SESSION['team_forfeit_data'];
 /* ===============================
    DB接続
 =============================== */
-$dsn = "mysql:host=localhost;port=3307;dbname=kendo_support_system;charset=utf8mb4";
-$pdo = new PDO($dsn, "root", "", [
-    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-]);
+require_once '../../conect/db_connect.php';
 
 /* ===============================
    大会・部門名取得

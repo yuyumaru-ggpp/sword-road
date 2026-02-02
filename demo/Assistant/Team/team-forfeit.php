@@ -1,600 +1,351 @@
 <?php
-session_start();
+require_once 'team_db.php';
 
-// セッションに試合番号がない場合は入力画面に戻す
-if (!isset($_SESSION['match_number'])) {
+// 基本セッションチェック（team_red_id, team_white_idはまだ不要）
+if (
+    !isset(
+        $_SESSION['tournament_id'],
+        $_SESSION['division_id'],
+        $_SESSION['match_number']
+    )
+) {
     header('Location: match_input.php');
     exit;
 }
 
-$match_number = htmlspecialchars($_SESSION['match_number']);
+// 変数取得
+$tournament_id = (int)$_SESSION['tournament_id'];
+$division_id   = (int)$_SESSION['division_id'];
+$match_number  = $_SESSION['match_number'];
+
+// 大会・部門情報取得
+$sql = "
+    SELECT
+        t.title AS tournament_name,
+        d.name  AS division_name
+    FROM tournaments t
+    JOIN departments d ON d.tournament_id = t.id
+    WHERE d.id = :division_id
+";
+$stmt = $pdo->prepare($sql);
+$stmt->execute([':division_id' => $division_id]);
+$info = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// 部門に属するチーム一覧を取得
+$sql = "
+    SELECT
+        t.id,
+        t.team_number,
+        t.name
+    FROM teams t
+    WHERE t.department_id = :division_id
+    ORDER BY t.team_number
+";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute([':division_id' => $division_id]);
+$teams = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$error = '';
+
+/* ===============================
+   POST処理
+=============================== */
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    $red_team_id = trim($_POST['red_team'] ?? '');
+    $white_team_id = trim($_POST['white_team'] ?? '');
+
+    if ($red_team_id === '' || $white_team_id === '') {
+        $error = 'チームを選択してください';
+    } else if ($red_team_id === $white_team_id) {
+        $error = '同じチームは選択できません';
+    } else {
+
+        // チームIDの存在チェック
+        $sql = "
+            SELECT t.id, t.name, t.team_number
+            FROM teams t
+            WHERE t.department_id = :division_id
+              AND t.id IN (:red_id, :white_id)
+        ";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([
+            ':division_id' => $division_id,
+            ':red_id' => $red_team_id,
+            ':white_id' => $white_team_id
+        ]);
+
+        $found_teams = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (count($found_teams) !== 2) {
+            $error = '選択されたチームが見つかりません';
+        } else {
+
+            // セッションに保存
+            $_SESSION['team_red_id'] = $red_team_id;
+            $_SESSION['team_white_id'] = $white_team_id;
+
+            header('Location: team-order-registration.php');
+            exit;
+        }
+    }
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>団体戦不戦勝</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>団体戦チーム選択</title>
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
-            background-color: #f5f5f5;
-            min-height: 100vh;
-            padding: 1rem;
-        }
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Sans','Meiryo',sans-serif;
+    background:#f5f5f5;
+    padding:1rem;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+.container {
+    max-width:1200px;
+    width:100%;
+    background:white;
+    padding:2rem;
+    border-radius:8px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.1);
+}
+.header {
+    display:flex;
+    flex-wrap:wrap;
+    gap:1rem;
+    font-size:clamp(1.2rem, 3vw, 2rem);
+    font-weight:bold;
+    margin-bottom:3rem;
+}
+.match-row {
+    display:flex;
+    gap:2rem;
+    justify-content:space-between;
+    margin-bottom:3rem;
+    align-items:center;
+}
+.team-section {
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:1.5rem;
+}
+.team-label {
+    font-size:2rem;
+    font-weight:bold;
+}
+.team-select {
+    width:100%;
+    max-width:350px;
+    padding:1rem;
+    font-size:1.2rem;
+    text-align:center;
+    border:3px solid #ddd;
+    border-radius:8px;
+    cursor:pointer;
+}
+.team-select:focus {
+    outline:none;
+    border-color:#3b82f6;
+}
+.vs-text {
+    font-size:3rem;
+    font-weight:bold;
+    flex-shrink:0;
+}
+.action-buttons {
+    display:flex;
+    justify-content:center;
+    gap:2rem;
+}
+.action-button {
+    padding:1rem 3rem;
+    font-size:1.4rem;
+    font-weight:bold;
+    border-radius:50px;
+    cursor:pointer;
+    transition:all 0.2s;
+}
+.confirm-button {
+    background:#3b82f6;
+    color:white;
+    border:3px solid #3b82f6;
+}
+.confirm-button:hover {
+    background:#2563eb;
+}
+.back-button {
+    background:white;
+    border:3px solid #000;
+}
+.back-button:hover {
+    background:#f9fafb;
+}
+.team-number-input {
+    width:100%;
+    max-width:350px;
+    padding:1rem;
+    font-size:1.2rem;
+    text-align:center;
+    border:3px solid #ddd;
+    border-radius:8px;
+    margin-bottom:0.5rem;
+}
+.team-number-input:focus {
+    outline:none;
+    border-color:#3b82f6;
+}
+.input-label-small {
+    font-size:1rem;
+    color:#666;
+    margin-bottom:0.5rem;
+}
 
-        @media (min-width: 768px) {
-            body {
-                padding: 2rem;
-            }
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .header {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            align-items: center;
-        }
-
-        .header-text {
-            font-size: 1rem;
-        }
-
-        .match-number-box {
-            margin-left: auto;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            background-color: #e5e7eb;
-            padding: 0.5rem 1.5rem;
-            border-radius: 4px;
-        }
-
-        .match-number-label {
-            font-size: 1rem;
-            white-space: nowrap;
-        }
-
-        .match-number-value {
-            font-size: 1rem;
-            font-weight: 600;
-        }
-
-        @media (min-width: 768px) {
-            .header {
-                gap: 2rem;
-                margin-bottom: 3rem;
-            }
-            
-            .header-text {
-                font-size: 1.5rem;
-            }
-
-            .match-number-box {
-                padding: 0.75rem 2rem;
-            }
-
-            .match-number-label {
-                font-size: 1.5rem;
-            }
-
-            .match-number-value {
-                font-size: 1.5rem;
-            }
-        }
-
-        .note {
-            text-align: center;
-            font-size: 0.9rem;
-            color: #666;
-            margin-bottom: 3rem;
-        }
-
-        @media (min-width: 768px) {
-            .note {
-                font-size: 1.125rem;
-                margin-bottom: 4rem;
-            }
-        }
-
-        .team-section {
-            display: flex;
-            justify-content: center;
-            gap: 3rem;
-            margin-bottom: 4rem;
-            flex-wrap: wrap;
-        }
-
-        @media (min-width: 768px) {
-            .team-section {
-                gap: 8rem;
-            }
-        }
-
-        .team-column {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1.5rem;
-        }
-
-        @media (min-width: 768px) {
-            .team-column {
-                gap: 2rem;
-            }
-        }
-
-        .team-input {
-            width: 150px;
-            padding: 0.75rem;
-            font-size: 1.25rem;
-            text-align: center;
-            border: 2px solid #d1d5db;
-            border-radius: 4px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .team-input:focus {
-            border-color: #3b82f6;
-        }
-
-        @media (min-width: 768px) {
-            .team-input {
-                width: 200px;
-                padding: 1rem;
-                font-size: 1.5rem;
-            }
-        }
-
-        .vs-container {
-            display: flex;
-            align-items: center;
-            align-self: stretch;
-            justify-content: center;
-        }
-
-        .vs-text {
-            font-size: 1.5rem;
-            font-weight: normal;
-        }
-
-        @media (min-width: 768px) {
-            .vs-text {
-                font-size: 2rem;
-            }
-        }
-
-        .button-group {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        .player-change-button,
-        .forfeit-button {
-            padding: 0.75rem 2rem;
-            font-size: 1rem;
-            background-color: white;
-            border: 2px solid #000;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            white-space: nowrap;
-            min-width: 150px;
-        }
-
-        @media (min-width: 768px) {
-            .player-change-button,
-            .forfeit-button {
-                padding: 1rem 2.5rem;
-                font-size: 1.25rem;
-                min-width: 180px;
-            }
-        }
-
-        .player-change-button:hover,
-        .forfeit-button:hover {
-            background-color: #f9fafb;
-        }
-
-        .player-change-button:active,
-        .forfeit-button:active {
-            background-color: #e5e7eb;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 1.5rem;
-            justify-content: flex-end;
-            flex-wrap: wrap;
-        }
-
-        @media (min-width: 768px) {
-            .action-buttons {
-                gap: 3rem;
-            }
-        }
-
-        .action-button {
-            padding: 0.875rem 2.5rem;
-            font-size: 1.125rem;
-            background-color: white;
-            border: 2px solid #000;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            white-space: nowrap;
-        }
-
-        @media (min-width: 768px) {
-            .action-button {
-                padding: 1rem 3rem;
-                font-size: 1.25rem;
-            }
-        }
-
-        .action-button:hover {
-            background-color: #f9fafb;
-        }
-
-        .action-button:active {
-            background-color: #e5e7eb;
-        }
-
-        .player-dropdown {
-            display: none;
-            margin-top: 1rem;
-            background-color: white;
-            border: 2px solid #d1d5db;
-            border-radius: 8px;
-            padding: 1rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 350px;
-        }
-
-        .player-dropdown.active {
-            display: block;
-        }
-
-        .player-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-            margin-bottom: 1rem;
-        }
-
-        .player-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem;
-            background-color: #f9fafb;
-            border-radius: 4px;
-            font-size: 0.9rem;
-        }
-
-        @media (min-width: 768px) {
-            .player-item {
-                font-size: 1rem;
-                padding: 1rem;
-            }
-        }
-
-        .player-position {
-            font-weight: 600;
-            min-width: 60px;
-            color: #374151;
-        }
-
-        .player-select {
-            flex: 1;
-            padding: 0.5rem;
-            font-size: 0.9rem;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            outline: none;
-            transition: border-color 0.2s;
-            background-color: white;
-            cursor: pointer;
-        }
-
-        .player-select:focus {
-            border-color: #3b82f6;
-        }
-
-        @media (min-width: 768px) {
-            .player-select {
-                font-size: 1rem;
-            }
-        }
-
-        .close-dropdown {
-            width: 100%;
-            padding: 0.625rem;
-            font-size: 0.9rem;
-            background-color: #3b82f6;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            font-weight: 500;
-        }
-
-        .close-dropdown:hover {
-            background-color: #2563eb;
-        }
-    </style>
+.error {
+    color:#ef4444;
+    text-align:center;
+    font-size:1.2rem;
+    margin-bottom:1rem;
+}
+@media (max-width: 768px) {
+    .match-row {
+        flex-direction:column;
+    }
+    .vs-text {
+        font-size:2rem;
+    }
+}
+</style>
 </head>
+
 <body>
-    <div class="container">
-        <div class="header">
-            <span class="header-text">団体戦</span>
-            <span class="header-text">〇〇大会</span>
-            <span class="header-text">〇〇部門</span>
-            <span class="header-text">5人制用</span>
-            <div class="match-number-box">
-                <span class="match-number-label">試合番号</span>
-                <span class="match-number-value" id="matchNumberDisplay"><?php echo $match_number; ?></span>
-            </div>
-        </div>
-        
-        <p class="note">※不戦勝ボタンは勝った方の選手を押してください。</p>
-        
-        <div class="team-section">
-            <div class="team-column">
-                <input type="text" class="team-input" placeholder="チームID" id="team1">
-                <div class="button-group">
-                    <button class="player-change-button" id="leftPlayerChange">選手変更</button>
-                    <div class="player-dropdown" id="leftDropdown">
-                        <div class="player-list" id="leftPlayerList">
-                            <!-- 選手リストが動的に追加されます -->
-                        </div>
-                        <button class="close-dropdown" id="leftCloseDropdown">閉じる</button>
-                    </div>
-                    <button class="forfeit-button" id="leftButton">不戦勝</button>
-                </div>
-            </div>
-            
-            <div class="vs-container">
-                <span class="vs-text">対</span>
-            </div>
-            
-            <div class="team-column">
-                <input type="text" class="team-input" placeholder="チームID" id="team2">
-                <div class="button-group">
-                    <button class="player-change-button" id="rightPlayerChange">選手変更</button>
-                    <div class="player-dropdown" id="rightDropdown">
-                        <div class="player-list" id="rightPlayerList">
-                            <!-- 選手リストが動的に追加されます -->
-                        </div>
-                        <button class="close-dropdown" id="rightCloseDropdown">閉じる</button>
-                    </div>
-                    <button class="forfeit-button" id="rightButton">不戦勝</button>
-                </div>
-            </div>
-        </div>
-        
-        <div class="action-buttons">
-            <button class="action-button" id="confirmButton">決定</button>
-            <button class="action-button" onclick="history.back()">戻る</button>
-        </div>
+
+<div class="container">
+    <div class="header">
+        <span>団体戦</span>
+        <span><?= htmlspecialchars($info['tournament_name']) ?></span>
+        <span><?= htmlspecialchars($info['division_name']) ?></span>
     </div>
+
+    <?php if ($error): ?>
+        <div class="error"><?= htmlspecialchars($error) ?></div>
+    <?php endif; ?>
+
+    <form method="POST">
+        <div class="match-row">
+            <div class="team-section">
+                <div class="team-label">赤</div>
+                <div class="input-label-small">チーム番号</div>
+                <input type="text" class="team-number-input" id="redTeamNumber" placeholder="チーム番号を入力">
+                <div class="input-label-small">またはチームを選択</div>
+                <select name="red_team" class="team-select" id="redTeam" required>
+                    <option value="">チームを選択してください</option>
+                    <?php foreach ($teams as $team): ?>
+                        <option value="<?= $team['id'] ?>" data-number="<?= htmlspecialchars($team['team_number']) ?>">
+                            <?= htmlspecialchars($team['name']) ?> (<?= htmlspecialchars($team['team_number']) ?>)
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="vs-text">対</div>
+
+            <div class="team-section">
+                <div class="team-label">白</div>
+                <div class="input-label-small">チーム番号</div>
+                <input type="text" class="team-number-input" id="whiteTeamNumber" placeholder="チーム番号を入力">
+                <div class="input-label-small">またはチームを選択</div>
+                <select name="white_team" class="team-select" id="whiteTeam" required>
+                    <option value="">チームを選択してください</option>
+                    <?php foreach ($teams as $team): ?>
+                        <option value="<?= $team['id'] ?>" data-number="<?= htmlspecialchars($team['team_number']) ?>">
+                            <?= htmlspecialchars($team['name']) ?> (<?= htmlspecialchars($team['team_number']) ?>)
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button type="submit" class="action-button confirm-button">決定</button>
+            <button type="button" class="action-button back-button" onclick="history.back()">戻る</button>
+        </div>
+    </form>
+</div>
+
+<script>
+// チーム番号入力時の自動選択機能（赤チーム）
+document.getElementById('redTeamNumber').addEventListener('input', function(e) {
+    const number = e.target.value.trim();
+    const select = document.getElementById('redTeam');
     
-    <script>
-        let selectedWinner = null;
-        
-        const leftButton = document.getElementById('leftButton');
-        const rightButton = document.getElementById('rightButton');
-        const leftPlayerChange = document.getElementById('leftPlayerChange');
-        const rightPlayerChange = document.getElementById('rightPlayerChange');
-        const confirmButton = document.getElementById('confirmButton');
-        const leftDropdown = document.getElementById('leftDropdown');
-        const rightDropdown = document.getElementById('rightDropdown');
-        const leftPlayerList = document.getElementById('leftPlayerList');
-        const rightPlayerList = document.getElementById('rightPlayerList');
-        const leftCloseDropdown = document.getElementById('leftCloseDropdown');
-        const rightCloseDropdown = document.getElementById('rightCloseDropdown');
-        
-        // サンプルの選手データ（実際にはサーバーから取得）
-        const leftTeamPlayers = [
-            { id: 1, name: '選手1', position: '先鋒' },
-            { id: 2, name: '選手2', position: '次鋒' },
-            { id: 3, name: '選手3', position: '中堅' },
-            { id: 4, name: '選手4', position: '副将' },
-            { id: 5, name: '選手5', position: '大将' }
-        ];
-        
-        const rightTeamPlayers = [
-            { id: 8, name: '選手A', position: '先鋒' },
-            { id: 9, name: '選手B', position: '次鋒' },
-            { id: 10, name: '選手C', position: '中堅' },
-            { id: 11, name: '選手D', position: '副将' },
-            { id: 12, name: '選手E', position: '大将' }
-        ];
-        
-        // チームの全選手リスト（選択肢用）
-        const leftTeamAllPlayers = [
-            { id: 1, name: '選手1' },
-            { id: 2, name: '選手2' },
-            { id: 3, name: '選手3' },
-            { id: 4, name: '選手4' },
-            { id: 5, name: '選手5' },
-            { id: 6, name: '選手6' },
-            { id: 7, name: '選手7' },
-            { id: 15, name: '選手8' },
-            { id: 16, name: '選手9' },
-            { id: 17, name: '選手10' }
-        ];
-        
-        const rightTeamAllPlayers = [
-            { id: 8, name: '選手A' },
-            { id: 9, name: '選手B' },
-            { id: 10, name: '選手C' },
-            { id: 11, name: '選手D' },
-            { id: 12, name: '選手E' },
-            { id: 13, name: '選手F' },
-            { id: 14, name: '選手G' },
-            { id: 18, name: '選手H' },
-            { id: 19, name: '選手I' },
-            { id: 20, name: '選手J' }
-        ];
-        
-        function createPlayerList(players, allPlayers, container) {
-            container.innerHTML = '';
-            players.forEach(player => {
-                const playerItem = document.createElement('div');
-                playerItem.className = 'player-item';
-                
-                // セレクトボックスを作成
-                let selectHTML = `<select class="player-select" data-position="${player.position}">`;
-                selectHTML += `<option value="">選択なし</option>`;
-                allPlayers.forEach(p => {
-                    const selected = p.id === player.id ? 'selected' : '';
-                    selectHTML += `<option value="${p.id}" ${selected}>${p.name}</option>`;
-                });
-                selectHTML += `</select>`;
-                
-                playerItem.innerHTML = `
-                    <span class="player-position">${player.position}</span>
-                    ${selectHTML}
-                `;
-                container.appendChild(playerItem);
-            });
-            
-            // セレクトボックスの変更を監視
-            container.querySelectorAll('.player-select').forEach(select => {
-                select.addEventListener('change', function() {
-                    const playerId = this.value;
-                    const position = this.getAttribute('data-position');
-                    const playerName = this.options[this.selectedIndex].text;
-                    if (playerId) {
-                        console.log(`${position}を選手ID ${playerId}（${playerName}）に変更`);
-                    } else {
-                        console.log(`${position}を未選択に変更`);
-                    }
-                    // 実際にはここでサーバーに保存する処理を追加
-                });
-            });
+    if (number === '') {
+        return;
+    }
+    
+    // チーム番号に一致するオプションを探す
+    for (let option of select.options) {
+        if (option.dataset.number && option.dataset.number === number) {
+            select.value = option.value;
+            return;
         }
-        
-        leftButton.addEventListener('click', function() {
-            if (selectedWinner === 'left') {
-                selectedWinner = null;
-                leftButton.style.backgroundColor = 'white';
-                leftButton.style.color = 'black';
-                leftButton.style.borderColor = '#000';
-            } else {
-                selectedWinner = 'left';
-                leftButton.style.backgroundColor = '#3b82f6';
-                leftButton.style.color = 'white';
-                leftButton.style.borderColor = '#3b82f6';
-                
-                rightButton.style.backgroundColor = 'white';
-                rightButton.style.color = 'black';
-                rightButton.style.borderColor = '#000';
-            }
-        });
-        
-        rightButton.addEventListener('click', function() {
-            if (selectedWinner === 'right') {
-                selectedWinner = null;
-                rightButton.style.backgroundColor = 'white';
-                rightButton.style.color = 'black';
-                rightButton.style.borderColor = '#000';
-            } else {
-                selectedWinner = 'right';
-                rightButton.style.backgroundColor = '#3b82f6';
-                rightButton.style.color = 'white';
-                rightButton.style.borderColor = '#3b82f6';
-                
-                leftButton.style.backgroundColor = 'white';
-                leftButton.style.color = 'black';
-                leftButton.style.borderColor = '#000';
-            }
-        });
-        
-        leftPlayerChange.addEventListener('click', function() {
-            const team1 = document.getElementById('team1').value;
-            
-            if (!team1) {
-                alert('チームIDを入力してください');
-                return;
-            }
-            
-            // プルダウンの表示切り替え
-            const isActive = leftDropdown.classList.contains('active');
-            leftDropdown.classList.toggle('active');
-            rightDropdown.classList.remove('active');
-            
-            // 初回表示時に選手リストを生成
-            if (!isActive && leftPlayerList.children.length === 0) {
-                createPlayerList(leftTeamPlayers, leftTeamAllPlayers, leftPlayerList);
-            }
-        });
-        
-        rightPlayerChange.addEventListener('click', function() {
-            const team2 = document.getElementById('team2').value;
-            
-            if (!team2) {
-                alert('チームIDを入力してください');
-                return;
-            }
-            
-            // プルダウンの表示切り替え
-            const isActive = rightDropdown.classList.contains('active');
-            rightDropdown.classList.toggle('active');
-            leftDropdown.classList.remove('active');
-            
-            // 初回表示時に選手リストを生成
-            if (!isActive && rightPlayerList.children.length === 0) {
-                createPlayerList(rightTeamPlayers, rightTeamAllPlayers, rightPlayerList);
-            }
-        });
-        
-        leftCloseDropdown.addEventListener('click', function() {
-            leftDropdown.classList.remove('active');
-            alert('選手情報を保存しました');
-        });
-        
-        rightCloseDropdown.addEventListener('click', function() {
-            rightDropdown.classList.remove('active');
-            alert('選手情報を保存しました');
-        });
-        
-        confirmButton.addEventListener('click', function() {
-            const team1 = document.getElementById('team1').value;
-            const team2 = document.getElementById('team2').value;
-            
-            if (!team1 || !team2) {
-                alert('両方のチームIDを入力してください');
-                return;
-            }
-            
-            // 不戦勝が選択されているかどうかで遷移先を分岐
-            if (selectedWinner) {
-                // 不戦勝が選択されている場合は不戦勝結果画面へ
-                location.href = 'forfeit-result.php';
-            } else {
-                // 通常の試合詳細画面へ
-                location.href = 'team-match-detail.php';
-            }
-        });
-    </script>
+    }
+});
+
+// チーム番号入力時の自動選択機能（白チーム）
+document.getElementById('whiteTeamNumber').addEventListener('input', function(e) {
+    const number = e.target.value.trim();
+    const select = document.getElementById('whiteTeam');
+    
+    if (number === '') {
+        return;
+    }
+    
+    // チーム番号に一致するオプションを探す
+    for (let option of select.options) {
+        if (option.dataset.number && option.dataset.number === number) {
+            select.value = option.value;
+            return;
+        }
+    }
+});
+
+// プルダウン選択時にチーム番号欄に反映（赤チーム）
+document.getElementById('redTeam').addEventListener('change', function(e) {
+    const selectedOption = e.target.options[e.target.selectedIndex];
+    const numberInput = document.getElementById('redTeamNumber');
+    
+    if (selectedOption.dataset.number) {
+        numberInput.value = selectedOption.dataset.number;
+    } else {
+        numberInput.value = '';
+    }
+});
+
+// プルダウン選択時にチーム番号欄に反映（白チーム）
+document.getElementById('whiteTeam').addEventListener('change', function(e) {
+    const selectedOption = e.target.options[e.target.selectedIndex];
+    const numberInput = document.getElementById('whiteTeamNumber');
+    
+    if (selectedOption.dataset.number) {
+        numberInput.value = selectedOption.dataset.number;
+    } else {
+        numberInput.value = '';
+    }
+});
+</script>
+
 </body>
 </html>
