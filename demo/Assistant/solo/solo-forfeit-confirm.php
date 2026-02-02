@@ -1,8 +1,9 @@
 <?php
-session_start();
+// 個人戦共通処理を読み込み
+require_once 'solo_db.php';
 
 /* ===============================
-   セッションチェック
+   不戦勝用セッションチェック
 =============================== */
 if (
     !isset(
@@ -17,14 +18,6 @@ if (
 }
 
 $data = $_SESSION['forfeit_data'];
-
-/* ===============================
-   DB接続
-=============================== */
-$dsn = "mysql:host=localhost;port=3308;dbname=kendo_support_system;charset=utf8mb4";
-$pdo = new PDO($dsn, "root", "", [
-    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-]);
 
 /* ===============================
    大会・部門名取得
@@ -48,11 +41,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         INSERT INTO individual_matches
             (department_id, department, match_field,
              player_a_id, player_b_id,
-             started_at, ended_at, final_winner)
+             player_a_score, player_b_score,
+             started_at, ended_at, final_winner,
+             is_forfeit)
         VALUES
             (:department_id, :department, 1,
              :player_a, :player_b,
-             NOW(), NOW(), :winner)
+             :player_a_score, :player_b_score,
+             NOW(), NOW(), :winner,
+             1)
     ";
 
     $stmt = $pdo->prepare($sql);
@@ -61,6 +58,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ':department'    => $_SESSION['match_number'],
         ':player_a'      => $data['upper_id'],
         ':player_b'      => $data['lower_id'],
+        ':player_a_score' => $data['upper_score'],
+        ':player_b_score' => $data['lower_score'],
         ':winner'        => $data['winner']
     ]);
 
@@ -233,9 +232,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </tr>
             </thead>
             <tbody>
-                <!-- 上段 -->
+                <!-- 赤 -->
                 <tr>
-                    <td class="side-label">上</td>
+                    <td class="side-label">赤</td>
                     <td class="player-info">
                         <div class="player-name"><?= htmlspecialchars($data['upper_name']) ?></div>
                         <div class="player-number">選手番号: <?= htmlspecialchars($data['upper_number']) ?></div>
@@ -247,12 +246,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <span class="forfeit-loss">不戦敗</span>
                         <?php endif; ?>
                     </td>
-                    <td class="total-cell"><?= ($data['winner'] === 'A') ? '2' : '0' ?></td>
+                    <td class="total-cell"><?= $data['upper_score'] ?></td>
                 </tr>
 
-                <!-- 下段 -->
+                <!-- 白 -->
                 <tr>
-                    <td class="side-label">下</td>
+                    <td class="side-label">白</td>
                     <td class="player-info">
                         <div class="player-name"><?= htmlspecialchars($data['lower_name']) ?></div>
                         <div class="player-number">選手番号: <?= htmlspecialchars($data['lower_number']) ?></div>
@@ -264,7 +263,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <span class="forfeit-loss">不戦敗</span>
                         <?php endif; ?>
                     </td>
-                    <td class="total-cell"><?= ($data['winner'] === 'B') ? '2' : '0' ?></td>
+                    <td class="total-cell"><?= $data['lower_score'] ?></td>
                 </tr>
             </tbody>
         </table>

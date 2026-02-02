@@ -1,10 +1,14 @@
 <?php
-session_start();
+// 個人戦共通処理を読み込み
+require_once 'solo_db.php';
 
 /* ===============================
-   POST & セッションチェック
+   セッションチェックとデータ取得
 =============================== */
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+checkSoloSession();
+
+// 試合データを取得
+if (!isset($_SESSION['match_input'])) {
     header('Location: match_input.php');
     exit;
 }
@@ -12,34 +16,34 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $data = $_SESSION['match_input'];
 
 /* ===============================
-   DB接続
-=============================== */
-$dsn = "mysql:host=localhost;port=3308;dbname=kendo_support_system;charset=utf8mb4";
-$pdo = new PDO($dsn, "root", "", [
-    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-]);
-
-/* ===============================
    試合結果を解析
 =============================== */
 // 技と勝者を抽出
+$scores = $data['scores'] ?? [];
+$upperSelected = $data['upper']['selected'] ?? [];
+$lowerSelected = $data['lower']['selected'] ?? [];
+
+if (!is_array($upperSelected)) {
+    $upperSelected = [];
+}
+if (!is_array($lowerSelected)) {
+    $lowerSelected = [];
+}
+
 $techniques = [];
 $winners = [];
 
-foreach ($data['upper']['scores'] as $i => $score) {
-    if ($score !== '▼' && $score !== '▲' && $score !== '×') {
+foreach ($scores as $i => $score) {
+    if ($score !== '▼' && $score !== '▲' && $score !== '×' && $score !== '') {
         $techniques[] = $score;
-        $winners[] = ($data['upper']['selected'] == $i) ? 'A' : null;
-    }
-}
-
-foreach ($data['lower']['scores'] as $i => $score) {
-    if ($score !== '▼' && $score !== '▲' && $score !== '×') {
-        if (!isset($techniques[count($techniques) - 1]) || $techniques[count($techniques) - 1] !== $score) {
-            $techniques[] = $score;
-        }
-        if (($data['lower']['selected'] == $i) && !$winners[count($winners) - 1]) {
-            $winners[count($winners) - 1] = 'B';
+        
+        // どちらの選手が取ったかを判定
+        if (in_array($i, $upperSelected)) {
+            $winners[] = 'A';
+        } else if (in_array($i, $lowerSelected)) {
+            $winners[] = 'B';
+        } else {
+            $winners[] = null;
         }
     }
 }
@@ -54,8 +58,23 @@ if ($data['upper']['decision']) {
 } else if ($data['lower']['decision']) {
     $final_winner = 'B';
     $judgement = '判定';
+} else if ($data['special'] === 'draw') {
+    $final_winner = null;
+    $judgement = '引分け';
+} else if ($data['special'] === 'ippon') {
+    // 一本勝ち
+    $a_count = count(array_filter($winners, fn($w) => $w === 'A'));
+    $b_count = count(array_filter($winners, fn($w) => $w === 'B'));
+    
+    if ($a_count > $b_count) {
+        $final_winner = 'A';
+        $judgement = '一本勝';
+    } else if ($b_count > $a_count) {
+        $final_winner = 'B';
+        $judgement = '一本勝';
+    }
 } else {
-    // 勝ち本数で判定
+    // 通常の勝敗判定
     $a_count = count(array_filter($winners, fn($w) => $w === 'A'));
     $b_count = count(array_filter($winners, fn($w) => $w === 'B'));
     
@@ -63,9 +82,6 @@ if ($data['upper']['decision']) {
         $final_winner = 'A';
     } else if ($b_count > $a_count) {
         $final_winner = 'B';
-    } else if ($data['special'] === 'draw') {
-        $final_winner = null;
-        $judgement = '引分け';
     }
 }
 
