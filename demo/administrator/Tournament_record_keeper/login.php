@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // ★ セッション保存（これが超重要）
             $_SESSION['admin_user'] = $admin;
 
-            header("Location: php/tournament-detail.php");
+            header("Location: php/tournament_select.php");
             exit;
         } else {
             $error = "IDまたはパスワードが違います。";

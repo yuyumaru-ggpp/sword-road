@@ -1,10 +1,10 @@
 <?php
 session_start();
-require_once '../../../db_connect.php';
+require_once '../../db_connect.php';
 
 // ログインチェック
 if (!isset($_SESSION['admin_user'])) {
-    header("Location: ../../login.php");
+    header("Location: ../login.php");
     exit;
 }
 
@@ -16,10 +16,6 @@ $sql = "SELECT id, title, event_date FROM tournaments ORDER BY event_date DESC";
 $stmt = $pdo->query($sql);
 $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// 戻るボタンの遷移先をロールで切り替え
-$back_link = ($user_role === 'recorder')
-    ? '../recorder_top.php'
-    : 'Admin_top.php';
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -28,7 +24,7 @@ $back_link = ($user_role === 'recorder')
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>大会選択画面</title>
-    <link rel="stylesheet" href="../../css/player_change/select_tournament.css">
+    <link rel="stylesheet" href="../css/player_change/select_tournament.css">
 </head>
 
 <body>
@@ -50,7 +46,7 @@ $back_link = ($user_role === 'recorder')
 
                     <?php foreach ($tournaments as $t): ?>
                         <div class="tournament-row"
-                            onclick="location.href='category_select.php?id=<?= $t['id'] ?>'">
+                            onclick="location.href='tournament-detail.php?id=<?= $t['id'] ?>'">
 
                             <span class="tournament-id"><?= htmlspecialchars($t['id']) ?></span>
 
@@ -71,7 +67,7 @@ $back_link = ($user_role === 'recorder')
 
         <button type="button"
             class="action-button secondary"
-            onclick="location.href='../tournament-detail.php'">
+            onclick="location.href='../../master.php'">
             戻る
         </button>
     </div>
