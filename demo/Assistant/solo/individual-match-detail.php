@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <meta charset="UTF-8">
 <title>個人戦試合詳細</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<link rel="stylesheet" href="individual-match-detail.css">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body { 
@@ -434,6 +434,26 @@ body {
     .dropdown-container { width:30px; height:30px; }
     .divider-section { margin:0.5rem 0; }
     .bottom-area { gap:0.3rem; margin-top:0.3rem; }
+/* 上段の選手情報を赤色に - 視認性向上 */
+.upper-section .value {
+    color: #ef4444 !important;
+    font-weight: 700 !important;
+    background: rgba(239, 68, 68, 0.15) !important;
+    padding: 4px 12px !important;
+    border-radius: 8px !important;
+    border: 2px solid rgba(239, 68, 68, 0.3) !important;
+    display: inline-block !important;
+}
+
+/* 下段の選手情報を白色に - 視認性向上 */
+.lower-section .value {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.6) 0%, rgba(118, 75, 162, 0.6) 100%) !important;
+    padding: 4px 12px !important;
+    border-radius: 8px !important;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8) !important;
+    display: inline-block !important;
 }
 
 </style>

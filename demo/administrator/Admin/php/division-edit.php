@@ -110,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <form method="POST" novalidate>
         <label class="input-label">種別</label>
         <div style="display:flex; gap:1.5rem; margin-bottom:1rem;">
-          <label><input type="radio" name="distinction" value="0" <?= ((int)$dept['distinction'] === 0) ? 'checked' : '' ?>> 個人戦</label>
+          <label><input type="radio" name="distinction" value="0" <?= ((int)$dept['distinction'] === 2) ? 'checked' : '' ?>> 個人戦</label>
           <label><input type="radio" name="distinction" value="1" <?= ((int)$dept['distinction'] === 1) ? 'checked' : '' ?>> 団体戦</label>
         </div>
 
@@ -118,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <input id="name" name="name" class="name-input" type="text" value="<?= htmlspecialchars($dept['name']) ?>" required>
 
         <div class="button-container">
-          <a class="btn" href="division-register.php?tournament_id=<?= htmlspecialchars($tournament_id) ?>">戻る</a>
+          <a class="btn" href="tournament-detail.php?tournament_id=<?= htmlspecialchars($tournament_id) ?>">戻る</a>
           <button type="submit" class="btn btn-primary">更新</button>
         </div>
       </form>

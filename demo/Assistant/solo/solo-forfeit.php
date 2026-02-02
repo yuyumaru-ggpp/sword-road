@@ -263,23 +263,26 @@ body {
     }
 }
 </style>
+<link rel="stylesheet" href="solo-match-selection.css">
 </head>
 
 <body>
 
 <div class="container">
     <div class="header">
-        <span>個人戦</span>
-        <span><?= htmlspecialchars($info['tournament_name']) ?></span>
-        <span><?= htmlspecialchars($info['division_name']) ?></span>
+        <div class="header-title">個人戦</div>
+        <div class="header-main">
+            <?= htmlspecialchars($info['tournament_name']) ?><br>
+            <?= htmlspecialchars($info['division_name']) ?>
+        </div>
     </div>
 
     <div class="notice">
-        ※ 不戦勝の場合は勝者側の「不戦勝」ボタンを押してください
+        💡 不戦勝の場合は勝者側の「不戦勝」ボタンを押してください
     </div>
 
     <?php if ($error): ?>
-        <div class="error"><?= htmlspecialchars($error) ?></div>
+        <div class="error">⚠️ <?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
 
     <form method="POST">
@@ -302,7 +305,9 @@ body {
                 <button type="button" class="forfeit-button" id="upperForfeit">不戦勝</button>
             </div>
 
-            <div class="vs-text">対</div>
+            <div class="vs-divider">
+                <span class="vs-text">VS</span>
+            </div>
 
             <div class="player-section">
                 <div class="player-label">白</div>
@@ -322,7 +327,7 @@ body {
         </div>
 
         <div class="action-buttons">
-            <button type="submit" class="action-button confirm-button" id="confirmButton">決定</button>
+            <button type="submit" class="action-button confirm-button">決定</button>
             <button type="button" class="action-button back-button" onclick="history.back()">戻る</button>
         </div>
     </form>

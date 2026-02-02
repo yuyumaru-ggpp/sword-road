@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         $stmt->execute();
 
-        header("Location: tournament-setting.php?id=" . $id);
+        header("Location: tournament-detail.php?id=" . $id);
         exit;
     }
 }
