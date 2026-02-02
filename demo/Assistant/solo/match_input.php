@@ -1,6 +1,7 @@
 <!-- match_input.php -->
 <?php
-session_start();
+// 個人戦共通処理を読み込み
+require_once 'solo_db.php';
 
 /* ---------- ログイン & パラメータチェック ---------- */
 if (!isset($_SESSION['tournament_id'], $_GET['division_id'])) {
@@ -11,27 +12,12 @@ if (!isset($_SESSION['tournament_id'], $_GET['division_id'])) {
 $tournament_id = $_SESSION['tournament_id'];
 $division_id = (int)$_GET['division_id'];
 
-/* ---------- DB接続 ---------- */
-$user = "root";
-$pass = "";
-$database = "kendo_support_system";
-$server = "localhost";
-$port = "3307";
-
-$dsn = "mysql:host={$server};port={$port};dbname={$database};charset=utf8mb4";
-
-try {
-    $pdo = new PDO($dsn, $user, $pass);
-    $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (Exception $e) {
-    exit("DB接続失敗：" . $e->getMessage());
-}
 
 /* ---------- 大会・部門情報取得 ---------- */
 $sql = "
     SELECT
         t.title AS tournament_name,
+        t.match_field AS match_field_count,
         d.name AS division_name,
         d.distinction
     FROM
@@ -58,7 +44,12 @@ if (!$info) {
     exit('部門情報が取得できません');
 }
 
+$match_field_count = (int)($info['match_field_count'] ?? 1);
+
 $error = '';
+
+/* ---------- 前回の試合場番号を取得 ---------- */
+$previous_match_field = isset($_SESSION['last_match_field']) ? $_SESSION['last_match_field'] : '';
 
 /* ---------- フォーム処理 ---------- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -71,9 +62,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($_POST['action'] === 'submit') {
 
         $match_number = trim($_POST['match_number']);
+        $match_field = (int)$_POST['match_field'];
 
         if ($match_number === '') {
             $error = '試合番号を入力してください';
+        } elseif ($match_field < 1 || $match_field > $match_field_count) {
+            $error = '試合場を選択してください';
         } else {
 
             // 重複チェック（departmentカラムを使用）
@@ -82,19 +76,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 FROM individual_matches
                 WHERE department_id = :department_id
                   AND department = :match_number
+                  AND match_field = :match_field
             ";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([
                 ':department_id' => $division_id,
-                ':match_number' => $match_number
+                ':match_number' => $match_number,
+                ':match_field' => $match_field
             ]);
 
             if ($stmt->fetchColumn() > 0) {
-                $error = 'この試合番号はすでに登録されています';
+                $error = 'この試合番号と試合場の組み合わせはすでに登録されています';
             } else {
                 // セッションに保持
                 $_SESSION['division_id'] = $division_id;
                 $_SESSION['match_number'] = $match_number;
+                $_SESSION['match_field'] = $match_field;
+                
+                // 次回の入力のために試合場番号を記憶
+                $_SESSION['last_match_field'] = $match_field;
 
                 header('Location: solo-forfeit.php');
                 exit;
@@ -153,10 +153,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .input-wrapper {
             width: 100%;
             max-width: 500px;
-            margin-bottom: 50px;
+            margin-bottom: 30px;
         }
 
-        input[type="text"] {
+        .input-label {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+            color: #333;
+        }
+
+        input[type="text"], select {
             width: 100%;
             padding: 20px 30px;
             font-size: 20px;
@@ -167,12 +175,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background-color: #f5f5f5;
         }
 
-        input[type="text"]:focus {
+        input[type="text"]:focus, select:focus {
             border-color: #666;
         }
 
         input[type="text"]::placeholder {
             color: #999;
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 20px center;
+            padding-right: 50px;
+        }
+
+        select option {
+            text-align: center;
         }
 
         .button-group {
@@ -214,15 +235,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <div class="main-content">
-        <h2>試合番号を入力してください</h2>
+        <h2>試合情報を入力してください</h2>
 
         <form method="POST">
             <div class="input-wrapper">
-                <input type="text" name="match_number" placeholder="試合番号" value="<?php echo htmlspecialchars($_POST['match_number'] ?? ''); ?>">
-                <?php if ($error): ?>
-                    <div class="error"><?php echo htmlspecialchars($error); ?></div>
-                <?php endif; ?>
+                <div class="input-label">試合場</div>
+                <select name="match_field">
+                    <option value="">選択してください</option>
+                    <?php for ($i = 1; $i <= $match_field_count; $i++): ?>
+                        <option value="<?= $i ?>" <?= (isset($_POST['match_field']) && $_POST['match_field'] == $i) || (!isset($_POST['match_field']) && $previous_match_field == $i) ? 'selected' : '' ?>>
+                            第<?= $i ?>試合場
+                        </option>
+                    <?php endfor; ?>
+                </select>
             </div>
+
+            <div class="input-wrapper">
+                <div class="input-label">試合番号</div>
+                <input type="text" name="match_number" placeholder="試合番号" value="<?php echo htmlspecialchars($_POST['match_number'] ?? ''); ?>">
+            </div>
+
+            <?php if ($error): ?>
+                <div class="error"><?php echo htmlspecialchars($error); ?></div>
+            <?php endif; ?>
 
             <div class="button-group">
                 <button type="submit" name="action" value="back">戻る</button>

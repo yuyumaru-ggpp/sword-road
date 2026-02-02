@@ -1,37 +1,17 @@
 <?php
 session_start();
+require_once '../../conect/db_connect.php';
 
-/* ===============================
-   セッションチェック
-=============================== */
-if (
-    !isset(
-        $_SESSION['tournament_id'],
-        $_SESSION['division_id'],
-        $_SESSION['match_number'],
-        $_SESSION['player_a_id'],
-        $_SESSION['player_b_id']
-    )
-) {
+/* セッションチェック */
+if (!isset($_SESSION['tournament_id'], $_SESSION['division_id'], $_SESSION['match_number'])) {
     header('Location: match_input.php');
     exit;
 }
 
-$tournament_id = $_SESSION['tournament_id'];
-$division_id   = $_SESSION['division_id'];
-$match_number  = $_SESSION['match_number'];
-$player_a_id   = $_SESSION['player_a_id'];
-$player_b_id   = $_SESSION['player_b_id'];
+$tournament_id = (int)$_SESSION['tournament_id'];
+$division_id = (int)$_SESSION['division_id'];
+$match_number = $_SESSION['match_number'];
 
-/* ===============================
-   DB接続
-=============================== */
-
-$dsn = "mysql:host=localhost;port=3307;dbname=kendo_support_system;charset=utf8mb4";
-
-$pdo = new PDO($dsn, "root", "", [
-    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-]);
 
 /* ===============================
    大会・部門・選手情報取得
@@ -143,20 +123,23 @@ body {
 .row { 
     display:flex; 
     align-items:center; 
-    font-size:clamp(0.9rem, 2vh, 1.2rem); 
+    font-size:clamp(1.2rem, 2.5vh, 1.8rem); 
     gap:clamp(0.5rem, 1vw, 1rem);
-    margin-bottom:0;
+    margin-bottom:clamp(0.5rem, 1vh, 1rem);
     flex-wrap:wrap;
 }
 
 .label { 
     min-width:clamp(70px, 10vw, 100px); 
     font-weight:bold; 
+    font-size:clamp(1.2rem, 2.5vh, 1.8rem);
 }
 
 .value { 
     min-width:clamp(100px, 15vw, 150px); 
     word-break:break-all;
+    font-size:clamp(1.4rem, 3vh, 2.2rem);
+    font-weight:bold;
 }
 
 .score-display { 
@@ -452,6 +435,7 @@ body {
     .divider-section { margin:0.5rem 0; }
     .bottom-area { gap:0.3rem; margin-top:0.3rem; }
 }
+
 </style>
 </head>
 
@@ -505,10 +489,12 @@ body {
                         <div class="score-dropdown">▼</div>
                         <div class="dropdown-menu">
                             <div class="dropdown-item" data-val="▼">▼</div>
-                            <div class="dropdown-item" data-val="面">面</div>
-                            <div class="dropdown-item" data-val="小手">小手</div>
-                            <div class="dropdown-item" data-val="胴">胴</div>
-                            <div class="dropdown-item" data-val="突">突</div>
+                            <div class="dropdown-item" data-val="メ">メ</div>
+                            <div class="dropdown-item" data-val="コ">コ</div>
+                            <div class="dropdown-item" data-val="ド">ド</div>
+                            <div class="dropdown-item" data-val="ツ">ツ</div>
+                            <div class="dropdown-item" data-val="反">反</div>
+                            <div class="dropdown-item" data-val="判">判</div>
                             <div class="dropdown-item" data-val="×">×</div>
                         </div>
                     </div>
@@ -516,10 +502,12 @@ body {
                         <div class="score-dropdown">▼</div>
                         <div class="dropdown-menu">
                             <div class="dropdown-item" data-val="▼">▼</div>
-                            <div class="dropdown-item" data-val="面">面</div>
-                            <div class="dropdown-item" data-val="小手">小手</div>
-                            <div class="dropdown-item" data-val="胴">胴</div>
-                            <div class="dropdown-item" data-val="突">突</div>
+                            <div class="dropdown-item" data-val="メ">メ</div>
+                            <div class="dropdown-item" data-val="コ">コ</div>
+                            <div class="dropdown-item" data-val="ド">ド</div>
+                            <div class="dropdown-item" data-val="ツ">ツ</div>
+                            <div class="dropdown-item" data-val="反">反</div>
+                            <div class="dropdown-item" data-val="判">判</div>
                             <div class="dropdown-item" data-val="×">×</div>
                         </div>
                     </div>
@@ -527,10 +515,12 @@ body {
                         <div class="score-dropdown">▼</div>
                         <div class="dropdown-menu">
                             <div class="dropdown-item" data-val="▼">▼</div>
-                            <div class="dropdown-item" data-val="面">面</div>
-                            <div class="dropdown-item" data-val="小手">小手</div>
-                            <div class="dropdown-item" data-val="胴">胴</div>
-                            <div class="dropdown-item" data-val="突">突</div>
+                            <div class="dropdown-item" data-val="メ">メ</div>
+                            <div class="dropdown-item" data-val="コ">コ</div>
+                            <div class="dropdown-item" data-val="ド">ド</div>
+                            <div class="dropdown-item" data-val="ツ">ツ</div>
+                            <div class="dropdown-item" data-val="反">反</div>
+                            <div class="dropdown-item" data-val="判">判</div>
                             <div class="dropdown-item" data-val="×">×</div>
                         </div>
                     </div>
@@ -541,9 +531,11 @@ body {
                 <div class="draw-container">
                     <button type="button" class="draw-button" id="drawButton">-</button>
                     <div class="draw-dropdown-menu" id="drawMenu">
+                        <div class="dropdown-item">二本勝</div>
                         <div class="dropdown-item">一本勝</div>
-                        <div class="dropdown-item">延長</div>
-                        <div class="dropdown-item">引分け</div>
+                        <div class="dropdown-item">延長戦</div>
+                        <div class="dropdown-item">判定</div>
+                        <div class="dropdown-item">引き分け</div>
                         <div class="dropdown-item">-</div>
                     </div>
                 </div>
@@ -595,28 +587,30 @@ body {
 </div>
 
 <script>
-/* ===== 初期データ ===== */
+
+
+
+/* ===== 初期データ（selectedを配列に変更） ===== */
 const data = {
     upper: {
         name: "<?= htmlspecialchars($upper_name) ?>",
         number: "<?= htmlspecialchars($upper_no) ?>",
-        scores: ['▼','▼','▼'],
-        selected: -1,
+        selected: [],
         decision: false
     },
     lower: {
         name: "<?= htmlspecialchars($lower_name) ?>",
         number: "<?= htmlspecialchars($lower_no) ?>",
-        scores: ['▲','▲','▲'],
-        selected: -1,
+        selected: [],
         decision: false
     },
+    scores: ['▼','▼','▼'],
     special: 'none'
 };
 
 function updateDecisionButtonsVisibility() {
     const drawText = document.getElementById('drawButton').textContent;
-    const showButtons = drawText === '延長';
+    const showButtons = drawText === '延長戦';
     
     document.getElementById('upperDecisionRow').classList.toggle('show', showButtons);
     document.getElementById('lowerDecisionRow').classList.toggle('show', showButtons);
@@ -633,33 +627,41 @@ function load() {
     document.querySelector('.lower-name').textContent = data.lower.name||'───';
     document.querySelector('.lower-number').textContent = data.lower.number||'───';
 
-    document.querySelectorAll('.middle-controls .score-dropdown').forEach((b,i)=>b.textContent=(data.upper.scores&&data.upper.scores[i])||'▼');
+    document.querySelectorAll('.middle-controls .score-dropdown').forEach((b,i)=>b.textContent=(data.scores&&data.scores[i])||'▼');
 
-    document.querySelectorAll('.upper-circles .radio-circle').forEach((c,i)=>c.classList.toggle('selected',data.upper.selected===i));
-    document.querySelectorAll('.lower-circles .radio-circle').forEach((c,i)=>c.classList.toggle('selected',data.lower.selected===i));
+    // 配列で複数のインデックスを処理
+    document.querySelectorAll('.upper-circles .radio-circle').forEach((c,i)=> {
+        c.classList.toggle('selected', (data.upper.selected || []).includes(i));
+    });
+    document.querySelectorAll('.lower-circles .radio-circle').forEach((c,i)=> {
+        c.classList.toggle('selected', (data.lower.selected || []).includes(i));
+    });
 
     document.getElementById('upperDecisionBtn').classList.toggle('active', data.upper.decision||false);
     document.getElementById('lowerDecisionBtn').classList.toggle('active', data.lower.decision||false);
 
     const special = data.special||'none';
-    const text = special==='ippon'?'一本勝':special==='extend'?'延長':special==='draw'?'引分け':'-';
+    const text = special==='nihon'?'二本勝':special==='ippon'?'一本勝':special==='extend'?'延長戦':special==='hantei'?'判定':special==='draw'?'引き分け':'-';
     document.getElementById('drawButton').textContent=text;
     
     updateDecisionButtonsVisibility();
 }
 
 function saveLocal() {
-    data.upper.scores = Array.from(document.querySelectorAll('.middle-controls .score-dropdown')).map(b=>b.textContent);
-    const uSel = document.querySelector('.upper-circles .radio-circle.selected');
-    data.upper.selected = uSel? +uSel.dataset.index : -1;
-    const lSel = document.querySelector('.lower-circles .radio-circle.selected');
-    data.lower.selected = lSel? +lSel.dataset.index : -1;
+    data.scores = Array.from(document.querySelectorAll('.middle-controls .score-dropdown')).map(b=>b.textContent);
+    
+    // 選択されたすべてのインデックスを配列で保存
+    data.upper.selected = Array.from(document.querySelectorAll('.upper-circles .radio-circle.selected'))
+        .map(el => parseInt(el.dataset.index));
+    
+    data.lower.selected = Array.from(document.querySelectorAll('.lower-circles .radio-circle.selected'))
+        .map(el => parseInt(el.dataset.index));
 
     data.upper.decision = document.getElementById('upperDecisionBtn').classList.contains('active');
     data.lower.decision = document.getElementById('lowerDecisionBtn').classList.contains('active');
 
     const dt = document.getElementById('drawButton').textContent;
-    data.special = dt==='一本勝'?'ippon':dt==='延長'?'extend':dt==='引分け'?'draw':'none';
+    data.special = dt==='二本勝'?'nihon':dt==='一本勝'?'ippon':dt==='延長戦'?'extend':dt==='判定'?'hantei':dt==='引き分け'?'draw':'none';
 }
 
 // 判定勝ちボタンの処理
@@ -685,25 +687,36 @@ document.getElementById('lowerDecisionBtn').addEventListener('click', function()
     }
 });
 
+// 赤丸クリックの処理（複数選択対応）
 for (let i = 0; i < 3; i++) {
     const upper = document.querySelector(`.upper-circles .radio-circle[data-index="${i}"]`);
     const lower = document.querySelector(`.lower-circles .radio-circle[data-index="${i}"]`);
 
     upper.addEventListener('click', () => {
+        const lowerSame = document.querySelector(`.lower-circles .radio-circle[data-index="${i}"]`);
+        
         if (upper.classList.contains('selected')) {
+            // 選択解除
             upper.classList.remove('selected');
         } else {
+            // 選択
             upper.classList.add('selected');
-            lower.classList.remove('selected');
+            // 同じ位置の下段を解除
+            lowerSame.classList.remove('selected');
         }
     });
 
     lower.addEventListener('click', () => {
+        const upperSame = document.querySelector(`.upper-circles .radio-circle[data-index="${i}"]`);
+        
         if (lower.classList.contains('selected')) {
+            // 選択解除
             lower.classList.remove('selected');
         } else {
+            // 選択
             lower.classList.add('selected');
-            upper.classList.remove('selected');
+            // 同じ位置の上段を解除
+            upperSame.classList.remove('selected');
         }
     });
 }
@@ -742,8 +755,9 @@ document.addEventListener('click',()=>document.querySelectorAll('.dropdown-menu,
 
 document.getElementById('cancelButton').addEventListener('click',()=>{
     if(confirm('試合内容をリセットしますか?')){
-        data.upper={name:data.upper.name,number:data.upper.number,scores:['▼','▼','▼'],selected:-1,decision:false};
-        data.lower={name:data.lower.name,number:data.lower.number,scores:['▲','▲','▲'],selected:-1,decision:false};
+        data.upper={name:data.upper.name,number:data.upper.number,selected:[],decision:false};
+        data.lower={name:data.lower.name,number:data.lower.number,selected:[],decision:false};
+        data.scores=['▼','▼','▼'];
         data.special='none';
         load();
     }

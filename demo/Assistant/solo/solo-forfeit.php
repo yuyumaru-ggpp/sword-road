@@ -1,74 +1,19 @@
 <?php
-session_start();
+require_once 'solo_db.php';
 
-/* ===============================
-   必須セッションチェック
-=============================== */
-if (
-    !isset($_SESSION['tournament_id'], $_SESSION['division_id'], $_SESSION['match_number'])
-) {
-    header('Location: match_input.php');
-    exit;
-}
+// セッションチェック
+checkSoloSession();
 
+// 変数取得
 $tournament_id = (int)$_SESSION['tournament_id'];
 $division_id   = (int)$_SESSION['division_id'];
 $match_number  = $_SESSION['match_number'];
 
-/* ===============================
-   DB接続
-=============================== */
+// 大会・部門情報取得
+$info = getTournamentInfo($pdo, $division_id);
 
-$dsn = "mysql:host=localhost;port=3307;dbname=kendo_support_system;charset=utf8mb4";
-
-$pdo = new PDO($dsn, "root", "", [
-    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-]);
-
-/* ===============================
-   大会・部門名取得
-=============================== */
-$sql = "
-    SELECT
-        t.title AS tournament_name,
-        d.name  AS division_name
-    FROM departments d
-    INNER JOIN tournaments t ON t.id = d.tournament_id
-    WHERE d.id = :division_id
-";
-$stmt = $pdo->prepare($sql);
-$stmt->execute([
-    ':division_id' => $division_id
-]);
-$info = $stmt->fetch();
-
-if (!$info) {
-    exit('部門情報が取得できません');
-}
-
-/* ===============================
-   部門に属する選手一覧を取得（画面表示用）
-=============================== */
-$sql = "
-    SELECT
-        p.id,
-        p.player_number,
-        p.name,
-        t.name as team_name
-    FROM players p
-    INNER JOIN teams t ON p.team_id = t.id
-    INNER JOIN departments d ON t.department_id = d.id
-    WHERE d.id = :division_id
-      AND p.substitute_flg = 0
-    ORDER BY p.id
-";
-
-$stmt = $pdo->prepare($sql);
-$stmt->execute([
-    ':division_id' => $division_id
-]);
-$players = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// 選手一覧取得
+$players = getPlayers($pdo, $division_id);
 
 $error = '';
 
@@ -119,11 +64,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             /* ===============================
-               不戦勝
+               不戦勝（ボタンを押した側が勝ち）
             =============================== */
             if ($forfeit === 'upper' || $forfeit === 'lower') {
 
-                // セッションに不戦勝情報を保存
+                // 不戦勝ボタンを押した側が勝ち（2本）、相手が負け（0本）
+                // upper ボタン押下 = 上段が勝ち、下段が負け
+                // lower ボタン押下 = 下段が勝ち、上段が負け
+                
                 $_SESSION['forfeit_data'] = [
                     'upper_id' => $upper_id,
                     'lower_id' => $lower_id,
@@ -131,7 +79,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'lower_name' => $player_info[$lower_id]['name'],
                     'upper_number' => $player_info[$upper_id]['number'],
                     'lower_number' => $player_info[$lower_id]['number'],
-                    'winner' => ($forfeit === 'upper') ? 'A' : 'B'
+                    'winner' => ($forfeit === 'upper') ? 'A' : 'B',  // ボタンを押した側が勝ち
+                    'upper_score' => ($forfeit === 'upper') ? 2 : 0,  // 上段ボタン押したら上段が2本
+                    'lower_score' => ($forfeit === 'lower') ? 2 : 0   // 下段ボタン押したら下段が2本
                 ];
 
                 header('Location: solo-forfeit-confirm.php');
@@ -278,6 +228,26 @@ body {
 .back-button:hover {
     background:#f9fafb;
 }
+.player-number-input {
+    width:100%;
+    max-width:300px;
+    padding:1rem;
+    font-size:1.2rem;
+    text-align:center;
+    border:3px solid #ddd;
+    border-radius:8px;
+    margin-bottom:0.5rem;
+}
+.player-number-input:focus {
+    outline:none;
+    border-color:#3b82f6;
+}
+.input-label-small {
+    font-size:1rem;
+    color:#666;
+    margin-bottom:0.5rem;
+}
+
 .error {
     color:#ef4444;
     text-align:center;
@@ -317,11 +287,14 @@ body {
 
         <div class="match-row">
             <div class="player-section">
-                <div class="player-label">上段選手</div>
+                <div class="player-label">赤</div>
+                <div class="input-label-small">選手番号</div>
+                <input type="text" class="player-number-input" id="upperPlayerNumber" placeholder="選手番号を入力">
+                <div class="input-label-small">または選手を選択</div>
                 <select name="upper_player" class="player-select" id="upperPlayer" required>
                     <option value="">選手を選択してください</option>
                     <?php foreach ($players as $player): ?>
-                        <option value="<?= $player['id'] ?>" <?= (isset($_POST['upper_player']) && $_POST['upper_player'] == $player['id']) ? 'selected' : '' ?>>
+                        <option value="<?= $player['id'] ?>" data-number="<?= htmlspecialchars($player['player_number']) ?>" <?= (isset($_POST['upper_player']) && $_POST['upper_player'] == $player['id']) ? 'selected' : '' ?>>
                             <?= htmlspecialchars($player['name']) ?> (<?= htmlspecialchars($player['team_name']) ?>)
                         </option>
                     <?php endforeach; ?>
@@ -332,11 +305,14 @@ body {
             <div class="vs-text">対</div>
 
             <div class="player-section">
-                <div class="player-label">下段選手</div>
+                <div class="player-label">白</div>
+                <div class="input-label-small">選手番号</div>
+                <input type="text" class="player-number-input" id="lowerPlayerNumber" placeholder="選手番号を入力">
+                <div class="input-label-small">または選手を選択</div>
                 <select name="lower_player" class="player-select" id="lowerPlayer" required>
                     <option value="">選手を選択してください</option>
                     <?php foreach ($players as $player): ?>
-                        <option value="<?= $player['id'] ?>" <?= (isset($_POST['lower_player']) && $_POST['lower_player'] == $player['id']) ? 'selected' : '' ?>>
+                        <option value="<?= $player['id'] ?>" data-number="<?= htmlspecialchars($player['player_number']) ?>" <?= (isset($_POST['lower_player']) && $_POST['lower_player'] == $player['id']) ? 'selected' : '' ?>>
                             <?= htmlspecialchars($player['name']) ?> (<?= htmlspecialchars($player['team_name']) ?>)
                         </option>
                     <?php endforeach; ?>
@@ -384,7 +360,66 @@ document.querySelector('form').onsubmit = (e) => {
         forfeitInput.value = '';
     }
 };
+
+// 選手番号入力時の自動選択機能
+document.getElementById('upperPlayerNumber').addEventListener('input', function(e) {
+    const number = e.target.value.trim();
+    const select = document.getElementById('upperPlayer');
+    
+    if (number === '') {
+        return;
+    }
+    
+    // 選手番号に一致するオプションを探す
+    for (let option of select.options) {
+        if (option.dataset.number && option.dataset.number === number) {
+            select.value = option.value;
+            return;
+        }
+    }
+});
+
+document.getElementById('lowerPlayerNumber').addEventListener('input', function(e) {
+    const number = e.target.value.trim();
+    const select = document.getElementById('lowerPlayer');
+    
+    if (number === '') {
+        return;
+    }
+    
+    // 選手番号に一致するオプションを探す
+    for (let option of select.options) {
+        if (option.dataset.number && option.dataset.number === number) {
+            select.value = option.value;
+            return;
+        }
+    }
+});
+
+// プルダウン選択時に選手番号欄に反映
+document.getElementById('upperPlayer').addEventListener('change', function(e) {
+    const selectedOption = e.target.options[e.target.selectedIndex];
+    const numberInput = document.getElementById('upperPlayerNumber');
+    
+    if (selectedOption.dataset.number) {
+        numberInput.value = selectedOption.dataset.number;
+    } else {
+        numberInput.value = '';
+    }
+});
+
+document.getElementById('lowerPlayer').addEventListener('change', function(e) {
+    const selectedOption = e.target.options[e.target.selectedIndex];
+    const numberInput = document.getElementById('lowerPlayerNumber');
+    
+    if (selectedOption.dataset.number) {
+        numberInput.value = selectedOption.dataset.number;
+    } else {
+        numberInput.value = '';
+    }
+});
+
 </script>
 
 </body>
-</html> 
+</html>
