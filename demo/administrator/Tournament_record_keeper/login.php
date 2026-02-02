@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once '../db_connect.php';
 
 $error = '';
@@ -11,8 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'すべての項目を入力してください。';
     } else {
 
-        // ★ SELECT で管理者を検索
-        $sql = "SELECT * FROM admin_users WHERE user_id = :user_id AND password = :password";
+        $sql = "SELECT * FROM managers WHERE user_id = :user_id AND password = :password";
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':user_id', $user_id, PDO::PARAM_STR);
         $stmt->bindValue(':password', $pass, PDO::PARAM_STR);
@@ -21,11 +21,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $admin = $stmt->fetch();
 
         if ($admin) {
-            // ★ ログイン成功
-            header("Location: php/tournament-detail.php");
+
+            // ★ セッション保存（これが超重要）
+            $_SESSION['admin_user'] = $admin;
+
+            header("Location: php/tournament_select.php");
             exit;
         } else {
-            // ★ ログイン失敗
             $error = "IDまたはパスワードが違います。";
         }
     }
@@ -47,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <p style="color:red;"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></p>
     <?php endif; ?>
 
-    <form action="php/tournament-detail.php" method="POST">
+    <form action="" method="POST">
         <input type="text" name="user_id" placeholder="IDを入力してください"
                value="<?= htmlspecialchars($user_id, ENT_QUOTES, 'UTF-8') ?>"/>
 

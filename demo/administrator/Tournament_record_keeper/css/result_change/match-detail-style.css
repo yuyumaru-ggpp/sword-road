@@ -1,0 +1,565 @@
+/* ------------------------------
+   RESET
+------------------------------ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 0.5rem;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ------------------------------
+   CONTAINER
+------------------------------ */
+.container {
+    max-width: 1200px;
+    width: 100%;
+    height: auto;
+    max-height: none;
+    background: white;
+    padding: clamp(1.5rem, 2.5vh, 2.5rem) clamp(1rem, 2vh, 2rem);
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ------------------------------
+   HEADER
+------------------------------ */
+.header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: clamp(0.5rem, 1vh, 1rem);
+    margin-bottom: clamp(1.5rem, 3vh, 2rem);
+    padding: clamp(0.8rem, 1.5vh, 1.2rem);
+    font-size: clamp(1rem, 2.5vh, 1.3rem);
+    font-weight: bold;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+/* ------------------------------
+   CONTENT WRAPPER
+------------------------------ */
+.content-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    max-height: calc(100vh - 200px);
+    padding-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    min-height: 0;
+}
+
+/* スクロールバーのスタイリング */
+.content-wrapper::-webkit-scrollbar {
+    width: 8px;
+}
+
+.content-wrapper::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.content-wrapper::-webkit-scrollbar-thumb {
+    background: #667eea;
+    border-radius: 10px;
+}
+
+.content-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #764ba2;
+}
+
+/* ------------------------------
+   MATCH SECTIONS
+------------------------------ */
+.match-section {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.4rem, 0.8vh, 0.8rem);
+    flex-shrink: 0;
+    padding: clamp(1rem, 2vh, 1.5rem);
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.match-section:hover {
+    border-color: #667eea;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.15);
+}
+
+.upper-section {
+    margin-bottom: clamp(2rem, 3.5vh, 3.5rem);
+    border-color: #fee2e2;
+    background: linear-gradient(135deg, #fff5f5 0%, #fef2f2 100%);
+}
+
+.upper-section:hover {
+    border-color: #ef4444;
+}
+
+.lower-section {
+    border-color: #dbeafe;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+}
+
+.lower-section:hover {
+    border-color: #3b82f6;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    font-size: clamp(0.95rem, 2vh, 1.25rem);
+    gap: clamp(0.5rem, 1vw, 1rem);
+    flex-wrap: wrap;
+    padding: clamp(0.3rem, 0.8vh, 0.5rem) 0;
+}
+
+.label {
+    min-width: clamp(80px, 12vw, 110px);
+    font-weight: 600;
+    color: #475569;
+}
+
+.value {
+    min-width: clamp(120px, 18vw, 180px);
+    word-break: break-all;
+    font-weight: 500;
+    color: #1e293b;
+}
+
+/* ------------------------------
+   SCORE DISPLAY
+------------------------------ */
+.score-display {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin: clamp(1rem, 2vh, 1.5rem) 0;
+    padding: clamp(0.8rem, 1.5vh, 1.2rem);
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.score-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(0.4rem, 1vh, 0.8rem);
+}
+
+.score-numbers {
+    display: flex;
+    gap: clamp(1.5rem, 4vw, 3rem);
+    font-size: clamp(1.1rem, 2.8vh, 1.6rem);
+    font-weight: bold;
+    color: #334155;
+}
+
+.score-numbers span {
+    width: clamp(40px, 7vw, 55px);
+    height: clamp(40px, 7vw, 55px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f1f5f9;
+    border-radius: 50%;
+    border: 2px solid #e2e8f0;
+}
+
+/* ------------------------------
+   RADIO CIRCLES
+------------------------------ */
+.radio-circles {
+    display: flex;
+    gap: clamp(1.5rem, 4vw, 3rem);
+}
+
+.radio-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.radio-circle {
+    width: clamp(40px, 7vw, 55px);
+    height: clamp(40px, 7vw, 55px);
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #cbd5e1;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    position: relative;
+}
+
+.radio-circle:hover {
+    transform: scale(1.05);
+    border-color: #94a3b8;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.radio-circle.selected {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border-color: #dc2626;
+    transform: scale(1.15);
+    box-shadow: 0 0 0 4px rgba(239,68,68,0.2), 0 4px 12px rgba(239,68,68,0.3);
+}
+
+.radio-circle.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: clamp(1rem, 2.5vh, 1.4rem);
+    font-weight: bold;
+}
+
+.radio-label {
+    font-size: clamp(0.7rem, 1.5vh, 0.9rem);
+    color: #64748b;
+    text-align: center;
+    max-width: clamp(50px, 8vw, 70px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ------------------------------
+   DECISION BUTTONS
+------------------------------ */
+.decision-button {
+    padding: clamp(0.6rem, 1.2vh, 0.8rem) clamp(1.5rem, 3vw, 2rem);
+    font-size: clamp(0.9rem, 2vh, 1.15rem);
+    background: white;
+    border: 2px solid #334155;
+    border-radius: 30px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+    color: #334155;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.decision-button:hover {
+    background: #f8fafc;
+    border-color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.decision-button.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.decision-row {
+    display: none;
+    justify-content: center;
+    margin-top: clamp(0.8rem, 1.5vh, 1.2rem);
+}
+
+.decision-row.show {
+    display: flex;
+}
+
+/* ------------------------------
+   MIDDLE CONTROLS
+------------------------------ */
+.divider-section {
+    position: relative;
+    margin: clamp(2.5rem, 4vh, 4rem) 0;
+    flex-shrink: 0;
+    min-height: clamp(80px, 12vh, 100px);
+}
+
+.middle-controls {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
+    background: white;
+    padding: clamp(1rem, 2vh, 1.8rem) clamp(1rem, 2.5vw, 2rem);
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    border: 2px solid #e2e8f0;
+}
+
+.score-dropdowns {
+    display: flex;
+    gap: clamp(1.5rem, 4vw, 3rem);
+}
+
+.dropdown-container {
+    position: relative;
+    width: clamp(45px, 7vw, 60px);
+    height: clamp(45px, 7vw, 60px);
+}
+
+.score-dropdown {
+    width: 100%;
+    height: 100%;
+    font-size: clamp(1.1rem, 2.8vh, 1.6rem);
+    font-weight: bold;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 2px solid #cbd5e1;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    color: #334155;
+}
+
+.score-dropdown:hover {
+    background: white;
+    border-color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+/* ------------------------------
+   DROPDOWN MENU
+------------------------------ */
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    z-index: 1000;
+    min-width: 80px;
+    overflow: hidden;
+}
+
+.dropdown-menu.show {
+    display: block;
+    animation: dropdownFadeIn 0.2s ease;
+}
+
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.dropdown-item {
+    padding: clamp(0.5rem, 1vh, 0.7rem) clamp(0.8rem, 1.5vw, 1rem);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: clamp(0.9rem, 2vh, 1.1rem);
+    font-weight: 500;
+    color: #334155;
+    text-align: center;
+}
+
+.dropdown-item:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.dropdown-item:not(:last-child) {
+    border-bottom: 1px solid #f1f5f9;
+}
+
+/* ------------------------------
+   DRAW MENU
+------------------------------ */
+.draw-container-wrapper {
+    position: absolute;
+    top: 50%;
+    left: calc(50% + clamp(10rem, 18vw, 15rem));
+    transform: translateY(-50%);
+    background: transparent;
+    padding: 0;
+}
+
+.draw-container {
+    position: relative;
+}
+
+.draw-button {
+    padding: clamp(0.6rem, 1.2vh, 0.8rem) clamp(1.2rem, 2.5vw, 1.8rem);
+    font-size: clamp(0.9rem, 2vh, 1.15rem);
+    background: white;
+    border: 2px solid #cbd5e1;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #334155;
+    min-width: clamp(80px, 12vw, 100px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.draw-button:hover {
+    background: #f8fafc;
+    border-color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.draw-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    z-index: 1000;
+    min-width: 100%;
+    overflow: hidden;
+}
+
+.draw-dropdown-menu.show {
+    display: block;
+    animation: dropdownFadeIn 0.2s ease;
+}
+
+/* ------------------------------
+   BOTTOM AREA
+------------------------------ */
+.bottom-area {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: clamp(1rem, 2vh, 1.5rem) 0;
+    border-top: 2px solid #e2e8f0;
+    z-index: 50;
+    flex-shrink: 0;
+    margin-top: clamp(1rem, 2vh, 1.5rem);
+}
+
+.bottom-buttons {
+    display: flex;
+    justify-content: center;
+    gap: clamp(1rem, 2.5vw, 2rem);
+    flex-wrap: wrap;
+}
+
+.bottom-button {
+    padding: clamp(0.7rem, 1.4vh, 0.9rem) clamp(2rem, 5vw, 3rem);
+    font-size: clamp(1rem, 2.2vh, 1.3rem);
+    border-radius: 30px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.bottom-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.bottom-button:active {
+    transform: translateY(0);
+}
+
+.back-button {
+    background: white;
+    border: 2px solid #64748b;
+    color: #334155;
+}
+
+.back-button:hover {
+    border-color: #475569;
+    background: #f8fafc;
+}
+
+.submit-button {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: 2px solid #3b82f6;
+}
+
+.submit-button:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    border-color: #2563eb;
+}
+
+.submit-button:disabled {
+    background: #94a3b8;
+    border-color: #94a3b8;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* キャンセルボタン（左側配置用） */
+#cancelButton {
+    background: white;
+    border: 2px solid #ef4444;
+    color: #ef4444;
+}
+
+#cancelButton:hover {
+    background: #fef2f2;
+    border-color: #dc2626;
+    color: #dc2626;
+}
+
+/* ------------------------------
+   RESPONSIVE
+------------------------------ */
+@media (max-width: 768px) {
+    .draw-container-wrapper {
+        position: static;
+        transform: none;
+        margin-top: 1rem;
+        display: flex;
+        justify-content: center;
+    }
+    
+    .middle-controls {
+        position: static;
+        transform: none;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .divider-section {
+        margin: 1.5rem 0;
+        min-height: auto;
+    }
+}

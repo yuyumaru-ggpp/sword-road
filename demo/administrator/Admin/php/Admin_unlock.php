@@ -3,15 +3,6 @@
 session_start();
 require_once '../../db_connect.php'; // 環境に合わせてパスを調整
 
-// ログ出力関数（開発用／本番は別ログ管理を推奨）
-function app_log($msg)
-{
-    $logfile = __DIR__ . '/logs/tournament_lock.log';
-    @mkdir(dirname($logfile), 0755, true);
-    $time = date('Y-m-d H:i:s');
-    @file_put_contents($logfile, "[$time] $msg\n", FILE_APPEND | LOCK_EX);
-}
-
 // CSRF トークン生成・検証
 if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(24));
@@ -52,7 +43,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $raw !== '') {
     if ($input === null) {
         http_response_code(400);
         echo json_encode(['success' => false, 'error' => 'JSONパースエラー']);
-        app_log("JSON parse error raw: " . substr($raw, 0, 1000));
         exit;
     }
 
@@ -61,7 +51,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $raw !== '') {
     if (!hash_equals($_SESSION['csrf_token'], (string)$client_csrf)) {
         http_response_code(403);
         echo json_encode(['success' => false, 'error' => 'CSRFトークン不正']);
-        app_log("CSRF token mismatch. session:{$_SESSION['csrf_token']} client:{$client_csrf}");
         exit;
     }
 
@@ -71,7 +60,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $raw !== '') {
     if ($id <= 0 || ($set_locked !== 0 && $set_locked !== 1)) {
         http_response_code(400);
         echo json_encode(['success' => false, 'error' => 'パラメータ不正']);
-        app_log("Invalid params: " . json_encode($input));
         exit;
     }
 
@@ -85,7 +73,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $raw !== '') {
         if (!$current) {
             http_response_code(404);
             echo json_encode(['success' => false, 'error' => '大会が見つかりません']);
-            app_log("Not found id={$id}");
             exit;
         }
 
@@ -103,7 +90,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $raw !== '') {
             // ログ用に安全にユーザ情報を整形
             $adminUser = $_SESSION['admin_user'] ?? '';
             $adminUserForLog = is_array($adminUser) ? json_encode($adminUser, JSON_UNESCAPED_UNICODE) : (string)$adminUser;
-            app_log("Updated id={$id} is_locked={$set_locked} by user={$adminUserForLog}");
 
             echo json_encode(['success' => true, 'is_locked' => $set_locked], JSON_UNESCAPED_UNICODE);
             exit;
@@ -111,18 +97,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $raw !== '') {
             $err = $pdo->errorInfo();
             http_response_code(500);
             echo json_encode(['success' => false, 'error' => 'DB更新に失敗しました']);
-            app_log("DB update failed id={$id} error=" . json_encode($err));
             exit;
         }
     } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode(['success' => false, 'error' => 'サーバエラーが発生しました']);
-        app_log("PDOException: " . $e->getMessage());
         exit;
     } catch (Throwable $e) {
         http_response_code(500);
         echo json_encode(['success' => false, 'error' => '予期せぬエラーが発生しました']);
-        app_log("Throwable: " . $e->getMessage());
         exit;
     }
 }

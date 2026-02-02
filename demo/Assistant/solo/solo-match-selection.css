@@ -1,0 +1,447 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.container {
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 1000px;
+    width: 100%;
+    height: auto;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    padding: clamp(16px, 3vh, 28px) clamp(16px, 3vw, 32px);
+}
+
+.header {
+    text-align: center;
+    margin-bottom: clamp(12px, 2vh, 20px);
+    padding-bottom: clamp(10px, 1.5vh, 14px);
+    border-bottom: 3px solid #f0f0f0;
+    flex-shrink: 0;
+}
+
+.header-title {
+    font-size: clamp(11px, 1.8vw, 13px);
+    color: #666;
+    font-weight: 500;
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+}
+
+.header-main {
+    font-size: clamp(16px, 2.8vw, 22px);
+    font-weight: bold;
+    color: #1a1a1a;
+    line-height: 1.3;
+}
+
+.notice {
+    background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+    border-radius: 12px;
+    padding: clamp(8px, 1.5vh, 12px);
+    margin-bottom: clamp(12px, 2vh, 18px);
+    text-align: center;
+    font-size: clamp(11px, 1.8vw, 13px);
+    color: #2d3436;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(253, 203, 110, 0.3);
+    flex-shrink: 0;
+}
+
+.error {
+    background: linear-gradient(135deg, #ff7675 0%, #d63031 100%);
+    border-radius: 12px;
+    padding: clamp(8px, 1.5vh, 12px);
+    margin-bottom: clamp(12px, 2vh, 18px);
+    text-align: center;
+    font-size: clamp(11px, 1.8vw, 13px);
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(214, 48, 49, 0.3);
+    flex-shrink: 0;
+}
+
+.match-container {
+    display: flex;
+    gap: clamp(16px, 3vw, 32px);
+    align-items: center;
+    flex: 1;
+    min-height: 0;
+}
+
+.player-card {
+    flex: 1;
+    background: #f8f9fa;
+    border-radius: 16px;
+    padding: clamp(14px, 2.5vh, 24px);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(10px, 1.8vh, 14px);
+    transition: all 0.3s ease;
+    height: 100%;
+    max-height: 100%;
+}
+
+.player-card:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.player-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: clamp(14px, 2.5vw, 18px);
+    font-weight: 600;
+    color: #495057;
+    flex-shrink: 0;
+}
+
+.player-card.left .player-label::before {
+    content: '';
+    width: 4px;
+    height: 18px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 2px;
+}
+
+.player-card.right .player-label::after {
+    content: '';
+    width: 4px;
+    height: 18px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 2px;
+}
+
+.player-select {
+    width: 100%;
+    padding: clamp(10px, 1.8vh, 14px);
+    font-size: clamp(13px, 2.2vw, 15px);
+    border: 2px solid #dee2e6;
+    border-radius: 12px;
+    background: white;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    color: #212529;
+    flex-shrink: 0;
+}
+
+.player-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+.player-select option {
+    padding: 8px;
+}
+
+.forfeit-button {
+    width: 100%;
+    padding: clamp(10px, 1.8vh, 14px);
+    font-size: clamp(13px, 2.2vw, 15px);
+    border: 2px solid #e74c3c;
+    border-radius: 12px;
+    background: white;
+    color: #e74c3c;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.forfeit-button:hover {
+    background: #ffe5e5;
+    transform: scale(1.02);
+}
+
+.forfeit-button.selected {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+    box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4);
+    transform: scale(1.05);
+}
+
+.vs-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.vs-text {
+    display: inline-block;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: clamp(18px, 3.5vw, 24px);
+    font-weight: bold;
+    padding: clamp(8px, 1.5vh, 12px) clamp(16px, 3vw, 24px);
+    border-radius: 24px;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.action-buttons {
+    display: flex;
+    gap: clamp(12px, 2.5vw, 20px);
+    margin-top: clamp(16px, 2.5vh, 24px);
+    flex-shrink: 0;
+}
+
+.action-button {
+    flex: 1;
+    padding: clamp(12px, 2vh, 16px);
+    font-size: clamp(15px, 2.5vw, 18px);
+    font-weight: bold;
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.confirm-button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.confirm-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.5);
+}
+
+.confirm-button:active {
+    transform: translateY(0);
+}
+
+.back-button {
+    background: white;
+    color: #495057;
+    border: 2px solid #dee2e6;
+}
+
+.back-button:hover {
+    background: #f8f9fa;
+    border-color: #adb5bd;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* タブレット以下 */
+@media (max-width: 768px) {
+    .container {
+        max-height: 100vh;
+        height: auto;
+        min-height: 100vh;
+    }
+
+    .match-container {
+        flex-direction: column;
+        gap: 12px;
+        flex: 1;
+        min-height: 0;
+        overflow: visible;
+    }
+
+    .player-card {
+        width: 100%;
+        max-height: none;
+        height: auto;
+        flex: 0 0 auto;
+    }
+
+    .vs-divider {
+        flex-shrink: 0;
+        height: auto;
+    }
+
+    .vs-text {
+        padding: 6px 20px;
+        font-size: 16px;
+    }
+
+    .action-buttons {
+        margin-top: 16px;
+    }
+}
+
+/* スマートフォン */
+@media (max-width: 480px) {
+    body {
+        padding: 8px;
+        align-items: flex-start;
+    }
+
+    .container {
+        border-radius: 16px;
+        padding: 12px;
+        max-height: none;
+        height: 100%;
+        min-height: 100vh;
+        overflow: visible;
+    }
+
+    .header {
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+    }
+
+    .header-title {
+        font-size: 11px;
+        margin-bottom: 3px;
+    }
+
+    .header-main {
+        font-size: 14px;
+        line-height: 1.4;
+    }
+
+    .notice {
+        font-size: 10px;
+        padding: 8px 10px;
+        margin-bottom: 10px;
+    }
+
+    .error {
+        font-size: 11px;
+        padding: 8px 10px;
+        margin-bottom: 10px;
+    }
+
+    .match-container {
+        gap: 10px;
+    }
+
+    .player-card {
+        padding: 12px;
+        gap: 8px;
+    }
+
+    .player-label {
+        font-size: 13px;
+    }
+
+    .player-select {
+        padding: 10px;
+        font-size: 13px;
+    }
+
+    .forfeit-button {
+        padding: 10px;
+        font-size: 13px;
+    }
+
+    .vs-text {
+        font-size: 16px;
+        padding: 6px 18px;
+    }
+
+    .action-buttons {
+        gap: 10px;
+        margin-top: 12px;
+    }
+
+    .action-button {
+        padding: 12px;
+        font-size: 14px;
+    }
+}
+
+/* 小さい画面の高さ対応 */
+@media (max-height: 700px) {
+    .container {
+        padding: 10px 14px;
+    }
+
+    .header {
+        margin-bottom: 8px;
+        padding-bottom: 8px;
+    }
+
+    .header-title {
+        font-size: 10px;
+    }
+
+    .header-main {
+        font-size: 14px;
+    }
+
+    .notice, .error {
+        padding: 6px 8px;
+        margin-bottom: 8px;
+        font-size: 10px;
+    }
+
+    .player-card {
+        padding: 10px;
+        gap: 6px;
+    }
+
+    .player-label {
+        font-size: 12px;
+    }
+
+    .player-select {
+        padding: 8px;
+        font-size: 12px;
+    }
+
+    .forfeit-button {
+        padding: 8px;
+        font-size: 12px;
+    }
+
+    .vs-text {
+        font-size: 14px;
+        padding: 5px 14px;
+    }
+
+    .action-buttons {
+        margin-top: 8px;
+        gap: 8px;
+    }
+
+    .action-button {
+        padding: 10px;
+        font-size: 13px;
+    }
+}
+
+/* 極小画面 */
+@media (max-width: 360px) {
+    body {
+        padding: 6px;
+    }
+
+    .container {
+        padding: 10px;
+        border-radius: 12px;
+    }
+
+    .header-main {
+        font-size: 13px;
+    }
+
+    .player-select,
+    .forfeit-button {
+        font-size: 12px;
+    }
+}
