@@ -69,13 +69,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = '試合場を選択してください';
         } else {
 
-            // 重複チェック(departmentカラムを使用)
+            // 重複チェック（individual_match_num を使用）
             $sql = "
-                SELECT COUNT(*)
-                FROM individual_matches
-                WHERE department_id = :department_id
-                  AND department = :match_number
-                  AND match_field = :match_field
+            SELECT COUNT(*)
+            FROM individual_matches
+            WHERE department_id = :department_id
+            AND individual_match_num = :match_number
+            AND match_field = :match_field
             ";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([

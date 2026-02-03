@@ -21,21 +21,15 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute([':division_id' => $_SESSION['division_id']]);
 $info = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// チーム名を取得
-$sql = "SELECT name FROM teams WHERE id = :team_id";
-$stmt = $pdo->prepare($sql);
-
-$stmt->execute([':team_id' => $team_red_id]);
-$team_red_name = $stmt->fetchColumn();
-
-$stmt->execute([':team_id' => $team_white_id]);
-$team_white_name = $stmt->fetchColumn();
+// チーム名をセッションから取得
+$team_red_name = $_SESSION['team_red_name'] ?? '';
+$team_white_name = $_SESSION['team_white_name'] ?? '';
 
 // 試合に出た選手を取得
 $red_order = $_SESSION['team_red_order'] ?? [];
 $white_order = $_SESSION['team_white_order'] ?? [];
 
-$positions = ['先鋒', '次鋒', '代表決定戦', '副将', '大将'];
+$positions = ['先鋒', '次鋒', '中堅', '副将', '大将'];
 $red_players = [];
 $white_players = [];
 
@@ -361,7 +355,6 @@ body {
             <div class="row">
                 <div class="label">チーム名</div>
                 <div style="font-size:1.2rem; font-weight:bold;"><?= htmlspecialchars($team_red_name) ?></div>
-                <span style="color:#ef4444; font-size:2rem; margin-left:1rem;">■</span>
             </div>
             <div class="row">
                 <div class="label">選手選択</div>
@@ -416,7 +409,6 @@ body {
             <div class="row">
                 <div class="label">チーム名</div>
                 <div style="font-size:1.2rem; font-weight:bold;"><?= htmlspecialchars($team_white_name) ?></div>
-                <span style="color:#fff; font-size:2rem; margin-left:1rem; text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000;">■</span>
             </div>
         </div>
     </div>
@@ -578,11 +570,25 @@ document.getElementById('submitButton').onclick = async () => {
         return;
     }
     
+    // 技名を取得
+    const scoreText = document.querySelector('.score-dropdown').textContent;
+    
+    // 先鋒～大将と同じデータ構造に変換してから送信
+    const sendData = {
+        scores: [scoreText, '▼', '▼'],
+        red:    { selected: data.red.selected   ? [0] : [] },
+        white:  { selected: data.white.selected  ? [0] : [] },
+        special: 'none',
+        // 代表戦用の選手情報はそのまま付与
+        red_player_id:   data.red.player_id,
+        white_player_id: data.white.player_id
+    };
+    
     try {
         const r = await fetch(location.href, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(data)
+            body: JSON.stringify(sendData)
         });
         const j = await r.json();
         if (j.status === 'ok') {
@@ -595,4 +601,4 @@ document.getElementById('submitButton').onclick = async () => {
 load();
 </script>
 </body>
-</html>
+</html> 

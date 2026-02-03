@@ -12,6 +12,9 @@ $match_number  = $vars['match_number'];
 $team_red_id   = $vars['team_red_id'];
 $team_white_id = $vars['team_white_id'];
 
+// 試合結果をセッションから取得
+$matchResults = $_SESSION['match_results'] ?? [];
+
 
 
 /* ===============================
@@ -132,9 +135,9 @@ if ($redWins > $whiteWins) {
 try {
     $pdo->beginTransaction();
     
-    // team_matchesテーブルに保存
+    // team_match_resultsテーブルに保存
     $sql = "
-    INSERT INTO team_matches (
+    INSERT INTO team_match_results (
         department_id,
         match_number,
         match_field,
@@ -195,118 +198,73 @@ try {
     
     $matchField = 1; // 試合場（固定値、必要に応じて変更）
     
+    // INSERT文のテンプレート
+    $insertSql = "
+    INSERT INTO individual_matches (
+        department_id, team_match_id, match_field, order_id,
+        player_a_id, player_b_id,
+        started_at, ended_at,
+        first_technique, first_winner,
+        second_technique, second_winner,
+        third_technique, third_winner,
+        judgement, final_winner
+    ) VALUES (
+        :department_id, :team_match_id, :match_field, :order_id,
+        :player_a_id, :player_b_id,
+        NOW(), NOW(),
+        :first_technique, :first_winner,
+        :second_technique, :second_winner,
+        :third_technique, :third_winner,
+        :judgement, :final_winner
+    )";
+
     foreach ($matchResults as $posName => $posData) {
         if (!isset($orderMapping[$posName])) {
             continue;
         }
-        
-        $result = calcMatchResult($posData);
+
         $orderNum = $orderMapping[$posName];
-        
-        // 赤チームと白チームの選手ID
-        $redPlayerId = $redOrder[$posName] ?? null;
-        $whitePlayerId = $whiteOrder[$posName] ?? null;
-        
-        // 技の取得（first, second, third）
-        $redScores = $posData['red']['scores'] ?? ['▼', '▼', '▼'];
-        $whiteScores = $posData['white']['scores'] ?? ['▲', '▲', '▲'];
-        
-        $redFirstTech = ($redScores[0] !== '▼' && $redScores[0] !== '×') ? $redScores[0] : null;
-        $redSecondTech = ($redScores[1] !== '▼' && $redScores[1] !== '×') ? $redScores[1] : null;
-        $redThirdTech = ($redScores[2] !== '▼' && $redScores[2] !== '×') ? $redScores[2] : null;
-        
-        $whiteFirstTech = ($whiteScores[0] !== '▲' && $whiteScores[0] !== '×') ? $whiteScores[0] : null;
-        $whiteSecondTech = ($whiteScores[1] !== '▲' && $whiteScores[1] !== '×') ? $whiteScores[1] : null;
-        $whiteThirdTech = ($whiteScores[2] !== '▲' && $whiteScores[2] !== '×') ? $whiteScores[2] : null;
-        
-        // 勝者の技を判定
-        $redWinnerIndex = $posData['red']['selected'] ?? -1;
-        $whiteWinnerIndex = $posData['white']['selected'] ?? -1;
-        
-        $firstWinner = null;
-        $secondWinner = null;
-        $thirdWinner = null;
-        
-        if (is_array($redSelected) && in_array(0, $redSelected)) {
-            $firstWinner = 'red';
-        } else if (is_array($whiteSelected) && in_array(0, $whiteSelected)) {
-            $firstWinner = 'white';
+        $stmt = $pdo->prepare($insertSql);
+
+        $result = calcMatchResult($posData);
+
+        // 選手ID: 代表決定戦は別フィールドに格納される
+        if ($posName === '代表決定戦') {
+            $redPlayerId   = $posData['red_player_id']  ?? null;
+            $whitePlayerId = $posData['white_player_id'] ?? null;
+        } else {
+            $redPlayerId   = $redOrder[$posName]  ?? null;
+            $whitePlayerId = $whiteOrder[$posName] ?? null;
         }
-        
-        if (is_array($redSelected) && in_array(1, $redSelected)) {
-            $secondWinner = 'red';
-        } else if (is_array($whiteSelected) && in_array(1, $whiteSelected)) {
-            $secondWinner = 'white';
-        }
-        
-        if (is_array($redSelected) && in_array(2, $redSelected)) {
-            $thirdWinner = 'red';
-        } else if (is_array($whiteSelected) && in_array(2, $whiteSelected)) {
-            $thirdWinner = 'white';
-        }
-        
-        // 判定（一本勝、延長、引分け）
+
+        // scoresから技名を取得
+        $scores = $posData['scores'] ?? [];
+        $firstTech  = (isset($scores[0]) && $scores[0] !== '▼' && $scores[0] !== '▲' && $scores[0] !== '×' && $scores[0] !== '') ? $scores[0] : null;
+        $secondTech = (isset($scores[1]) && $scores[1] !== '▼' && $scores[1] !== '▲' && $scores[1] !== '×' && $scores[1] !== '') ? $scores[1] : null;
+        $thirdTech  = (isset($scores[2]) && $scores[2] !== '▼' && $scores[2] !== '▲' && $scores[2] !== '×' && $scores[2] !== '') ? $scores[2] : null;
+
+        // selected配列から各枠の勝者を判定
+        $redSelected   = $posData['red']['selected']   ?? [];
+        $whiteSelected = $posData['white']['selected'] ?? [];
+        if (!is_array($redSelected))   { $redSelected   = []; }
+        if (!is_array($whiteSelected)) { $whiteSelected = []; }
+
+        $firstWinner  = in_array(0, $redSelected) ? 'red' : (in_array(0, $whiteSelected) ? 'white' : null);
+        $secondWinner = in_array(1, $redSelected) ? 'red' : (in_array(1, $whiteSelected) ? 'white' : null);
+        $thirdWinner  = in_array(2, $redSelected) ? 'red' : (in_array(2, $whiteSelected) ? 'white' : null);
+
+        // 判定（一本勝・延長・引分け等）
         $special = $posData['special'] ?? 'none';
         $judgement = null;
-        if ($special === 'ippon') {
-            $judgement = '一本勝';
-        } else if ($special === 'extend') {
-            $judgement = '延長';
-        } else if ($special === 'draw') {
-            $judgement = '引分け';
-        }
-        
+        if      ($special === 'ippon')  { $judgement = '一本勝'; }
+        elseif  ($special === 'nihon')  { $judgement = '二本勝'; }
+        elseif  ($special === 'extend') { $judgement = '延長';   }
+        elseif  ($special === 'draw')   { $judgement = '引分け'; }
+        elseif  ($special === 'hantei') { $judgement = '判定';   }
+
         // 最終勝者
-        $finalWinnerPos = $result['winner'];
-        if ($finalWinnerPos === 'draw') {
-            $finalWinnerPos = null;
-        }
-        
-        // individual_matchesに保存
-        $sql = "
-        INSERT INTO individual_matches (
-            department_id,
-            team_match_id,
-            match_field,
-            order_id,
-            player_a_id,
-            player_b_id,
-            started_at,
-            ended_at,
-            first_technique,
-            first_winner,
-            second_technique,
-            second_winner,
-            third_technique,
-            third_winner,
-            judgement,
-            final_winner
-        ) VALUES (
-            :department_id,
-            :team_match_id,
-            :match_field,
-            :order_id,
-            :player_a_id,
-            :player_b_id,
-            NOW(),
-            NOW(),
-            :first_technique,
-            :first_winner,
-            :second_technique,
-            :second_winner,
-            :third_technique,
-            :third_winner,
-            :judgement,
-            :final_winner
-        )";
-        
-        $stmt = $pdo->prepare($sql);
-        
-        // 技は共通のscoresから取得
-        $firstTech = $redFirstTech;
-        $secondTech = $redSecondTech;
-        $thirdTech = $redThirdTech;
-        
+        $finalWinner = ($result['winner'] !== 'draw') ? $result['winner'] : null;
+
         $stmt->execute([
             ':department_id'    => $_SESSION['division_id'],
             ':team_match_id'    => $team_match_id,
@@ -321,7 +279,7 @@ try {
             ':third_technique'  => $thirdTech,
             ':third_winner'     => $thirdWinner,
             ':judgement'        => $judgement,
-            ':final_winner'     => $finalWinnerPos
+            ':final_winner'     => $finalWinner
         ]);
     }
     

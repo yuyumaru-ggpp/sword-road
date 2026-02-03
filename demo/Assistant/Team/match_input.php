@@ -9,7 +9,7 @@ if (!isset($_SESSION['tournament_id'], $_GET['division_id'])) {
 }
 
 $tournament_id = $_SESSION['tournament_id'];
-$division_id = (int)$_GET['division_id'];
+$division_id = (int) $_GET['division_id'];
 
 /* ---------- DB接続 ---------- */
 require_once '../../conect/db_connect.php';
@@ -45,7 +45,7 @@ if (!$info) {
     exit('部門情報が取得できません');
 }
 
-$match_field_count = (int)($info['match_field_count'] ?? 1);
+$match_field_count = (int) ($info['match_field_count'] ?? 1);
 
 $error = '';
 
@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($_POST['action'] === 'submit') {
 
         $match_number = trim($_POST['match_number']);
-        $match_field = (int)$_POST['match_field'];
+        $match_field = (int) $_POST['match_field'];
 
         if ($match_number === '') {
             $error = '試合番号を入力してください';
@@ -71,13 +71,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = '試合場を選択してください';
         } else {
 
-            // 重複チェック（departmentカラムを使用）
+            // 重複チェック（individual_match_num を使用）
             $sql = "
-                SELECT COUNT(*)
-                FROM individual_matches
-                WHERE department_id = :department_id
-                  AND department = :match_number
-                  AND match_field = :match_field
+            SELECT COUNT(*)
+            FROM individual_matches
+            WHERE department_id = :department_id
+            AND individual_match_num = :match_number
+            AND match_field = :match_field
             ";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([
@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['division_id'] = $division_id;
                 $_SESSION['match_number'] = $match_number;
                 $_SESSION['match_field'] = $match_field;
-                
+
                 // 次回の入力のために試合場番号を記憶
                 $_SESSION['last_match_field'] = $match_field;
 
@@ -107,6 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -165,7 +166,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: #333;
         }
 
-        input[type="text"], select {
+        input[type="text"],
+        select {
             width: 100%;
             padding: 20px 30px;
             font-size: 20px;
@@ -176,7 +178,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background-color: #f5f5f5;
         }
 
-        input[type="text"]:focus, select:focus {
+        input[type="text"]:focus,
+        select:focus {
             border-color: #666;
         }
 
@@ -227,46 +230,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body>
-<div class="container">
+    <div class="container">
 
-    <div class="header">
-        <span><?php echo ((int)$info['distinction'] === 2) ? '個人戦' : '団体戦'; ?></span>
-        <span><?php echo htmlspecialchars($info['tournament_name']); ?></span>
-        <span><?php echo htmlspecialchars($info['division_name']); ?></span>
+        <div class="header">
+            <span><?php echo ((int) $info['distinction'] === 2) ? '個人戦' : '団体戦'; ?></span>
+            <span><?php echo htmlspecialchars($info['tournament_name']); ?></span>
+            <span><?php echo htmlspecialchars($info['division_name']); ?></span>
+        </div>
+
+        <div class="main-content">
+            <h2>試合情報を入力してください</h2>
+
+            <form method="POST">
+                <div class="input-wrapper">
+                    <div class="input-label">試合場</div>
+                    <select name="match_field">
+                        <option value="">選択してください</option>
+                        <?php for ($i = 1; $i <= $match_field_count; $i++): ?>
+                            <option value="<?= $i ?>" <?= (isset($_POST['match_field']) && $_POST['match_field'] == $i) || (!isset($_POST['match_field']) && $previous_match_field == $i) ? 'selected' : '' ?>>
+                                第<?= $i ?>試合場
+                            </option>
+                        <?php endfor; ?>
+                    </select>
+                </div>
+
+                <div class="input-wrapper">
+                    <div class="input-label">試合番号</div>
+                    <input type="text" name="match_number" placeholder="試合番号"
+                        value="<?php echo htmlspecialchars($_POST['match_number'] ?? ''); ?>">
+                </div>
+
+                <?php if ($error): ?>
+                    <div class="error"><?php echo htmlspecialchars($error); ?></div>
+                <?php endif; ?>
+
+                <div class="button-group">
+                    <button type="submit" name="action" value="back">戻る</button>
+                    <button type="submit" name="action" value="submit">決定</button>
+                </div>
+            </form>
+        </div>
+
     </div>
-
-    <div class="main-content">
-        <h2>試合情報を入力してください</h2>
-
-        <form method="POST">
-            <div class="input-wrapper">
-                <div class="input-label">試合場</div>
-                <select name="match_field">
-                    <option value="">選択してください</option>
-                    <?php for ($i = 1; $i <= $match_field_count; $i++): ?>
-                        <option value="<?= $i ?>" <?= (isset($_POST['match_field']) && $_POST['match_field'] == $i) || (!isset($_POST['match_field']) && $previous_match_field == $i) ? 'selected' : '' ?>>
-                            第<?= $i ?>試合場
-                        </option>
-                    <?php endfor; ?>
-                </select>
-            </div>
-
-            <div class="input-wrapper">
-                <div class="input-label">試合番号</div>
-                <input type="text" name="match_number" placeholder="試合番号" value="<?php echo htmlspecialchars($_POST['match_number'] ?? ''); ?>">
-            </div>
-
-            <?php if ($error): ?>
-                <div class="error"><?php echo htmlspecialchars($error); ?></div>
-            <?php endif; ?>
-
-            <div class="button-group">
-                <button type="submit" name="action" value="back">戻る</button>
-                <button type="submit" name="action" value="submit">決定</button>
-            </div>
-        </form>
-    </div>
-
-</div>
 </body>
+
 </html>

@@ -391,7 +391,7 @@ if (isset($matchResults['代表決定戦'])) {
                     <td class="result-cell">
                         <div class="cell-content">
                             <?php 
-                                if ($repResult && $repResult['winner'] === 'red') {
+                                if (isset($matchResults['代表決定戦'])) {
                                     $rep = $matchResults['代表決定戦'];
                                     $scores = $rep['scores'] ?? [];
                                     $redSelected = $rep['red']['selected'] ?? [];
@@ -400,17 +400,29 @@ if (isset($matchResults['代表決定戦'])) {
                                         $redSelected = [];
                                     }
                                     
+                                    // 赤チームの得点計算
+                                    $redRepPoints = 0;
+                                    foreach ($redSelected as $idx) {
+                                        if (isset($scores[$idx]) && $scores[$idx] !== '▼' && $scores[$idx] !== '▲' && $scores[$idx] !== '×' && $scores[$idx] !== '') {
+                                            $redRepPoints++;
+                                        }
+                                    }
+                                    
                                     foreach ($scores as $i => $score) {
                                         if ($score !== '▼' && $score !== '▲' && $score !== '×' && $score !== '' && 
                                             in_array($i, $redSelected)) {
                                             // インデックス0（1番目の枠）の技に〇マーク
-                                            $redPoints = count(array_filter($redSelected, function($idx) use ($scores) {
-                                                return isset($scores[$idx]) && $scores[$idx] !== '▼' && $scores[$idx] !== '▲' && $scores[$idx] !== '×' && $scores[$idx] !== '';
-                                            }));
-                                            $class = ($redPoints > 0 && $i === 0 && in_array(0, $redSelected)) ? 'winner first-point' : 'winner';
+                                            $class = ($redRepPoints > 0 && $i === 0 && in_array(0, $redSelected)) ? 'winner first-point' : 'winner';
                                             echo '<span class="' . $class . '">' . htmlspecialchars($score) . '</span>';
                                         }
                                     }
+                                    
+                                    // 勝敗表示
+                                    if ($repResult && $repResult['winner'] === 'red') {
+                                        echo ' <span class="winner">勝</span>';
+                                    }
+                                } else {
+                                    echo '-';
                                 }
                             ?>
                         </div>
@@ -472,7 +484,7 @@ if (isset($matchResults['代表決定戦'])) {
                     <td class="result-cell">
                         <div class="cell-content">
                             <?php 
-                                if ($repResult && $repResult['winner'] === 'white') {
+                                if (isset($matchResults['代表決定戦'])) {
                                     $rep = $matchResults['代表決定戦'];
                                     $scores = $rep['scores'] ?? [];
                                     $whiteSelected = $rep['white']['selected'] ?? [];
@@ -481,17 +493,29 @@ if (isset($matchResults['代表決定戦'])) {
                                         $whiteSelected = [];
                                     }
                                     
+                                    // 白チームの得点計算
+                                    $whiteRepPoints = 0;
+                                    foreach ($whiteSelected as $idx) {
+                                        if (isset($scores[$idx]) && $scores[$idx] !== '▼' && $scores[$idx] !== '▲' && $scores[$idx] !== '×' && $scores[$idx] !== '') {
+                                            $whiteRepPoints++;
+                                        }
+                                    }
+                                    
                                     foreach ($scores as $i => $score) {
                                         if ($score !== '▼' && $score !== '▲' && $score !== '×' && $score !== '' && 
                                             in_array($i, $whiteSelected)) {
                                             // インデックス0（1番目の枠）の技に〇マーク
-                                            $whitePoints = count(array_filter($whiteSelected, function($idx) use ($scores) {
-                                                return isset($scores[$idx]) && $scores[$idx] !== '▼' && $scores[$idx] !== '▲' && $scores[$idx] !== '×' && $scores[$idx] !== '';
-                                            }));
-                                            $class = ($whitePoints > 0 && $i === 0 && in_array(0, $whiteSelected)) ? 'winner first-point' : 'winner';
+                                            $class = ($whiteRepPoints > 0 && $i === 0 && in_array(0, $whiteSelected)) ? 'winner first-point' : 'winner';
                                             echo '<span class="' . $class . '">' . htmlspecialchars($score) . '</span>';
                                         }
                                     }
+                                    
+                                    // 勝敗表示
+                                    if ($repResult && $repResult['winner'] === 'white') {
+                                        echo ' <span class="winner">勝</span>';
+                                    }
+                                } else {
+                                    echo '-';
                                 }
                             ?>
                         </div>
