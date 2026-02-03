@@ -163,3 +163,38 @@ header {
     gap: 10px;
   }
 }
+/* 縦一列レイアウト（大会カードを上下に並べる） */
+.tournament-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;            /* カード間の余白 */
+  margin-top: 12px;
+  align-items: stretch; /* 子要素を横幅いっぱいに伸ばす */
+}
+
+/* カードを横幅いっぱいに広げる */
+.tournament-item {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  border-radius: 8px;
+  background: #fff;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+/* カード内の見た目調整（必要に応じて縮める） */
+.tournament-item h3 { margin: 0 0 6px 0; font-size: 1rem; }
+.tournament-item p { margin: 0; color: #666; font-size: 0.95rem; }
+
+/* ページ幅が狭いときの余白調整 */
+@media (max-width: 640px) {
+  .tournament-list { gap: 10px; }
+  .tournament-item { padding: 10px; border-radius: 6px; }
+  .tournament-item h3 { font-size: 0.98rem; }
+}
+/* CSS */
+.menu-links { display: none; }
+.menu-links.open { display: flex; }
