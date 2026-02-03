@@ -91,7 +91,6 @@ if ($data['upper']['decision']) {
 $sql = "
 INSERT INTO individual_matches (
     department_id,
-    department,
     match_field,
     player_a_id,
     player_b_id,
@@ -107,8 +106,7 @@ INSERT INTO individual_matches (
     final_winner
 ) VALUES (
     :department_id,
-    :department,
-    1,
+    :match_field,
     :player_a_id,
     :player_b_id,
     NOW(),
@@ -126,7 +124,7 @@ INSERT INTO individual_matches (
 $stmt = $pdo->prepare($sql);
 $stmt->execute([
     ':department_id'     => $_SESSION['division_id'],
-    ':department'        => $_SESSION['match_number'],
+    ':match_field'       => 1,
     ':player_a_id'       => $_SESSION['player_a_id'],
     ':player_b_id'       => $_SESSION['player_b_id'],
     ':first_technique'   => $techniques[0] ?? null,

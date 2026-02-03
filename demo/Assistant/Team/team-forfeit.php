@@ -1,7 +1,7 @@
 <?php
 require_once 'team_db.php';
 
-// 基本セッションチェック（team_red_id, team_white_idはまだ不要）
+// セッションチェック（team_red_id, team_white_idは不要）
 if (
     !isset(
         $_SESSION['tournament_id'],
@@ -55,6 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $red_team_id = trim($_POST['red_team'] ?? '');
     $white_team_id = trim($_POST['white_team'] ?? '');
+    $forfeit  = $_POST['forfeit'] ?? '';
 
     if ($red_team_id === '' || $white_team_id === '') {
         $error = 'チームを選択してください';
@@ -83,7 +84,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = '選択されたチームが見つかりません';
         } else {
 
-            // セッションに保存
+            // チーム情報を取得
+            $team_info = [];
+            foreach ($found_teams as $t) {
+                $team_info[$t['id']] = [
+                    'name' => $t['name'],
+                    'number' => $t['team_number']
+                ];
+            }
+
+            /* ===============================
+               不戦勝（ボタンを押した側が勝ち）
+            =============================== */
+            if ($forfeit === 'red' || $forfeit === 'white') {
+
+                // 不戦勝ボタンを押した側が勝ち
+                // red ボタン押下 = 赤チームが勝ち、白チームが負け
+                // white ボタン押下 = 白チームが勝ち、赤チームが負け
+                
+                $_SESSION['team_forfeit_data'] = [
+                    'red_team_id' => $red_team_id,
+                    'white_team_id' => $white_team_id,
+                    'red_team_name' => $team_info[$red_team_id]['name'],
+                    'white_team_name' => $team_info[$white_team_id]['name'],
+                    'red_team_number' => $team_info[$red_team_id]['number'],
+                    'white_team_number' => $team_info[$white_team_id]['number'],
+                    'winner' => ($forfeit === 'red') ? 'red' : 'white'
+                ];
+
+                header('Location: team-forfeit-confirm.php');
+                exit;
+            }
+
+            /* ===============================
+               通常試合 → オーダー登録へ
+            =============================== */
             $_SESSION['team_red_id'] = $red_team_id;
             $_SESSION['team_white_id'] = $white_team_id;
 
@@ -128,6 +163,12 @@ body {
     font-weight:bold;
     margin-bottom:3rem;
 }
+.notice {
+    text-align:center;
+    font-size:1.2rem;
+    color:#666;
+    margin-bottom:3rem;
+}
 .match-row {
     display:flex;
     gap:2rem;
@@ -159,6 +200,24 @@ body {
 .team-select:focus {
     outline:none;
     border-color:#3b82f6;
+}
+.forfeit-button {
+    padding:1rem 3rem;
+    font-size:1.5rem;
+    font-weight:bold;
+    background:white;
+    border:3px solid #000;
+    border-radius:50px;
+    cursor:pointer;
+    transition:all 0.2s;
+}
+.forfeit-button:hover {
+    background:#f9fafb;
+}
+.forfeit-button.selected {
+    background:#ef4444;
+    color:white;
+    border-color:#ef4444;
 }
 .vs-text {
     font-size:3rem;
@@ -239,11 +298,17 @@ body {
         <span><?= htmlspecialchars($info['division_name']) ?></span>
     </div>
 
+    <div class="notice">
+        ※ 不戦勝の場合は勝者側の「不戦勝」ボタンを押してください
+    </div>
+
     <?php if ($error): ?>
         <div class="error"><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
 
     <form method="POST">
+        <input type="hidden" name="forfeit" id="forfeitInput">
+
         <div class="match-row">
             <div class="team-section">
                 <div class="team-label">赤</div>
@@ -258,6 +323,7 @@ body {
                         </option>
                     <?php endforeach; ?>
                 </select>
+                <button type="button" class="forfeit-button" id="redForfeit">不戦勝</button>
             </div>
 
             <div class="vs-text">対</div>
@@ -275,17 +341,50 @@ body {
                         </option>
                     <?php endforeach; ?>
                 </select>
+                <button type="button" class="forfeit-button" id="whiteForfeit">不戦勝</button>
             </div>
         </div>
 
         <div class="action-buttons">
-            <button type="submit" class="action-button confirm-button">決定</button>
+            <button type="submit" class="action-button confirm-button" id="confirmButton">決定</button>
             <button type="button" class="action-button back-button" onclick="history.back()">戻る</button>
         </div>
     </form>
 </div>
 
 <script>
+const redBtn = document.getElementById('redForfeit');
+const whiteBtn = document.getElementById('whiteForfeit');
+const forfeitInput = document.getElementById('forfeitInput');
+
+redBtn.onclick = () => {
+    if (redBtn.classList.contains('selected')) {
+        redBtn.classList.remove('selected');
+    } else {
+        redBtn.classList.add('selected');
+        whiteBtn.classList.remove('selected');
+    }
+};
+
+whiteBtn.onclick = () => {
+    if (whiteBtn.classList.contains('selected')) {
+        whiteBtn.classList.remove('selected');
+    } else {
+        whiteBtn.classList.add('selected');
+        redBtn.classList.remove('selected');
+    }
+};
+
+document.querySelector('form').onsubmit = (e) => {
+    if (redBtn.classList.contains('selected')) {
+        forfeitInput.value = 'red';
+    } else if (whiteBtn.classList.contains('selected')) {
+        forfeitInput.value = 'white';
+    } else {
+        forfeitInput.value = '';
+    }
+};
+
 // チーム番号入力時の自動選択機能（赤チーム）
 document.getElementById('redTeamNumber').addEventListener('input', function(e) {
     const number = e.target.value.trim();
@@ -295,7 +394,6 @@ document.getElementById('redTeamNumber').addEventListener('input', function(e) {
         return;
     }
     
-    // チーム番号に一致するオプションを探す
     for (let option of select.options) {
         if (option.dataset.number && option.dataset.number === number) {
             select.value = option.value;
@@ -313,7 +411,6 @@ document.getElementById('whiteTeamNumber').addEventListener('input', function(e)
         return;
     }
     
-    // チーム番号に一致するオプションを探す
     for (let option of select.options) {
         if (option.dataset.number && option.dataset.number === number) {
             select.value = option.value;

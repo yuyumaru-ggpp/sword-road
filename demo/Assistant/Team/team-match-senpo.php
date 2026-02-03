@@ -433,7 +433,6 @@ body {
             <div class="row">
                 <div class="label">チーム名</div>
                 <div class="value"><?= htmlspecialchars($team_red_name) ?></div>
-                <span style="color:#ef4444; font-size:clamp(1.8rem, 3.5vh, 2.5rem); font-weight:bold; margin-left:1rem;">■</span>
             </div>
             <div class="row">
                 <div class="label">名前</div>
@@ -529,7 +528,6 @@ body {
             <div class="row">
                 <div class="label">名前</div>
                 <div class="value"><?= htmlspecialchars($white_player_name ?: '───') ?></div>
-                <span style="color:#fff; font-size:clamp(1.8rem, 3.5vh, 2.5rem); font-weight:bold; margin-left:1rem; text-shadow: -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000;">■</span>
             </div>
             <div class="row">
                 <div class="label">チーム名</div>
