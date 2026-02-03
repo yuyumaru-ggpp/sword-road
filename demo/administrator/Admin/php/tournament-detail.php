@@ -16,11 +16,17 @@ if (!$id) {
 }
 
 // 大会情報取得
-$sql = "SELECT * FROM tournaments WHERE id = :id";
-$stmt = $pdo->prepare($sql);
-$stmt->bindValue(':id', $id, PDO::PARAM_INT);
-$stmt->execute();
-$tournament = $stmt->fetch(PDO::FETCH_ASSOC);
+try {
+    $sql = "SELECT * FROM tournaments WHERE id = :id LIMIT 1";
+    $stmt = $pdo->prepare($sql);
+    $stmt->bindValue(':id', (int)$id, PDO::PARAM_INT);
+    $stmt->execute();
+    $tournament = $stmt->fetch(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    error_log("tournament fetch failed: " . $e->getMessage());
+    echo "データベースエラーが発生しました。";
+    exit;
+}
 
 if (!$tournament) {
     echo "大会が見つかりません";
@@ -28,17 +34,29 @@ if (!$tournament) {
 }
 
 // 日付を見やすく整形（例：2026-01-28 → 2026年1月28日）
-$event_date = date("Y年n月j日", strtotime($tournament['event_date']));
+$event_date = '';
+if (!empty($tournament['event_date'])) {
+    $ts = strtotime($tournament['event_date']);
+    if ($ts !== false) $event_date = date("Y年n月j日", $ts);
+}
 
-// --- ここから追加: 部門一覧取得 ---
-$sqlDeps = "SELECT id, name, distinction, created_at FROM departments
-            WHERE tournament_id = :tournament_id AND del_flg = 0
-            ORDER BY created_at ASC";
-$stmtDeps = $pdo->prepare($sqlDeps);
-$stmtDeps->bindValue(':tournament_id', $id, PDO::PARAM_INT);
-$stmtDeps->execute();
-$departments = $stmtDeps->fetchAll(PDO::FETCH_ASSOC);
-// --- ここまで追加 ---
+// --- 部門一覧取得 ---
+try {
+    $sqlDeps = "SELECT id, name, distinction, created_at FROM departments
+                WHERE tournament_id = :tournament_id AND del_flg = 0
+                ORDER BY created_at ASC";
+    $stmtDeps = $pdo->prepare($sqlDeps);
+    $stmtDeps->bindValue(':tournament_id', (int)$id, PDO::PARAM_INT);
+    $stmtDeps->execute();
+    $departments = $stmtDeps->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    error_log("departments fetch failed: " . $e->getMessage());
+    $departments = [];
+}
+
+// 定数（意味を明確に）
+define('DIST_TEAM', 1);
+define('DIST_INDIVIDUAL', 2);
 
 ?>
 <!DOCTYPE html>
@@ -48,19 +66,7 @@ $departments = $stmtDeps->fetchAll(PDO::FETCH_ASSOC);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($tournament['title']) ?> - 詳細</title>
     <link rel="stylesheet" href="tournament-detail.css">
-    <style>
-      /* 部門一覧用の最小スタイル（必要に応じて外部CSSへ移動） */
-      .departments-section { margin-top: 2rem;margin-bottom: 2rem; background:#fff; padding:1rem; border-radius:8px; box-shadow:0 1px 6px rgba(0,0,0,0.04); }
-      .departments-section h2 { font-size:1.125rem; margin-bottom:0.75rem; }
-      .dept-table { width:100%; border-collapse:collapse; }
-      .dept-table th, .dept-table td { padding:0.6rem 0.75rem; border-bottom:1px solid #eee; text-align:left; vertical-align:middle; }
-      .badge { display:inline-block; padding:0.15rem 0.5rem; border-radius:6px; color:#fff; font-size:0.85rem; }
-      .badge-individual { background:#6b7280; }
-      .badge-team { background:#2563eb; }
-      .dept-actions a { margin-right:0.6rem; color:#2563eb; text-decoration:none; }
-      .dept-actions a.danger { color:#b91c1c; }
-      .muted { color:#6b7280; }
-    </style>
+
 </head>
 <body>
     <div class="container">
@@ -87,8 +93,7 @@ $departments = $stmtDeps->fetchAll(PDO::FETCH_ASSOC);
 
                 <!-- 開催日 -->
                 <div class="info-item">
-                    <div class="info-icon">
-                        <!-- カレンダーアイコン -->
+                    <div class="info-icon" aria-hidden="true">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="3" y="4" width="18" height="18" rx="2"></rect>
                             <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -98,14 +103,13 @@ $departments = $stmtDeps->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                     <div class="info-content">
                         <span class="info-label">開催日</span>
-                        <span class="info-value"><?= $event_date ?></span>
+                        <span class="info-value"><?= $event_date ?: '未設定' ?></span>
                     </div>
                 </div>
 
                 <!-- 会場 -->
                 <div class="info-item">
-                    <div class="info-icon">
-                        <!-- 場所アイコン -->
+                    <div class="info-icon" aria-hidden="true">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                             <circle cx="12" cy="10" r="3"></circle>
@@ -113,14 +117,13 @@ $departments = $stmtDeps->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                     <div class="info-content">
                         <span class="info-label">会場</span>
-                        <span class="info-value"><?= htmlspecialchars($tournament['venue']) ?></span>
+                        <span class="info-value"><?= htmlspecialchars($tournament['venue'] ?? '未設定') ?></span>
                     </div>
                 </div>
 
                 <!-- 試合場数 -->
                 <div class="info-item">
-                    <div class="info-icon">
-                        <!-- コートアイコン -->
+                    <div class="info-icon" aria-hidden="true">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="2" y="7" width="20" height="14" rx="2"></rect>
                             <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
@@ -128,14 +131,14 @@ $departments = $stmtDeps->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                     <div class="info-content">
                         <span class="info-label">試合場数</span>
-                        <span class="info-value"><?= htmlspecialchars($tournament['match_field']) ?>面</span>
+                        <span class="info-value"><?= htmlspecialchars($tournament['match_field'] ?? '-') ?>面</span>
                     </div>
                 </div>
 
             </div>
         </section>
 
-        <!-- 追加：部門一覧セクション -->
+        <!-- 部門一覧セクション -->
         <section class="departments-section" aria-labelledby="departments-title">
           <h2 id="departments-title">部門一覧</h2>
 
@@ -156,16 +159,21 @@ $departments = $stmtDeps->fetchAll(PDO::FETCH_ASSOC);
                   <tr>
                     <td><?= htmlspecialchars($d['name']) ?></td>
                     <td>
-                      <?php if ((int)$d['distinction'] === 0): ?>
-                        <span class="badge badge-individual">個人戦</span>
-                      <?php else: ?>
-                        <span class="badge badge-team">団体戦</span>
-                      <?php endif; ?>
+                      <?php
+                        $dist = (int)($d['distinction'] ?? 0);
+                        if ($dist === DIST_INDIVIDUAL) {
+                            echo '<span class="badge badge-individual">個人戦</span>';
+                        } elseif ($dist === DIST_TEAM) {
+                            echo '<span class="badge badge-team">団体戦</span>';
+                        } else {
+                            echo '<span class="badge badge-unknown">未設定</span>';
+                        }
+                      ?>
                     </td>
                     <td><?= htmlspecialchars($d['created_at']) ?></td>
                     <td class="dept-actions">
-                      <a href="division-edit.php?id=<?= $d['id'] ?>&tournament_id=<?= $id ?>">編集</a>
-                      <a href="division-delete.php?id=<?= $d['id'] ?>&tournament_id=<?= $id ?>" class="danger" onclick="return confirm('この部門を削除しますか？')">削除</a>
+                      <a href="division-edit.php?id=<?= urlencode($d['id']) ?>&tournament_id=<?= urlencode($id) ?>">編集</a>
+                      <a href="division-delete.php?id=<?= urlencode($d['id']) ?>&tournament_id=<?= urlencode($id) ?>" class="danger" onclick="return confirm('この部門を削除しますか？')">削除</a>
                     </td>
                   </tr>
                 <?php endforeach; ?>
@@ -179,30 +187,28 @@ $departments = $stmtDeps->fetchAll(PDO::FETCH_ASSOC);
             <h2 class="section-title">管理メニュー</h2>
             <div class="button-grid">
 
-                <a href="tournament-edit-title.php?id=<?= $id ?>" class="menu-button">
+                <a href="tournament-edit-title.php?id=<?= urlencode($id) ?>" class="menu-button">
                     <span>名称変更</span>
                 </a>
 
-                <a href="tournament-edit-password.php?id=<?= $id ?>" class="menu-button">
+                <a href="tournament-edit-password.php?id=<?= urlencode($id) ?>" class="menu-button">
                     <span>パスワード変更</span>
                 </a>
 
-                <a href="division-register.php?tournament_id=<?= $id ?>" class="menu-button">
+                <a href="division-register.php?tournament_id=<?= urlencode($id) ?>" class="menu-button">
                     <span>部門登録</span>
                 </a>
 
-                <a href="venue-edit.php?id=<?= $id ?>" class="menu-button">
+                <a href="venue-edit.php?id=<?= urlencode($id) ?>" class="menu-button">
                     <span>会場・試合場編集</span>
                 </a>
 
-                <a href="event-date-edit.php?id=<?= $id ?>" class="menu-button">
+                <a href="event-date-edit.php?id=<?= urlencode($id) ?>" class="menu-button">
                     <span>開催日修正</span>
                 </a>
 
             </div>
         </section>
-
-
 
         <!-- 戻るボタン -->
         <div class="back-section">
