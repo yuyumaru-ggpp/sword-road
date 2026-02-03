@@ -2,30 +2,48 @@
 session_start();
 require_once '../../db_connect.php';
 
-// ログインチェック
+// 管理者チェック
 if (!isset($_SESSION['admin_user'])) {
     header("Location: ../login.php");
     exit;
 }
 
-// パラメータ確認
-$id = $_GET['id'] ?? '';
-$tournament_id = $_GET['tournament_id'] ?? '';
+// CSRFトークン生成（なければ作成）
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+$csrf_token = $_SESSION['csrf_token'];
+
+// パラメータ検証
+$id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+$tournament_id = filter_input(INPUT_GET, 'tournament_id', FILTER_VALIDATE_INT);
 if (!$id || !$tournament_id) {
     header("Location: Admin_selection.php");
     exit;
 }
 
-// 部門取得
-$sql = "SELECT * FROM departments WHERE id = :id AND tournament_id = :tournament_id AND del_flg = 0";
-$stmt = $pdo->prepare($sql);
-$stmt->bindValue(':id', $id, PDO::PARAM_INT);
-$stmt->bindValue(':tournament_id', $tournament_id, PDO::PARAM_INT);
-$stmt->execute();
-$dept = $stmt->fetch(PDO::FETCH_ASSOC);
+try {
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-if (!$dept) {
-    echo "部門が見つかりません";
+    // 部門取得
+    $sql = "SELECT id, tournament_id, name, distinction, created_at, update_at
+            FROM departments
+            WHERE id = :id AND tournament_id = :tournament_id AND del_flg = 0";
+    $stmt = $pdo->prepare($sql);
+    $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+    $stmt->bindValue(':tournament_id', $tournament_id, PDO::PARAM_INT);
+    $stmt->execute();
+    $dept = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$dept) {
+        http_response_code(404);
+        echo "部門が見つかりません";
+        exit;
+    }
+
+} catch (PDOException $e) {
+    error_log("DB error (fetch dept): " . $e->getMessage());
+    echo "データベースエラーが発生しました。";
     exit;
 }
 
@@ -34,40 +52,70 @@ $success = '';
 
 // POST処理（更新）
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name = trim($_POST['name'] ?? '');
-    $distinction = isset($_POST['distinction']) ? (int)$_POST['distinction'] : null;
-
-    if ($name === '' || ($distinction !== 0 && $distinction !== 1)) {
-        $error = "部門名と種別を入力してください";
+    // CSRFチェック
+    $posted_csrf = $_POST['csrf_token'] ?? '';
+    if (!hash_equals($_SESSION['csrf_token'] ?? '', $posted_csrf)) {
+        $error = '不正なリクエストです。';
     } else {
-        // 同名チェック（同大会内で、現在のIDを除外）
-        $sqlCheck = "SELECT COUNT(*) FROM departments WHERE tournament_id = :tournament_id AND LOWER(name) = LOWER(:name) AND id != :id AND del_flg = 0";
-        $stmtCheck = $pdo->prepare($sqlCheck);
-        $stmtCheck->bindValue(':tournament_id', $tournament_id, PDO::PARAM_INT);
-        $stmtCheck->bindValue(':name', $name, PDO::PARAM_STR);
-        $stmtCheck->bindValue(':id', $id, PDO::PARAM_INT);
-        $stmtCheck->execute();
-        $count = (int)$stmtCheck->fetchColumn();
+        $name = trim((string)($_POST['name'] ?? ''));
+        // distinction: '' -> 未設定 (NULL), '1' -> 団体戦, '2' -> 個人戦
+        $raw_dist = isset($_POST['distinction']) ? (string)$_POST['distinction'] : '';
 
-        if ($count > 0) {
-            $error = "同じ名前の部門が既に存在します";
+        if ($name === '') {
+            $error = "部門名を入力してください";
+        } elseif (!in_array($raw_dist, ['', '1', '2'], true)) {
+            $error = "種別の値が不正です";
         } else {
-            $sqlUpd = "UPDATE departments
-                       SET name = :name,
-                           distinction = :distinction,
-                           update_at = NOW()
-                       WHERE id = :id AND tournament_id = :tournament_id";
-            $stmtUpd = $pdo->prepare($sqlUpd);
-            $stmtUpd->bindValue(':name', $name, PDO::PARAM_STR);
-            $stmtUpd->bindValue(':distinction', $distinction, PDO::PARAM_INT);
-            $stmtUpd->bindValue(':id', $id, PDO::PARAM_INT);
-            $stmtUpd->bindValue(':tournament_id', $tournament_id, PDO::PARAM_INT);
-            $stmtUpd->execute();
+            try {
+                // 同名チェック（同大会内、現在のIDを除外）
+                $sqlCheck = "SELECT COUNT(*) FROM departments
+                             WHERE tournament_id = :tournament_id
+                               AND LOWER(name) = LOWER(:name)
+                               AND id != :id
+                               AND del_flg = 0";
+                $stmtCheck = $pdo->prepare($sqlCheck);
+                $stmtCheck->bindValue(':tournament_id', $tournament_id, PDO::PARAM_INT);
+                $stmtCheck->bindValue(':name', $name, PDO::PARAM_STR);
+                $stmtCheck->bindValue(':id', $id, PDO::PARAM_INT);
+                $stmtCheck->execute();
+                $count = (int)$stmtCheck->fetchColumn();
 
-            $success = "部門を更新しました";
-            // 最新データを再取得
-            $stmt->execute();
-            $dept = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($count > 0) {
+                    $error = "同じ名前の部門が既に存在します";
+                } else {
+                    // distinction を NULL または 1/2 にする
+                    $distinction = ($raw_dist === '') ? null : (int)$raw_dist;
+
+                    $sqlUpd = "UPDATE departments
+                               SET name = :name,
+                                   distinction = :distinction,
+                                   update_at = NOW()
+                               WHERE id = :id AND tournament_id = :tournament_id";
+                    $stmtUpd = $pdo->prepare($sqlUpd);
+                    $stmtUpd->bindValue(':name', $name, PDO::PARAM_STR);
+                    if ($distinction === null) {
+                        $stmtUpd->bindValue(':distinction', null, PDO::PARAM_NULL);
+                    } else {
+                        $stmtUpd->bindValue(':distinction', $distinction, PDO::PARAM_INT);
+                    }
+                    $stmtUpd->bindValue(':id', $id, PDO::PARAM_INT);
+                    $stmtUpd->bindValue(':tournament_id', $tournament_id, PDO::PARAM_INT);
+
+                    $stmtUpd->execute();
+
+                    // 更新が反映されたか確認（任意）
+                    // $updatedRows = $stmtUpd->rowCount();
+
+                    $success = "部門を更新しました";
+
+                    // 最新データを再取得
+                    $stmt->execute();
+                    $dept = $stmt->fetch(PDO::FETCH_ASSOC);
+                }
+            } catch (PDOException $e) {
+                error_log("DB error (update dept): " . $e->getMessage());
+                $error = "更新中にエラーが発生しました。";
+            }
         }
     }
 }
@@ -89,6 +137,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .btn-primary { background:#2563eb; color:#fff; border-color:#2563eb; }
     .error { color:#b91c1c; text-align:center; margin-bottom:0.75rem; }
     .success { color:#065f46; text-align:center; margin-bottom:0.75rem; }
+    .radio-group label { display:inline-flex; align-items:center; gap:0.4rem; }
+    .danger-link { color:#b91c1c; text-decoration:none; font-weight:600; }
   </style>
 </head>
 <body>
@@ -96,35 +146,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <nav class="breadcrumb">
       <a href="Admin_top.php">メニュー</a> ＞
       <a href="Admin_selection.php">大会一覧</a> ＞
-      <a href="tournament-detail.php?id=<?= htmlspecialchars($tournament_id) ?>">大会詳細</a> ＞
-      <a href="division-register.php?tournament_id=<?= htmlspecialchars($tournament_id) ?>">部門選択</a> ＞
+      <a href="tournament-detail.php?id=<?= urlencode($tournament_id) ?>">大会詳細</a> ＞
+      <a href="division-register.php?tournament_id=<?= urlencode($tournament_id) ?>">部門選択</a> ＞
       <span>部門編集</span>
     </nav>
 
     <div class="card">
       <h1 style="text-align:center;">部門編集</h1>
 
-      <?php if ($error): ?><div class="error"><?= htmlspecialchars($error) ?></div><?php endif; ?>
-      <?php if ($success): ?><div class="success"><?= htmlspecialchars($success) ?></div><?php endif; ?>
+      <?php if ($error): ?><div class="error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div><?php endif; ?>
+      <?php if ($success): ?><div class="success"><?= htmlspecialchars($success, ENT_QUOTES, 'UTF-8') ?></div><?php endif; ?>
 
       <form method="POST" novalidate>
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token, ENT_QUOTES, 'UTF-8') ?>">
+
         <label class="input-label">種別</label>
-        <div style="display:flex; gap:1.5rem; margin-bottom:1rem;">
-          <label><input type="radio" name="distinction" value="0" <?= ((int)$dept['distinction'] === 2) ? 'checked' : '' ?>> 個人戦</label>
-          <label><input type="radio" name="distinction" value="1" <?= ((int)$dept['distinction'] === 1) ? 'checked' : '' ?>> 団体戦</label>
+        <div class="radio-group" style="display:flex; gap:1.5rem; margin-bottom:1rem;">
+          <?php
+            // 現在の値を判定（NULL -> 未設定）
+            $currentDist = array_key_exists('distinction', $dept) && $dept['distinction'] !== null ? (string)$dept['distinction'] : '';
+          ?>
+          <label>
+            <input type="radio" name="distinction" value="" <?= ($currentDist === '') ? 'checked' : '' ?>> 未設定
+          </label>
+          <label>
+            <input type="radio" name="distinction" value="1" <?= ($currentDist === '1') ? 'checked' : '' ?>> 団体戦
+          </label>
+          <label>
+            <input type="radio" name="distinction" value="2" <?= ($currentDist === '2') ? 'checked' : '' ?>> 個人戦
+          </label>
         </div>
 
         <label for="name" class="input-label">部門名</label>
-        <input id="name" name="name" class="name-input" type="text" value="<?= htmlspecialchars($dept['name']) ?>" required>
+        <input id="name" name="name" class="name-input" type="text" value="<?= htmlspecialchars($dept['name'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required>
 
         <div class="button-container">
-          <a class="btn" href="tournament-detail.php?tournament_id=<?= htmlspecialchars($tournament_id) ?>">戻る</a>
+          <a class="btn" href="tournament-detail.php?id=<?= urlencode($tournament_id) ?>">戻る</a>
           <button type="submit" class="btn btn-primary">更新</button>
         </div>
       </form>
 
       <div style="text-align:center; margin-top:1rem;">
-        <a href="division-delete.php?id=<?= htmlspecialchars($id) ?>&tournament_id=<?= htmlspecialchars($tournament_id) ?>" style="color:#b91c1c;">この部門を削除する</a>
+        <form method="post" action="division-delete.php" onsubmit="return confirm('この部門を削除しますか？ この操作は取り消せません。');" style="display:inline;">
+          <input type="hidden" name="id" value="<?= htmlspecialchars($id, ENT_QUOTES, 'UTF-8') ?>">
+          <input type="hidden" name="tournament_id" value="<?= htmlspecialchars($tournament_id, ENT_QUOTES, 'UTF-8') ?>">
+          <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token, ENT_QUOTES, 'UTF-8') ?>">
+          <button type="submit" class="danger-link" style="background:none;border:none;padding:0;cursor:pointer;">この部門を削除する</button>
+        </form>
       </div>
     </div>
   </div>
