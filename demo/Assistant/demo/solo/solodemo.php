@@ -630,7 +630,7 @@ body {
 <script>
 function startSystem() {
     // 個人戦選手選択画面に遷移
-    window.location.href = 'solo-forfeit.php';
+    window.location.href = 'match_input.php';
 }
 
 function goBack() {

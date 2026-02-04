@@ -68,10 +68,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             =============================== */
             if ($forfeit === 'upper' || $forfeit === 'lower') {
 
-                // 不戦勝ボタンを押した側が勝ち（2本）、相手が負け（0本）
-                // upper ボタン押下 = 上段が勝ち、下段が負け
-                // lower ボタン押下 = 下段が勝ち、上段が負け
-                
                 $_SESSION['forfeit_data'] = [
                     'upper_id' => $upper_id,
                     'lower_id' => $lower_id,
@@ -79,9 +75,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'lower_name' => $player_info[$lower_id]['name'],
                     'upper_number' => $player_info[$upper_id]['number'],
                     'lower_number' => $player_info[$lower_id]['number'],
-                    'winner' => ($forfeit === 'upper') ? 'A' : 'B',  // ボタンを押した側が勝ち
-                    'upper_score' => ($forfeit === 'upper') ? 2 : 0,  // 上段ボタン押したら上段が2本
-                    'lower_score' => ($forfeit === 'lower') ? 2 : 0   // 下段ボタン押したら下段が2本
+                    'winner' => ($forfeit === 'upper') ? 'A' : 'B',
+                    'upper_score' => ($forfeit === 'upper') ? 2 : 0,
+                    'lower_score' => ($forfeit === 'lower') ? 2 : 0
                 ];
 
                 header('Location: solo-forfeit-confirm.php');
@@ -113,156 +109,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <title>個人戦選手選択</title>
 
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body {
-    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Sans','Meiryo',sans-serif;
-    background:#f5f5f5;
-    padding:1rem;
-    min-height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-}
-.container {
-    max-width:1200px;
-    width:100%;
-    background:white;
-    padding:2rem;
-    border-radius:8px;
-    box-shadow:0 10px 30px rgba(0,0,0,0.1);
-}
-.header {
-    display:flex;
-    flex-wrap:wrap;
-    gap:1rem;
-    font-size:clamp(1.2rem, 3vw, 2rem);
-    font-weight:bold;
-    margin-bottom:3rem;
-}
-.notice {
-    text-align:center;
-    font-size:1.2rem;
-    color:#666;
-    margin-bottom:3rem;
-}
-.match-row {
-    display:flex;
-    gap:2rem;
-    justify-content:space-between;
-    margin-bottom:3rem;
-    align-items:center;
-}
-.player-section {
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:1.5rem;
-}
-.player-label {
-    font-size:2rem;
-    font-weight:bold;
-}
-.player-select {
-    width:100%;
-    max-width:300px;
-    padding:1rem;
-    font-size:1.2rem;
-    text-align:center;
-    border:3px solid #ddd;
-    border-radius:8px;
-    cursor:pointer;
-}
-.player-select:focus {
-    outline:none;
-    border-color:#3b82f6;
-}
-.forfeit-button {
-    padding:1rem 3rem;
-    font-size:1.5rem;
-    font-weight:bold;
-    background:white;
-    border:3px solid #000;
-    border-radius:50px;
-    cursor:pointer;
-    transition:all 0.2s;
-}
-.forfeit-button:hover {
-    background:#f9fafb;
-}
-.forfeit-button.selected {
-    background:#ef4444;
-    color:white;
-    border-color:#ef4444;
-}
-.vs-text {
-    font-size:3rem;
-    font-weight:bold;
-    flex-shrink:0;
-}
-.action-buttons {
-    display:flex;
-    justify-content:center;
-    gap:2rem;
-}
-.action-button {
-    padding:1rem 3rem;
-    font-size:1.4rem;
-    font-weight:bold;
-    border-radius:50px;
-    cursor:pointer;
-    transition:all 0.2s;
-}
-.confirm-button {
-    background:#3b82f6;
-    color:white;
-    border:3px solid #3b82f6;
-}
-.confirm-button:hover {
-    background:#2563eb;
-}
-.back-button {
-    background:white;
-    border:3px solid #000;
-}
-.back-button:hover {
-    background:#f9fafb;
-}
-.player-number-input {
-    width:100%;
-    max-width:300px;
-    padding:1rem;
-    font-size:1.2rem;
-    text-align:center;
-    border:3px solid #ddd;
-    border-radius:8px;
-    margin-bottom:0.5rem;
-}
-.player-number-input:focus {
-    outline:none;
-    border-color:#3b82f6;
-}
+/* =============================================
+   solo-match-selection.css に含まれないスタイルのみ
+   ============================================= */
+
+/* 選手番号入力・ラベル（CSS側に未定義なため追加） */
 .input-label-small {
-    font-size:1rem;
-    color:#666;
-    margin-bottom:0.5rem;
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 2px;
+    text-align: center;
+    flex-shrink: 0;
 }
 
-.error {
-    color:#ef4444;
-    text-align:center;
-    font-size:1.2rem;
-    margin-bottom:1rem;
+.player-number-input {
+    width: 100%;
+    padding: clamp(10px, 1.8vh, 14px);
+    font-size: clamp(13px, 2.2vw, 15px);
+    text-align: center;
+    border: 2px solid #dee2e6;
+    border-radius: 12px;
+    background: white;
+    font-weight: 500;
+    color: #212529;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
 }
-@media (max-width: 768px) {
-    .match-row {
-        flex-direction:column;
+
+.player-number-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+/* スマートフォン */
+@media (max-width: 480px) {
+    .input-label-small {
+        font-size: 11px;
     }
-    .vs-text {
-        font-size:2rem;
+    .player-number-input {
+        padding: 10px;
+        font-size: 13px;
+    }
+}
+
+/* 小さい画面の高さ対応 */
+@media (max-height: 700px) {
+    .input-label-small {
+        font-size: 10px;
+        margin-bottom: 1px;
+    }
+    .player-number-input {
+        padding: 8px;
+        font-size: 12px;
     }
 }
 </style>
+
+<!-- メインスタイルシート（レスポンシブ対応一貫） -->
 <link rel="stylesheet" href="solo-match-selection.css">
 </head>
 
@@ -288,11 +192,14 @@ body {
     <form method="POST">
         <input type="hidden" name="forfeit" id="forfeitInput">
 
-        <div class="match-row">
-            <div class="player-section">
+        <!-- クラス名を CSS と合わせた -->
+        <div class="match-container">
+
+            <!-- 赤側：player-card left -->
+            <div class="player-card left">
                 <div class="player-label">赤</div>
                 <div class="input-label-small">選手番号</div>
-                <input type="text" class="player-number-input" id="upperPlayerNumber" placeholder="選手番号を入力">
+                <input type="text" class="player-number-input" id="upperPlayerNumber" placeholder="番号を入力">
                 <div class="input-label-small">または選手を選択</div>
                 <select name="upper_player" class="player-select" id="upperPlayer" required>
                     <option value="">選手を選択してください</option>
@@ -305,14 +212,16 @@ body {
                 <button type="button" class="forfeit-button" id="upperForfeit">不戦勝</button>
             </div>
 
+            <!-- VS区切り -->
             <div class="vs-divider">
                 <span class="vs-text">VS</span>
             </div>
 
-            <div class="player-section">
+            <!-- 白側：player-card right -->
+            <div class="player-card right">
                 <div class="player-label">白</div>
                 <div class="input-label-small">選手番号</div>
-                <input type="text" class="player-number-input" id="lowerPlayerNumber" placeholder="選手番号を入力">
+                <input type="text" class="player-number-input" id="lowerPlayerNumber" placeholder="番号を入力">
                 <div class="input-label-small">または選手を選択</div>
                 <select name="lower_player" class="player-select" id="lowerPlayer" required>
                     <option value="">選手を選択してください</option>
@@ -370,12 +279,7 @@ document.querySelector('form').onsubmit = (e) => {
 document.getElementById('upperPlayerNumber').addEventListener('input', function(e) {
     const number = e.target.value.trim();
     const select = document.getElementById('upperPlayer');
-    
-    if (number === '') {
-        return;
-    }
-    
-    // 選手番号に一致するオプションを探す
+    if (number === '') return;
     for (let option of select.options) {
         if (option.dataset.number && option.dataset.number === number) {
             select.value = option.value;
@@ -387,12 +291,7 @@ document.getElementById('upperPlayerNumber').addEventListener('input', function(
 document.getElementById('lowerPlayerNumber').addEventListener('input', function(e) {
     const number = e.target.value.trim();
     const select = document.getElementById('lowerPlayer');
-    
-    if (number === '') {
-        return;
-    }
-    
-    // 選手番号に一致するオプションを探す
+    if (number === '') return;
     for (let option of select.options) {
         if (option.dataset.number && option.dataset.number === number) {
             select.value = option.value;
@@ -404,26 +303,13 @@ document.getElementById('lowerPlayerNumber').addEventListener('input', function(
 // プルダウン選択時に選手番号欄に反映
 document.getElementById('upperPlayer').addEventListener('change', function(e) {
     const selectedOption = e.target.options[e.target.selectedIndex];
-    const numberInput = document.getElementById('upperPlayerNumber');
-    
-    if (selectedOption.dataset.number) {
-        numberInput.value = selectedOption.dataset.number;
-    } else {
-        numberInput.value = '';
-    }
+    document.getElementById('upperPlayerNumber').value = selectedOption.dataset.number || '';
 });
 
 document.getElementById('lowerPlayer').addEventListener('change', function(e) {
     const selectedOption = e.target.options[e.target.selectedIndex];
-    const numberInput = document.getElementById('lowerPlayerNumber');
-    
-    if (selectedOption.dataset.number) {
-        numberInput.value = selectedOption.dataset.number;
-    } else {
-        numberInput.value = '';
-    }
+    document.getElementById('lowerPlayerNumber').value = selectedOption.dataset.number || '';
 });
-
 </script>
 
 </body>

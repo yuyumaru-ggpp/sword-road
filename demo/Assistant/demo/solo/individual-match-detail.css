@@ -145,13 +145,11 @@ body {
     transition: all 0.3s ease;
 }
 
-/* 上段の選手情報 - 赤文字に薄い赤背景 */
 .upper-section .value {
     color: #dc2626;
     background: rgba(254, 226, 226, 0.8);
 }
 
-/* 下段の選手情報 - 白文字に濃い背景 */
 .lower-section .value {
     color: #ffffff;
     background: rgba(91, 33, 182, 0.85);
@@ -577,6 +575,126 @@ body {
 }
 
 /* ===================================
+   モーダルオーバーレイ
+=================================== */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    animation: overlayFadeIn 0.25s ease;
+}
+
+.modal-overlay.show {
+    display: flex;
+}
+
+@keyframes overlayFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* ===================================
+   モーダルカード
+=================================== */
+.modal-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 36px 32px 28px;
+    width: 90%;
+    max-width: 380px;
+    box-shadow:
+        0 24px 60px rgba(0, 0, 0, 0.28),
+        0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: modalPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalPop {
+    from {
+        opacity: 0;
+        transform: scale(0.88);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.modal-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+    line-height: 1;
+}
+
+.modal-title {
+    font-size: clamp(18px, 3vh, 22px);
+    font-weight: 800;
+    color: #1f2937;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.modal-desc {
+    font-size: clamp(13px, 1.9vh, 15px);
+    color: #6b7280;
+    text-align: center;
+    margin-bottom: 28px;
+    line-height: 1.5;
+}
+
+/* ===================================
+   モーダルボタン
+=================================== */
+.modal-buttons {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+}
+
+.modal-btn {
+    flex: 1;
+    padding: 12px 0;
+    font-size: clamp(15px, 2.2vh, 17px);
+    font-weight: 700;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: none;
+    letter-spacing: 0.04em;
+}
+
+.modal-btn:active {
+    transform: scale(0.95);
+}
+
+.modal-btn-cancel {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+.modal-btn-cancel:hover {
+    background: #e5e7eb;
+}
+
+.modal-btn-ok {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(102, 126, 234, 0.35);
+}
+
+.modal-btn-ok:hover {
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.45);
+    transform: translateY(-1px);
+}
+
+/* ===================================
    タブレット対応 (768px以下)
 =================================== */
 @media (max-width: 768px) {
@@ -707,6 +825,15 @@ body {
         max-width: none;
         padding: 6px 16px;
         font-size: clamp(13px, 3.5vw, 16px);
+    }
+
+    /* モーダル・スマホ調整 */
+    .modal-card {
+        padding: 28px 22px 22px;
+    }
+
+    .modal-icon {
+        font-size: 34px;
     }
 }
 
