@@ -98,3 +98,21 @@ body {
 .back-text:hover {
     color: #666;
 }
+/* 最低限のスタイル（既存CSSと併用可） */
+.container{max-width:920px;margin:28px auto;padding:18px}
+.header{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.title{font-size:20px;margin:0}
+.team-name{font-size:16px;margin:0;color:#6b7280}
+.note{font-size:13px;color:#6b7280;margin:8px 0}
+.form-container{background:#fff;border:1px solid #e6e9ee;padding:16px;border-radius:10px}
+.form-row{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+.position-label{min-width:56px;font-weight:700}
+.player-input{flex:1;padding:10px;border:1px solid #d1d5db;border-radius:8px}
+.small-btn{margin-left:8px;padding:8px;border-radius:8px;border:1px solid #e6e9ee;background:#fff;cursor:pointer}
+.small-btn[disabled]{opacity:0.5;cursor:not-allowed}
+.button-container{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.action-button{padding:10px 14px;border-radius:8px;background:#0b74de;color:#fff;border:none}
+.action-button.secondary{background:#fff;color:#111;border:1px solid #e6e9ee}
+.action-button.danger{background:#d9534f}
+.message{margin:10px 0;padding:10px;border-radius:8px}
+@media (max-width:640px){.form-row{flex-direction:column;align-items:stretch}}
