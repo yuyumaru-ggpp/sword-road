@@ -1,10 +1,10 @@
 <?php
 session_start();
-require_once '../../db_connect.php';
+require_once '../../../../connect/db_connect.php';
 
 // ログインチェック
 if (!isset($_SESSION['admin_user'])) {
-    header("Location: ../login.php");
+    header("Location: ../../login.php");
     exit;
 }
 
@@ -65,7 +65,7 @@ $departments = $stmtList->fetchAll(PDO::FETCH_ASSOC);
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>部門作成</title>
-  <link rel="stylesheet" href="../css/Admin_registration_namechange.css">
+  <link rel="stylesheet" href="../../css/Admin_registration_namechange.css">
   <style>
     .container { max-width: 820px; margin: 3rem auto; padding: 1rem; }
     .breadcrumb { font-size: 0.95rem; color:#555; margin-bottom:1.5rem; }

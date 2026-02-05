@@ -1,10 +1,10 @@
 <?php
 session_start();
-require_once '../../db_connect.php';
+require_once '../../../../connect/db_connect.php';
 
 // ログインチェック
 if (!isset($_SESSION['admin_user'])) {
-    header("Location: ../login.php");
+    header("Location: ../../login.php");
     exit;
 }
 
@@ -143,7 +143,7 @@ define('DIST_INDIVIDUAL', 2);
           <h2 id="departments-title">部門一覧</h2>
 
           <?php if (empty($departments)): ?>
-            <p class="muted">まだ部門が登録されていません。<a href="division-create.php?tournament_id=<?= htmlspecialchars($id) ?>">部門を作成</a></p>
+            <p class="muted">まだ部門が登録されていません。<a href="division-register.php?tournament_id=<?= htmlspecialchars($id) ?>">部門を作成</a></p>
           <?php else: ?>
             <table class="dept-table" role="table" aria-label="登録済み部門一覧">
               <thead>

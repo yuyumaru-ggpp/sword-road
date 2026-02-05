@@ -1,13 +1,11 @@
 <?php
 session_start();
-require_once '../../../db_connect.php';
+require_once '../../../../connect/db_connect.php';
 
-// ログインチェック
-if (!isset($_SESSION['admin_user'])) {
-    header("Location: ../../login.php");
+if (!isset($_SESSION['tournament_editor'])) {
+    header('Location: ../../login.php');
     exit;
 }
-
 // 大会ID取得
 $tournament_id = $_GET['id'] ?? null;
 
@@ -80,7 +78,7 @@ $departments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         </div>
 
-        <button type="button" class="action-button" onclick="location.href='../tournament-detail.php?id=<?= htmlspecialchars($tournament_id) ?>>'">戻る</button>
+        <button type="button" class="action-button" onclick="location.href='../tournament_editor_menu.php?id=<?= htmlspecialchars($tournament_id) ?>>'">戻る</button>
     </div>
 
 </body>

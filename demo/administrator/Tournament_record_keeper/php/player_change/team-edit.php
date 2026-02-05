@@ -1,10 +1,9 @@
 <?php
 session_start();
-require_once '../../../db_connect.php'; // 環境に合わせてパスを調整してください
+require_once '../../../../connect/db_connect.php';
 
-// ログインチェック
-if (!isset($_SESSION['admin_user'])) {
-    header("Location: ../../login.php");
+if (!isset($_SESSION['tournament_editor'])) {
+    header('Location: ../../login.php');
     exit;
 }
 

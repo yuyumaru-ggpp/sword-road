@@ -9,8 +9,7 @@
 session_start();
 // 管理者チェック（必要なら有効化）
 // if (!isset($_SESSION['admin_user'])) { header("Location: ../../login.php"); exit; }
-
-require_once '../../../db_connect.php';
+require_once '../../../../connect/db_connect.php';
 
 $tournament_id = $_GET['id'] ?? null;
 $department_id = $_GET['dept'] ?? null;

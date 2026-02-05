@@ -1,9 +1,10 @@
 <?php
 session_start();
+require_once '../../../../connect/db_connect.php';
 
 // ログインチェック
 if (!isset($_SESSION['admin_user'])) {
-    header("Location: ../login.php");
+    header("Location: ../../login.php");
     exit;
 }
 ?>
@@ -12,7 +13,7 @@ if (!isset($_SESSION['admin_user'])) {
 <head>
     <meta charset="UTF-8">
     <title>大会登録</title>
-    <link rel="stylesheet" href="../css/Admin_registration_create.css">
+    <link rel="stylesheet" href="../../css/Admin_registration_create.css">
 </head>
 <body>
 

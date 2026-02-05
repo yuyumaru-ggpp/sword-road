@@ -1,10 +1,10 @@
 <?php
 session_start();
-require_once '../../db_connect.php';
+require_once '../../../../connect/db_connect.php';
 
 // ログインチェック
 if (!isset($_SESSION['admin_user'])) {
-    header("Location: ../login.php");
+    header("Location: ../../login.php");
     exit;
 }
 
@@ -21,7 +21,7 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>大会詳細変更画面</title>
-    <link rel="stylesheet" href="../css/Admin_selection.css">
+    <link rel="stylesheet" href="../../css/Admin_selection.css">
 </head>
 
 <body>
@@ -55,7 +55,7 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         <div class="action-buttons">
             <button class="register-button" onclick="location.href='Admin_registration_create.php'">大会登録</button>
-            <button class="back-button" onclick="location.href='Admin_top.php'">戻る</button>
+            <button class="back-button" onclick="location.href='../Admin_top.php'">戻る</button>
         </div>
     </div>
 </body>

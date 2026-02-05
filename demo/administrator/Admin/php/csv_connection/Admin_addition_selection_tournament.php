@@ -1,13 +1,13 @@
 <?php
-session_start();
 
-// ログインしていなければログイン画面へ
+session_start();
+require_once '../../../../connect/db_connect.php';
+
+// ログインチェック
 if (!isset($_SESSION['admin_user'])) {
     header("Location: ../../login.php");
     exit;
 }
-
-require_once '../../../db_connect.php';
 
 // 大会一覧取得
 $sql = "SELECT id, title FROM tournaments ORDER BY id DESC";

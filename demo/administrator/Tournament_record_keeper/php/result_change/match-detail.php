@@ -1,18 +1,9 @@
 <?php
 session_start();
+require_once '../../../../connect/db_connect.php';
 
-// db_connect のパスを環境に合わせて調整してください
-$dbPath = dirname(__DIR__, 3) . '/db_connect.php';
-if (!file_exists($dbPath)) {
-    header('Content-Type: text/plain; charset=utf-8', true, 500);
-    echo "db_connect.php が見つかりません: " . $dbPath;
-    exit;
-}
-require_once $dbPath;
-
-// ログインチェック（必要に応じて調整）
-if (!isset($_SESSION['admin_user'])) {
-    header("Location: ../../login.php");
+if (!isset($_SESSION['tournament_editor'])) {
+    header('Location: ../../login.php');
     exit;
 }
 

@@ -5,18 +5,10 @@ header('Content-Type: application/json; charset=utf-8');
 session_start();
 
 // db_connect のパスを環境に合わせて調整してください
-$dbPath = dirname(__DIR__, 3) . '/db_connect.php';
-if (!file_exists($dbPath)) {
-    http_response_code(500);
-    echo json_encode(['status' => 'error', 'message' => 'サーバー設定エラー: DB接続ファイルが見つかりません']);
-    exit;
-}
-require_once $dbPath;
+require_once '../../../../connect/db_connect.php';
 
-// 簡易的な認可チェック（必要に応じて強化）
-if (!isset($_SESSION['admin_user'])) {
-    http_response_code(403);
-    echo json_encode(['status' => 'error', 'message' => '認可エラー']);
+if (!isset($_SESSION['tournament_editor'])) {
+    header('Location: ../../login.php');
     exit;
 }
 
