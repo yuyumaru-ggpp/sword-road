@@ -77,7 +77,6 @@ $back_link = ($user_role === 'recorder') ? '../../recorder_top.php' : '../../Adm
         <div class="back-link">
             <a href="../tournament-detail.php?id=<?= htmlspecialchars($tournament_id, ENT_QUOTES, 'UTF-8') ?>" class="back-text">← 戻る</a>
             &nbsp;&nbsp;
-            <a href="<?= $back_link ?>" class="back-text">トップへ</a>
         </div>
     </div>
 
