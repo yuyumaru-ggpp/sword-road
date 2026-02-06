@@ -39,11 +39,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     $sql = "
         INSERT INTO individual_matches
-            (department_id, department, match_field,
+            (department_id, individual_match_num, match_field,
              player_a_id, player_b_id,
              started_at, ended_at, final_winner)
         VALUES
-            (:department_id, :department, 1,
+            (:department_id, :individual_match_num, 1,
              :player_a, :player_b,
              NOW(), NOW(), :winner)
     ";
@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
         ':department_id' => $_SESSION['division_id'],
-        ':department'    => $_SESSION['match_number'],
+        ':individual_match_num'    => $_SESSION['match_number'],
         ':player_a'      => $data['upper_id'],
         ':player_b'      => $data['lower_id'],
         ':winner'        => $data['winner']

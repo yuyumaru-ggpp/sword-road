@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = '試合場を選択してください';
         } else {
 
-            // 重複チェック（individual_match_num を使用）
+            // 重複チェック(individual_match_num を使用)
             $sql = "
             SELECT COUNT(*)
             FROM individual_matches
@@ -118,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         html, body {
             height: 100%;
-            overflow: hidden;
+            overflow: auto; /* hidden から auto に変更 */
         }
 
         body {
@@ -126,6 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             position: relative;
+            min-height: 100vh; /* 追加 */
         }
 
         body::before {
@@ -148,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         .container {
             width: 100%;
-            height: 100%;
+            min-height: 100vh; /* height から min-height に変更 */
             display: flex;
             flex-direction: column;
             padding: min(3vh, 20px);
@@ -221,7 +222,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             align-items: center;
             justify-content: center;
             flex: 1;
-            min-height: 0;
             animation: fadeIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
         }
 
@@ -261,7 +261,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .input-wrapper {
             width: 100%;
             max-width: 500px;
-            margin-bottom: 30px;
             margin-bottom: min(4vh, 30px);
             position: relative;
         }
@@ -293,8 +292,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         input[type="text"]:focus, select:focus {
-            border-color: #666;
-        input[type="text"]:focus {
             box-shadow: 
                 0 15px 40px rgba(102, 126, 234, 0.3),
                 0 0 0 1px rgba(255, 255, 255, 0.9) inset;
@@ -406,7 +403,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             75% { transform: translateX(10px); }
         }
 
-        /* 縦長画面（スマホ縦向き） */
+        /* 縦長画面(スマホ縦向き) */
         @media (max-height: 700px) {
             .container {
                 padding: 2vh 2vw;
@@ -430,7 +427,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 margin-bottom: 2.5vh;
             }
 
-            input[type="text"] {
+            input[type="text"], select {
                 padding: 2vh 3vw;
                 font-size: clamp(16px, 3vh, 22px);
             }
@@ -459,7 +456,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        /* 横長画面（タブレット横向きなど） */
+        /* 横長画面(タブレット横向きなど) */
         @media (min-aspect-ratio: 4/3) and (max-height: 800px) {
             .container {
                 max-width: 900px;
@@ -509,10 +506,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <div class="main-content">
-        <h2>試合情報を入力してください</h2>
-
         <form method="POST">
-            <h2>試合番号を入力してください</h2>
+            <h2>試合情報を入力してください</h2>
 
             <div class="input-wrapper">
                 <div class="input-label">試合場</div>

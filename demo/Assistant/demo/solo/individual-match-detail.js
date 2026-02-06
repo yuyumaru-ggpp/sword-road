@@ -234,7 +234,7 @@ function initEventListeners() {
             });
             const j = await r.json();
             if (j.status === 'ok') {
-                window.location.href = 'index.php';
+                window.location.href = '../../index.php';
             } else {
                 hideModal();
                 alert('保存に失敗しました');
