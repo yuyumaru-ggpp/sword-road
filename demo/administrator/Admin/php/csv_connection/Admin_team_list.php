@@ -1,12 +1,12 @@
 <?php
 session_start();
+require_once '../../../../connect/db_connect.php';
 
+// ログインチェック
 if (!isset($_SESSION['admin_user'])) {
-  header("Location: ../../login.php");
-  exit;
+    header("Location: ../../login.php");
+    exit;
 }
-
-require_once '../../../db_connect.php';
 
 // GETパラメータ取得
 $tournament_id = $_GET['id'] ?? null;

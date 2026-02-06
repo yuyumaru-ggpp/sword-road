@@ -1,7 +1,12 @@
 <?php
-// tournament-lock.php
 session_start();
-require_once '../../db_connect.php'; // 環境に合わせてパスを調整
+require_once '../../../../connect/db_connect.php';
+
+// ログインチェック
+if (!isset($_SESSION['admin_user'])) {
+    header("Location: ../../login.php");
+    exit;
+}
 
 // CSRF トークン生成・検証
 if (!isset($_SESSION['csrf_token'])) {
@@ -175,7 +180,7 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </main>
 
         <div style="margin-top:12px;text-align:right">
-            <a class="btn-back" href="Admin_top.php">戻る</a>
+            <a class="btn-back" href="../Admin_top.php">戻る</a>
         </div>
     </div>
 

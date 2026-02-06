@@ -51,7 +51,7 @@ $menuClass = (isset($_SESSION['admin_user']) && $_SESSION['admin_user'] === true
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>大会一覧</title>
-    <link rel="stylesheet" href="./index_css/style.css">
+    <link rel="stylesheet" href="./style.css">
     <style>
         /* 最低限の補正（既存 CSS がある場合は不要） */
         .tournament-list {

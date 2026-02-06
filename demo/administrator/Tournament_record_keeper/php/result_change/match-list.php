@@ -1,18 +1,9 @@
 <?php
 session_start();
+require_once '../../../../connect/db_connect.php';
 
-// db_connect.php 読み込み（このファイルから3階層上）
-$dbPath = dirname(__DIR__, 3) . '/db_connect.php';
-if (!file_exists($dbPath)) {
-    header('Content-Type: text/plain; charset=utf-8', true, 500);
-    echo "db_connect.php が見つかりません: " . $dbPath;
-    exit;
-}
-require_once $dbPath;
-
-// ログインチェック
-if (!isset($_SESSION['admin_user'])) {
-    header("Location: ../../login.php");
+if (!isset($_SESSION['tournament_editor'])) {
+    header('Location: ../../login.php');
     exit;
 }
 

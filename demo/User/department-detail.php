@@ -65,6 +65,7 @@ function fetch_teams_map($pdo, array $ids){
 
 // main: build $matches
 $matches = [];
+$teamMatchDetails = []; // team_match_id => array of individual match details
 
 try {
     if ($distinction === 1) {
@@ -293,12 +294,55 @@ try {
             }));
         }
 
+        // Fetch individual match details for team matches
+        $teamMatchIds = [];
+        foreach ($matches as $m) {
+            if (!empty($m['team_match_id'])) {
+                $teamMatchIds[] = (int)$m['team_match_id'];
+            }
+        }
+        
+        if (!empty($teamMatchIds)) {
+            $teamMatchIds = array_values(array_unique($teamMatchIds));
+            $placeholders = implode(',', array_fill(0, count($teamMatchIds), '?'));
+            
+            $sql = "SELECT im.match_id, im.team_match_id, im.individual_match_num, im.order_id,
+                           pa.id AS a_id, pa.name AS a_name, pa.player_number AS a_number,
+                           pb.id AS b_id, pb.name AS b_name, pb.player_number AS b_number,
+                           im.first_technique, im.first_winner,
+                           im.second_technique, im.second_winner,
+                           im.third_technique, im.third_winner,
+                           im.judgement, im.final_winner
+                    FROM individual_matches im
+                    LEFT JOIN players pa ON pa.id = im.player_a_id
+                    LEFT JOIN players pb ON pb.id = im.player_b_id
+                    WHERE im.team_match_id IN ($placeholders) AND im.department_id = :dept
+                    ORDER BY im.order_id ASC, im.individual_match_num ASC";
+            
+            $stmt = $pdo->prepare($sql);
+            $params = $teamMatchIds;
+            $params[] = $dept_id;
+            $stmt->execute($params);
+            $detailRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            foreach ($detailRows as $row) {
+                $tmid = (int)$row['team_match_id'];
+                if (!isset($teamMatchDetails[$tmid])) {
+                    $teamMatchDetails[$tmid] = [];
+                }
+                $teamMatchDetails[$tmid][] = $row;
+            }
+        }
+
     } else {
-        // 個人戦: existing logic
+        // 個人戦: fetch with technique winners
         $sql = "SELECT im.match_id, im.individual_match_num AS match_number, im.match_field, im.order_id,
                        pa.id AS a_id, pa.name AS a_name, pa.player_number AS a_number,
                        pb.id AS b_id, pb.name AS b_name, pb.player_number AS b_number,
-                       im.first_technique, im.second_technique, im.third_technique, im.judgement, im.final_winner
+                       im.first_technique, im.first_winner,
+                       im.second_technique, im.second_winner,
+                       im.third_technique, im.third_winner,
+                       im.judgement, im.final_winner
                 FROM individual_matches im
                 LEFT JOIN players pa ON pa.id = im.player_a_id
                 LEFT JOIN players pb ON pb.id = im.player_b_id
@@ -329,30 +373,496 @@ foreach ($matches as $m) {
     $field = $m['match_field'] ?? '未設定';
     $grouped[$field][] = $m;
 }
-
-// Below: render HTML (same as previous template). For brevity, render a simple view:
 ?>
 <!doctype html>
 <html lang="ja">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title><?= esc($tournament['title']) ?> - <?= esc($department['name']) ?></title></head>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title><?= esc($tournament['title']) ?> - <?= esc($department['name']) ?></title>
+<style>
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background: #f5f5f5;
+}
+h1 {
+    color: #333;
+    border-bottom: 3px solid #007bff;
+    padding-bottom: 10px;
+}
+h3 {
+    background: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin-top: 30px;
+}
+.match-card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 10px 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.match-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #f0f0f0;
+}
+.match-id {
+    font-size: 0.9em;
+    color: #666;
+}
+.players {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+.player {
+    flex: 1;
+    text-align: center;
+}
+.player-name {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+.player-number {
+    color: #666;
+    font-size: 0.9em;
+}
+.vs {
+    font-weight: bold;
+    color: #999;
+    padding: 0 20px;
+}
+.techniques {
+    background: #f9f9f9;
+    padding: 12px;
+    border-radius: 5px;
+    margin: 10px 0;
+}
+.technique-item {
+    margin: 8px 0;
+    padding: 5px 0;
+}
+.technique-label {
+    font-weight: bold;
+    color: #555;
+}
+.technique-name {
+    color: #333;
+    margin: 0 8px;
+}
+.technique-winner {
+    font-weight: bold;
+    margin-left: 10px;
+}
+.winner-a {
+    color: #d9534f;
+}
+.winner-b {
+    color: #0275d8;
+}
+.final-result {
+    text-align: center;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 2px solid #f0f0f0;
+}
+.final-winner {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #5cb85c;
+}
+.judgement {
+    margin-top: 8px;
+    color: #666;
+    font-size: 0.95em;
+}
+.no-techniques {
+    color: #999;
+    font-style: italic;
+}
+.team-score {
+    font-size: 1.1em;
+    margin: 10px 0;
+}
+.score-value {
+    font-weight: bold;
+    font-size: 1.3em;
+}
+.summary {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid #007bff;
+}
+</style>
+</head>
 <body>
   <h1><?= esc($tournament['title']) ?> — <?= esc($department['name']) ?></h1>
-  <p>該当試合: <?= array_sum(array_map('count', $grouped)) ?> 件</p>
+  
+  <div class="summary">
+    <p><strong>該当試合:</strong> <?= array_sum(array_map('count', $grouped)) ?> 件</p>
+    <?php if ($q !== ''): ?>
+      <p><strong>検索キーワード:</strong> <?= esc($q) ?></p>
+    <?php endif; ?>
+  </div>
+
   <?php if (empty($grouped)): ?>
-    <p>該当する試合はありません。</p>
+    <div class="match-card">
+      <p class="no-techniques">該当する試合はありません。</p>
+    </div>
   <?php else: ?>
     <?php foreach ($grouped as $field => $list): ?>
       <h3>場 <?= esc($field) ?></h3>
+      
       <?php foreach ($list as $m): ?>
-        <div style="border:1px solid #ccc;padding:8px;margin:6px 0;">
-          <div>順: <?= esc($m['match_number'] ?? '-') ?> / ID: <?= esc($m['match_id'] ?? '-') ?></div>
+        <div class="match-card">
+          <div class="match-header">
+            <div class="match-id">
+              <strong>試合番号:</strong> <?= esc($m['match_number'] ?? '-') ?> 
+              <span style="margin-left: 15px;"><strong>ID:</strong> <?= esc($m['match_id'] ?? '-') ?></span>
+            </div>
+          </div>
+
           <?php if ($distinction === 1): ?>
-            <div><strong><?= esc($m['red_name'] ?? '-') ?></strong> (No: <?= esc($m['red_number'] ?? '-') ?>) vs <strong><?= esc($m['white_name'] ?? '-') ?></strong> (No: <?= esc($m['white_number'] ?? '-') ?>)</div>
-            <div>スコア: <?= esc($m['red_score'] ?? '-') ?> - <?= esc($m['white_score'] ?? '-') ?>　勝ち数: <?= esc($m['red_win_count'] ?? '-') ?> / <?= esc($m['white_win_count'] ?? '-') ?></div>
-            <?php if (isset($m['team_match_id'])): ?><div>team_match_id: <?= esc($m['team_match_id']) ?></div><?php endif; ?>
+            <!-- 団体戦 -->
+            <div class="players">
+              <div class="player">
+                <div class="player-name" style="color: #d9534f;">
+                  <?= esc($m['red_name'] ?? '-') ?>
+                  <?php if ($m['red_withdraw'] ?? 0): ?>
+                    <span style="font-size: 0.8em; color: #999;">（棄権）</span>
+                  <?php endif; ?>
+                </div>
+                <div class="player-number">No. <?= esc($m['red_number'] ?? '-') ?></div>
+              </div>
+              <div class="vs">VS</div>
+              <div class="player">
+                <div class="player-name" style="color: #0275d8;">
+                  <?= esc($m['white_name'] ?? '-') ?>
+                  <?php if ($m['white_withdraw'] ?? 0): ?>
+                    <span style="font-size: 0.8em; color: #999;">（棄権）</span>
+                  <?php endif; ?>
+                </div>
+                <div class="player-number">No. <?= esc($m['white_number'] ?? '-') ?></div>
+              </div>
+            </div>
+
+            <!-- スコア表示 -->
+            <div style="background: #f9f9f9; padding: 15px; border-radius: 5px; margin: 10px 0;">
+              <div style="display: flex; justify-content: space-around; align-items: center; margin-bottom: 10px;">
+                <div style="text-align: center; flex: 1;">
+                  <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">赤チーム</div>
+                  <div class="score-value" style="color: #d9534f; font-size: 2em;">
+                    <?= esc($m['red_score'] ?? '-') ?>
+                  </div>
+                </div>
+                <div style="font-size: 1.5em; font-weight: bold; color: #999;">-</div>
+                <div style="text-align: center; flex: 1;">
+                  <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">白チーム</div>
+                  <div class="score-value" style="color: #0275d8; font-size: 2em;">
+                    <?= esc($m['white_score'] ?? '-') ?>
+                  </div>
+                </div>
+              </div>
+
+              <?php if (isset($m['red_win_count']) || isset($m['white_win_count'])): ?>
+                <div style="text-align: center; padding-top: 10px; border-top: 1px solid #e0e0e0;">
+                  <span style="color: #666;">勝ち数:</span>
+                  <span style="color: #d9534f; font-weight: bold; font-size: 1.1em; margin: 0 5px;">
+                    <?= esc($m['red_win_count'] ?? '-') ?>
+                  </span>
+                  <span style="color: #999;">-</span>
+                  <span style="color: #0275d8; font-weight: bold; font-size: 1.1em; margin: 0 5px;">
+                    <?= esc($m['white_win_count'] ?? '-') ?>
+                  </span>
+                </div>
+              <?php endif; ?>
+            </div>
+
+            <?php if (!empty($m['winner'])): ?>
+              <div class="final-result">
+                <?php
+                $teamWinner = $m['winner'];
+                $teamWinnerLower = strtolower((string)$teamWinner);
+                $teamWinnerName = '';
+                $teamWinnerClass = '';
+                
+                if ($teamWinner == $m['red_id'] || $teamWinnerLower === 'red' || $teamWinnerLower === 'aka') {
+                  $teamWinnerName = $m['red_name'] ?? '赤チーム';
+                  $teamWinnerClass = 'winner-a';
+                } elseif ($teamWinner == $m['white_id'] || $teamWinnerLower === 'white' || $teamWinnerLower === 'shiro') {
+                  $teamWinnerName = $m['white_name'] ?? '白チーム';
+                  $teamWinnerClass = 'winner-b';
+                } else {
+                  $teamWinnerName = $teamWinner;
+                }
+                ?>
+                <div class="final-winner <?= $teamWinnerClass ?>">
+                  ✓ 勝者: <?= esc($teamWinnerName) ?>
+                </div>
+              </div>
+            <?php endif; ?>
+
+            <?php if (!empty($m['wo_flg']) && $m['wo_flg'] == 1): ?>
+              <div style="text-align: center; margin-top: 10px; color: #f0ad4e; font-weight: bold;">
+                ⚠ 不戦勝
+              </div>
+            <?php endif; ?>
+
+            <?php if (isset($m['team_match_id'])): ?>
+              <div style="color: #999; font-size: 0.85em; margin-top: 10px; text-align: right;">
+                team_match_id: <?= esc($m['team_match_id']) ?>
+              </div>
+            <?php endif; ?>
+
+            <?php
+            // Display individual match details for this team match
+            if (!empty($m['team_match_id']) && isset($teamMatchDetails[$m['team_match_id']])):
+            ?>
+              <div style="margin-top: 20px; border-top: 2px solid #e0e0e0; padding-top: 15px;">
+                <h4 style="color: #555; margin-bottom: 15px; font-size: 1.1em;">【個別対戦】</h4>
+                
+                <?php foreach ($teamMatchDetails[$m['team_match_id']] as $detail): ?>
+                  <div style="background: #fafafa; border: 1px solid #e0e0e0; border-radius: 5px; padding: 12px; margin-bottom: 12px;">
+                    <!-- 選手名 -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                      <div style="flex: 1; text-align: center;">
+                        <span style="font-weight: bold; color: #d9534f;">
+                          <?= esc($detail['a_name'] ?? '選手A') ?>
+                        </span>
+                        <span style="color: #999; font-size: 0.9em; margin-left: 5px;">
+                          (<?= esc($detail['a_number'] ?? '-') ?>)
+                        </span>
+                      </div>
+                      <div style="font-weight: bold; color: #999; padding: 0 15px;">VS</div>
+                      <div style="flex: 1; text-align: center;">
+                        <span style="font-weight: bold; color: #0275d8;">
+                          <?= esc($detail['b_name'] ?? '選手B') ?>
+                        </span>
+                        <span style="color: #999; font-size: 0.9em; margin-left: 5px;">
+                          (<?= esc($detail['b_number'] ?? '-') ?>)
+                        </span>
+                      </div>
+                    </div>
+
+                    <?php if (!empty($detail['order_id'])): ?>
+                      <div style="font-size: 0.85em; color: #666; margin-bottom: 8px;">
+                        順<?= esc($detail['order_id']) ?>
+                      </div>
+                    <?php endif; ?>
+
+                    <!-- 技の表示 -->
+                    <?php
+                    $techniques = [
+                      ['name' => $detail['first_technique'] ?? '', 'winner' => $detail['first_winner'] ?? ''],
+                      ['name' => $detail['second_technique'] ?? '', 'winner' => $detail['second_winner'] ?? ''],
+                      ['name' => $detail['third_technique'] ?? '', 'winner' => $detail['third_winner'] ?? ''],
+                    ];
+                    $hasAnyTech = false;
+                    
+                    foreach ($techniques as $i => $tech):
+                      if (!empty($tech['name'])):
+                        $hasAnyTech = true;
+                        $techNum = $i + 1;
+                        $winner = $tech['winner'] ?? '';
+                        $winnerName = '';
+                        $winnerClass = '';
+                        $winnerLower = strtolower((string)$winner);
+                        
+                        if ($winner == $detail['a_id'] || $winner === 'player_a' || $winnerLower === 'a' || $winnerLower === 'red') {
+                          $winnerName = $detail['a_name'] ?? '選手A';
+                          $winnerClass = 'winner-a';
+                        } elseif ($winner == $detail['b_id'] || $winner === 'player_b' || $winnerLower === 'b' || $winnerLower === 'white') {
+                          $winnerName = $detail['b_name'] ?? '選手B';
+                          $winnerClass = 'winner-b';
+                        }
+                    ?>
+                        <div style="margin: 5px 0; padding: 5px; <?php 
+                          if ($winnerName) {
+                            if ($winnerClass === 'winner-a') {
+                              echo 'background: #ffe6e6; border-left: 3px solid #d9534f; padding-left: 8px;';
+                            } else {
+                              echo 'background: #e6f2ff; border-left: 3px solid #0275d8; padding-left: 8px;';
+                            }
+                          }
+                        ?>">
+                          <span style="font-weight: bold; font-size: 0.9em; <?= $winnerName ? ($winnerClass === 'winner-a' ? 'color: #d9534f;' : 'color: #0275d8;') : 'color: #555;' ?>">
+                            第<?= $techNum ?>技:
+                          </span>
+                          <span style="font-size: 0.9em; <?= $winnerName ? ($winnerClass === 'winner-a' ? 'color: #d9534f; font-weight: bold;' : 'color: #0275d8; font-weight: bold;') : 'color: #333;' ?>">
+                            <?= esc($tech['name']) ?>
+                          </span>
+                          <?php if ($winnerName): ?>
+                            <span style="font-size: 0.85em; margin-left: 8px; <?= $winnerClass === 'winner-a' ? 'color: #d9534f;' : 'color: #0275d8;' ?>">
+                              🏆 <?= esc($winnerName) ?>
+                            </span>
+                          <?php endif; ?>
+                        </div>
+                    <?php 
+                      endif;
+                    endforeach;
+                    
+                    if (!$hasAnyTech):
+                    ?>
+                      <div style="color: #999; font-style: italic; font-size: 0.9em;">技の記録なし</div>
+                    <?php endif; ?>
+
+                    <!-- 最終結果 -->
+                    <?php if (!empty($detail['final_winner'])): ?>
+                      <?php
+                      $finalWinner = $detail['final_winner'];
+                      $finalWinnerName = '';
+                      $finalWinnerClass = '';
+                      $finalWinnerLower = strtolower((string)$finalWinner);
+                      
+                      if ($finalWinner == $detail['a_id'] || $finalWinner === 'player_a' || $finalWinnerLower === 'a' || $finalWinnerLower === 'red') {
+                        $finalWinnerName = $detail['a_name'] ?? '選手A';
+                        $finalWinnerClass = 'winner-a';
+                      } elseif ($finalWinner == $detail['b_id'] || $finalWinner === 'player_b' || $finalWinnerLower === 'b' || $finalWinnerLower === 'white') {
+                        $finalWinnerName = $detail['b_name'] ?? '選手B';
+                        $finalWinnerClass = 'winner-b';
+                      } else {
+                        $finalWinnerName = $finalWinner;
+                      }
+                      ?>
+                      <div style="text-align: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid #e0e0e0;">
+                        <span style="font-weight: bold; font-size: 0.95em; <?= $finalWinnerClass === 'winner-a' ? 'color: #d9534f;' : ($finalWinnerClass === 'winner-b' ? 'color: #0275d8;' : 'color: #5cb85c;') ?>">
+                          ✓ <?= esc($finalWinnerName) ?>
+                        </span>
+                      </div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($detail['judgement'])): ?>
+                      <div style="text-align: center; margin-top: 5px; color: #666; font-size: 0.85em;">
+                        <?= esc($detail['judgement']) ?>
+                      </div>
+                    <?php endif; ?>
+                  </div>
+                <?php endforeach; ?>
+              </div>
+            <?php endif; ?>
+
           <?php else: ?>
-            <div><strong><?= esc($m['a_name'] ?? '選手A') ?></strong> vs <strong><?= esc($m['b_name'] ?? '選手B') ?></strong></div>
-            <div>技: <?= esc($m['first_technique'] ?? '-') ?> / <?= esc($m['second_technique'] ?? '-') ?> / <?= esc($m['third_technique'] ?? '-') ?></div>
+            <!-- 個人戦 -->
+            <div class="players">
+              <div class="player">
+                <div class="player-name">
+                  <?= esc($m['a_name'] ?? '選手A') ?>
+                </div>
+                <div class="player-number">No. <?= esc($m['a_number'] ?? '-') ?></div>
+              </div>
+              <div class="vs">VS</div>
+              <div class="player">
+                <div class="player-name">
+                  <?= esc($m['b_name'] ?? '選手B') ?>
+                </div>
+                <div class="player-number">No. <?= esc($m['b_number'] ?? '-') ?></div>
+              </div>
+            </div>
+
+            <!-- 技と取得者の表示 -->
+            <div class="techniques">
+              <?php
+              $techniques = [
+                ['name' => $m['first_technique'] ?? '', 'winner' => $m['first_winner'] ?? ''],
+                ['name' => $m['second_technique'] ?? '', 'winner' => $m['second_winner'] ?? ''],
+                ['name' => $m['third_technique'] ?? '', 'winner' => $m['third_winner'] ?? ''],
+              ];
+              $hasAnyTech = false;
+              
+              foreach ($techniques as $i => $tech):
+                if (!empty($tech['name'])):
+                  $hasAnyTech = true;
+                  $techNum = $i + 1;
+                  $winner = $tech['winner'] ?? '';
+                  $winnerName = '';
+                  $winnerClass = '';
+                  
+                  // winner判定（player_a_id, player_b_id, "player_a", "player_b", "red", "white" 形式に対応）
+                  $winnerLower = strtolower((string)$winner);
+                  if ($winner == $m['a_id'] || $winner === 'player_a' || $winnerLower === 'a' || $winnerLower === 'red') {
+                    $winnerName = $m['a_name'] ?? '選手A';
+                    $winnerClass = 'winner-a';
+                  } elseif ($winner == $m['b_id'] || $winner === 'player_b' || $winnerLower === 'b' || $winnerLower === 'white') {
+                    $winnerName = $m['b_name'] ?? '選手B';
+                    $winnerClass = 'winner-b';
+                  }
+              ?>
+                <div class="technique-item" style="<?php 
+                  if ($winnerName) {
+                    if ($winnerClass === 'winner-a') {
+                      echo 'background: #ffe6e6; border-left: 4px solid #d9534f; padding-left: 8px;';
+                    } else {
+                      echo 'background: #e6f2ff; border-left: 4px solid #0275d8; padding-left: 8px;';
+                    }
+                  }
+                ?>">
+                  <span class="technique-label" style="font-weight: bold; <?= $winnerName ? ($winnerClass === 'winner-a' ? 'color: #d9534f;' : 'color: #0275d8;') : 'color: #555;' ?>">
+                    第<?= $techNum ?>技:
+                  </span>
+                  <span class="technique-name" style="<?= $winnerName ? ($winnerClass === 'winner-a' ? 'color: #d9534f;' : 'color: #0275d8;') : 'color: #333;' ?>">
+                    <?= esc($tech['name']) ?>
+                  </span>
+                  <?php if ($winnerName): ?>
+                    <span class="technique-winner <?= $winnerClass ?>">
+                      🏆 <?= esc($winnerName) ?>
+                    </span>
+                  <?php endif; ?>
+                </div>
+              <?php 
+                endif;
+              endforeach;
+              
+              if (!$hasAnyTech):
+              ?>
+                <div class="no-techniques">技の記録なし</div>
+              <?php endif; ?>
+            </div>
+
+            <!-- 最終結果 -->
+            <?php if (!empty($m['final_winner'])): ?>
+              <div class="final-result">
+                <?php
+                $finalWinner = $m['final_winner'];
+                $finalWinnerName = '';
+                $finalWinnerClass = '';
+                $finalWinnerLower = strtolower((string)$finalWinner);
+                
+                if ($finalWinner == $m['a_id'] || $finalWinner === 'player_a' || $finalWinnerLower === 'a' || $finalWinnerLower === 'red') {
+                  $finalWinnerName = $m['a_name'] ?? '選手A';
+                  $finalWinnerClass = 'winner-a';
+                } elseif ($finalWinner == $m['b_id'] || $finalWinner === 'player_b' || $finalWinnerLower === 'b' || $finalWinnerLower === 'white') {
+                  $finalWinnerName = $m['b_name'] ?? '選手B';
+                  $finalWinnerClass = 'winner-b';
+                } else {
+                  $finalWinnerName = $finalWinner;
+                }
+                ?>
+                <div class="final-winner <?= $finalWinnerClass ?>">
+                  ✓ 勝者: <?= esc($finalWinnerName) ?>
+                </div>
+              </div>
+            <?php endif; ?>
+            
+            <?php if (!empty($m['judgement'])): ?>
+              <div class="judgement">
+                判定: <?= esc($m['judgement']) ?>
+              </div>
+            <?php endif; ?>
+
           <?php endif; ?>
         </div>
       <?php endforeach; ?>

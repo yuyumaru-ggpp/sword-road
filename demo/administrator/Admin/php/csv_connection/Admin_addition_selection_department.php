@@ -1,5 +1,7 @@
 <?php
+
 session_start();
+require_once '../../../../connect/db_connect.php';
 
 // ログインチェック
 if (!isset($_SESSION['admin_user'])) {
@@ -12,8 +14,6 @@ $tournament_id = $_GET['id'] ?? null;
 if (!$tournament_id || !ctype_digit($tournament_id)) {
     die("大会IDが指定されていません");
 }
-
-require_once '../../../db_connect.php';
 
 // 部門一覧取得（削除されていないもの）
 $sql = "SELECT id, name, distinction FROM departments
