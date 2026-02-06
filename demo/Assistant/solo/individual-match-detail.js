@@ -17,22 +17,6 @@ const data = {
 };
 
 /**
- * 判定勝ちボタンの表示/非表示を更新
- */
-function updateDecisionButtonsVisibility() {
-    const drawText = document.getElementById('drawButton').textContent;
-    const showButtons = drawText === '延長戦';
-    
-    document.getElementById('upperDecisionRow').classList.toggle('show', showButtons);
-    document.getElementById('lowerDecisionRow').classList.toggle('show', showButtons);
-    
-    if (!showButtons) {
-        document.getElementById('upperDecisionBtn').classList.remove('active');
-        document.getElementById('lowerDecisionBtn').classList.remove('active');
-    }
-}
-
-/**
  * データをUIに反映
  */
 function load() {
@@ -63,8 +47,6 @@ function load() {
                  special === 'hantei' ? '判定' : 
                  special === 'draw' ? '引き分け' : '-';
     document.getElementById('drawButton').textContent = text;
-    
-    updateDecisionButtonsVisibility();
 }
 
 /**
@@ -186,7 +168,7 @@ function initEventListeners() {
         item.addEventListener('click', () => {
             document.getElementById('drawButton').textContent = item.textContent;
             document.getElementById('drawMenu').classList.remove('show');
-            updateDecisionButtonsVisibility();
+            // 判定勝ちボタン表示機能を削除（元はここにupdateDecisionButtonsVisibility()があった）
         });
     });
 
