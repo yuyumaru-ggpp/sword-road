@@ -20,14 +20,8 @@ $mock_divisions = [
 // 既に登録されている試合の組み合わせモック
 // [部門ID] => [ ['match_number', 'match_field'], ... ]
 $mock_registered_matches = [
-    1 => [
-        ['match_number' => '1',  'match_field' => 1],
-        ['match_number' => '2',  'match_field' => 1],
-        ['match_number' => '1',  'match_field' => 2],
-    ],
-    2 => [
-        ['match_number' => '1',  'match_field' => 1],
-    ],
+    1 => [],  // 空にする
+    2 => [],
 ];
 
 
@@ -72,7 +66,7 @@ $previous_match_field = isset($_SESSION['last_match_field']) ? $_SESSION['last_m
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($_POST['action'] === 'back') {
-        header('Location: ../index.php');
+        header('Location: solodemo.php');
         exit;
     }
 

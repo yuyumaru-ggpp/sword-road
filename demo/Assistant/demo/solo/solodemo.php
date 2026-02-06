@@ -634,8 +634,8 @@ function startSystem() {
 }
 
 function goBack() {
-    // 前のページに戻る
-    history.back();
+    // デモトップページに戻る
+    window.location.href = '../demo.php';
 }
 </script>
 </body>

@@ -144,149 +144,531 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>選手登録・団体戦</title>
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+}
+
 body {
-    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Sans','Meiryo',sans-serif;
-    background:#f5f5f5;
-    padding:2rem;
-    min-height:100vh;
+    font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Meiryo', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
 }
+
 .container {
-    max-width:1200px;
-    margin:0 auto;
-    background:white;
-    padding:3rem;
-    border-radius:8px;
-    box-shadow:0 10px 30px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 1100px;
+    height: calc(100vh - 16px);
+    max-height: 900px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
+
 .header {
-    display:flex;
-    flex-wrap:wrap;
-    gap:2rem;
-    font-size:1.5rem;
-    font-weight:bold;
-    margin-bottom:1rem;
-    align-items:center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
+
+.header-badge {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    padding: 6px 14px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.main-content {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
 .match-info {
-    background:#f9fafb;
-    padding:1rem 2rem;
-    border-radius:8px;
-    margin-bottom:2rem;
-    display:flex;
-    gap:2rem;
-    align-items:center;
+    background: #f7fafc;
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
 }
+
 .match-info-item {
-    font-size:1.1rem;
+    font-size: 14px;
+    color: #4a5568;
 }
+
+.match-info-item strong {
+    font-weight: 700;
+    color: #2d3748;
+}
+
 .note {
-    text-align:center;
-    font-size:1rem;
-    color:#666;
-    margin-bottom:3rem;
-    padding:1rem;
-    background:#fef3c7;
-    border-radius:4px;
+    text-align: center;
+    font-size: 12px;
+    color: #744210;
+    background: #fef3c7;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    line-height: 1.5;
+    flex-shrink: 0;
 }
+
+.teams-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    min-height: 0;
+    padding-bottom: 5px;
+}
+
 .teams-container {
-    display:flex;
-    gap:3rem;
-    margin-bottom:3rem;
+    display: flex;
+    gap: 20px;
+    margin-bottom: 15px;
 }
+
 .team-section {
-    flex:1;
+    flex: 1;
+    min-width: 0;
 }
+
 .team-header {
-    font-size:1.5rem;
-    font-weight:bold;
-    margin-bottom:2rem;
-    padding:1rem;
-    text-align:center;
-    border-radius:8px;
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 12px;
+    padding: 10px;
+    text-align: center;
+    border-radius: 10px;
 }
+
 .team-header.red {
-    background:#fee2e2;
-    color:#dc2626;
+    background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
+    color: white;
 }
+
 .team-header.white {
-    background:#f3f4f6;
-    color:#374151;
+    background: linear-gradient(135deg, #cbd5e0 0%, #a0aec0 100%);
+    color: white;
 }
+
 .position-row {
-    display:flex;
-    align-items:center;
-    gap:1rem;
-    margin-bottom:1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
 }
+
 .position-label {
-    font-size:1.3rem;
-    font-weight:bold;
-    min-width:80px;
+    font-size: 14px;
+    font-weight: bold;
+    min-width: 50px;
+    color: #4a5568;
+    flex-shrink: 0;
 }
-.player-input {
-    flex:1;
-    padding:0.75rem 1rem;
-    font-size:1.1rem;
-    border:2px solid #d1d5db;
-    border-radius:8px;
-    text-align:center;
-}
-.player-input:focus {
-    outline:none;
-    border-color:#3b82f6;
-}
+
 .player-display {
-    flex:1;
-    padding:0.75rem 1rem;
-    font-size:1.1rem;
-    border:2px solid #d1d5db;
-    border-radius:8px;
-    text-align:center;
-    background:#f9fafb;
-    color:#374151;
-    font-weight:bold;
+    flex: 1;
+    padding: 10px 14px;
+    font-size: 14px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    text-align: center;
+    background: #f7fafc;
+    color: #2d3748;
+    font-weight: 600;
 }
-.player-select {
-    flex:1;
-    padding:0.75rem 1rem;
-    font-size:1.1rem;
-    border:2px solid #d1d5db;
-    border-radius:8px;
-    cursor:pointer;
-}
-.player-select:focus {
-    outline:none;
-    border-color:#3b82f6;
-}
+
 .buttons {
-    display:flex;
-    gap:2rem;
-    justify-content:center;
-    margin-top:3rem;
+    display: flex;
+    gap: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #e2e8f0;
+    flex-shrink: 0;
 }
+
 .btn {
-    padding:1rem 3rem;
-    font-size:1.3rem;
-    font-weight:bold;
-    border-radius:50px;
-    cursor:pointer;
-    transition:all 0.2s;
+    flex: 1;
+    padding: 14px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
 }
+
 .btn-back {
-    background:white;
-    border:3px solid #000;
+    background-color: #e2e8f0;
+    color: #4a5568;
 }
+
 .btn-back:hover {
-    background:#f9fafb;
+    background-color: #cbd5e0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
+
 .btn-submit {
-    background:#3b82f6;
-    color:white;
-    border:3px solid #3b82f6;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
 }
+
 .btn-submit:hover {
-    background:#2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+/* 小さい画面での調整 */
+@media (max-height: 750px) {
+    body {
+        padding: 4px;
+    }
+
+    .container {
+        max-height: calc(100vh - 8px);
+        border-radius: 16px;
+    }
+
+    .header {
+        padding: 8px 10px;
+    }
+
+    .header-badge {
+        font-size: 11px;
+        padding: 3px 10px;
+    }
+
+    .main-content {
+        padding: 10px;
+    }
+
+    .match-info {
+        padding: 6px 10px;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .match-info-item {
+        font-size: 11px;
+    }
+
+    .note {
+        font-size: 10px;
+        padding: 5px;
+        margin-bottom: 8px;
+        line-height: 1.4;
+    }
+
+    .team-header {
+        font-size: 13px;
+        padding: 5px;
+        margin-bottom: 6px;
+    }
+
+    .position-row {
+        margin-bottom: 5px;
+        gap: 5px;
+    }
+
+    .position-label {
+        font-size: 11px;
+        min-width: 38px;
+    }
+
+    .player-display {
+        padding: 5px 8px;
+        font-size: 11px;
+    }
+
+    .btn {
+        padding: 9px 14px;
+        font-size: 13px;
+    }
+
+    .buttons {
+        padding-top: 8px;
+        gap: 10px;
+    }
+
+    .teams-container {
+        gap: 10px;
+        margin-bottom: 0;
+    }
+}
+
+/* タブレット縦向き・横向き */
+@media (max-width: 900px) {
+    .teams-container {
+        flex-direction: column;
+    }
+
+    .team-section {
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+}
+
+/* スマートフォン縦向き */
+@media (max-width: 600px) {
+    body {
+        padding: 4px;
+    }
+
+    .container {
+        max-height: calc(100vh - 8px);
+        border-radius: 12px;
+    }
+
+    .header {
+        padding: 6px 8px;
+    }
+
+    .header-badge {
+        font-size: 10px;
+        padding: 3px 8px;
+    }
+
+    .main-content {
+        padding: 8px;
+    }
+
+    .match-info {
+        padding: 5px 8px;
+        gap: 6px;
+        margin-bottom: 6px;
+        font-size: 11px;
+    }
+
+    .match-info-item {
+        font-size: 10px;
+    }
+
+    .note {
+        font-size: 9px;
+        padding: 4px 6px;
+        margin-bottom: 6px;
+        line-height: 1.3;
+    }
+
+    .teams-container {
+        gap: 8px;
+        margin-bottom: 0;
+    }
+
+    .team-header {
+        font-size: 12px;
+        padding: 4px;
+        margin-bottom: 5px;
+    }
+
+    .position-row {
+        margin-bottom: 4px;
+        gap: 4px;
+    }
+
+    .position-label {
+        font-size: 10px;
+        min-width: 32px;
+    }
+
+    .player-display {
+        padding: 4px 6px;
+        font-size: 10px;
+        border-width: 1px;
+    }
+
+    .btn {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    .buttons {
+        padding-top: 6px;
+        gap: 8px;
+    }
+
+    .team-section {
+        max-width: 100%;
+    }
+
+    .teams-wrapper {
+        padding-bottom: 3px;
+    }
+}
+
+/* スマートフォン横向き */
+@media (max-width: 900px) and (max-height: 500px) {
+    body {
+        padding: 3px;
+    }
+
+    .container {
+        max-width: 98%;
+        max-height: calc(100vh - 6px);
+        border-radius: 10px;
+    }
+
+    .header {
+        padding: 5px 8px;
+    }
+
+    .header-badge {
+        font-size: 9px;
+        padding: 3px 8px;
+    }
+
+    .main-content {
+        padding: 8px;
+    }
+
+    .match-info {
+        padding: 4px 8px;
+        gap: 6px;
+        margin-bottom: 6px;
+    }
+
+    .match-info-item {
+        font-size: 10px;
+    }
+
+    .note {
+        font-size: 8px;
+        padding: 4px;
+        margin-bottom: 6px;
+        line-height: 1.2;
+    }
+
+    .teams-container {
+        flex-direction: row;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+
+    .team-header {
+        font-size: 11px;
+        padding: 4px;
+        margin-bottom: 5px;
+    }
+
+    .position-row {
+        margin-bottom: 4px;
+        gap: 4px;
+    }
+
+    .position-label {
+        font-size: 10px;
+        min-width: 30px;
+    }
+
+    .player-display {
+        padding: 4px 6px;
+        font-size: 10px;
+        border-width: 1px;
+    }
+
+    .btn {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .buttons {
+        padding-top: 6px;
+        gap: 8px;
+    }
+
+    .team-section {
+        max-width: none;
+    }
+}
+
+/* 小さいスマートフォン */
+@media (max-width: 400px) {
+    .header-badge {
+        font-size: 11px;
+        padding: 5px 10px;
+    }
+
+    .match-info-item {
+        font-size: 12px;
+    }
+
+    .position-label {
+        min-width: 40px;
+        font-size: 12px;
+    }
+}
+
+/* カスタムスクロールバー */
+.main-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.main-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.main-content::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 10px;
+}
+
+.main-content::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}
+
+.teams-wrapper::-webkit-scrollbar {
+    width: 6px;
+}
+
+.teams-wrapper::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.teams-wrapper::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 10px;
+}
+
+.teams-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
 }
 </style>
 </head>
@@ -294,210 +676,214 @@ body {
 
 <div class="container">
     <div class="header">
-        <span>選手登録・団体戦</span>
-        <span><?= htmlspecialchars($info['tournament_name']) ?></span>
-        <span><?= htmlspecialchars($info['division_name']) ?></span>
+        <div class="header-badge">選手登録・団体戦</div>
+        <div class="header-badge"><?= htmlspecialchars($info['tournament_name']) ?></div>
+        <div class="header-badge"><?= htmlspecialchars($info['division_name']) ?></div>
     </div>
     
-    <div class="match-info">
-        <div class="match-info-item">試合番号: <strong><?= htmlspecialchars($match_number) ?></strong></div>
-        <div class="match-info-item" style="color:#dc2626;">赤: <strong><?= htmlspecialchars($team_red_name) ?></strong></div>
-        <div class="match-info-item">白: <strong><?= htmlspecialchars($team_white_name) ?></strong></div>
-    </div>
-    
-    <div class="note">
-        ※選手名はordersテーブルの登録内容が表示されます<br>
-        ※選手変更は必ず本部に届けてから変更してください
-    </div>
-    
-    <form method="POST">
-        <div class="teams-container">
-            <!-- 赤チーム -->
-            <div class="team-section">
-                <div class="team-header red">赤チーム</div>
-                
-                <div class="position-row">
-                    <div class="position-label">先鋒</div>
-                    <input type="hidden" name="red_senpo" value="<?= isset($red_initial_order[1]) ? $red_initial_order[1] : '' ?>">
-                    <div class="player-display"><?php 
-                        if (isset($red_initial_order[1])) {
-                            foreach ($red_players as $player) {
-                                if ($player['id'] == $red_initial_order[1]) {
-                                    echo htmlspecialchars($player['name']);
-                                    break;
+    <div class="main-content">
+        <div class="match-info">
+            <div class="match-info-item">試合番号: <strong><?= htmlspecialchars($match_number) ?></strong></div>
+            <div class="match-info-item" style="color:#dc2626;">赤: <strong><?= htmlspecialchars($team_red_name) ?></strong></div>
+            <div class="match-info-item">白: <strong><?= htmlspecialchars($team_white_name) ?></strong></div>
+        </div>
+        
+        <div class="note">
+            ※選手名はordersテーブルの登録内容が表示されます<br>
+            ※選手変更は必ず本部に届けてから変更してください
+        </div>
+        
+        <form method="POST" style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
+            <div class="teams-wrapper">
+                <div class="teams-container">
+                    <!-- 赤チーム -->
+                    <div class="team-section">
+                        <div class="team-header red">赤チーム</div>
+                        
+                        <div class="position-row">
+                            <div class="position-label">先鋒</div>
+                            <input type="hidden" name="red_senpo" value="<?= isset($red_initial_order[1]) ? $red_initial_order[1] : '' ?>">
+                            <div class="player-display"><?php 
+                                if (isset($red_initial_order[1])) {
+                                    foreach ($red_players as $player) {
+                                        if ($player['id'] == $red_initial_order[1]) {
+                                            echo htmlspecialchars($player['name']);
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    echo '（未登録）';
                                 }
-                            }
-                        } else {
-                            echo '（未登録）';
-                        }
-                    ?></div>
-                </div>
-                
-                <div class="position-row">
-                    <div class="position-label">次鋒</div>
-                    <input type="hidden" name="red_jiho" value="<?= isset($red_initial_order[2]) ? $red_initial_order[2] : '' ?>">
-                    <div class="player-display"><?php 
-                        if (isset($red_initial_order[2])) {
-                            foreach ($red_players as $player) {
-                                if ($player['id'] == $red_initial_order[2]) {
-                                    echo htmlspecialchars($player['name']);
-                                    break;
+                            ?></div>
+                        </div>
+                        
+                        <div class="position-row">
+                            <div class="position-label">次鋒</div>
+                            <input type="hidden" name="red_jiho" value="<?= isset($red_initial_order[2]) ? $red_initial_order[2] : '' ?>">
+                            <div class="player-display"><?php 
+                                if (isset($red_initial_order[2])) {
+                                    foreach ($red_players as $player) {
+                                        if ($player['id'] == $red_initial_order[2]) {
+                                            echo htmlspecialchars($player['name']);
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    echo '（未登録）';
                                 }
-                            }
-                        } else {
-                            echo '（未登録）';
-                        }
-                    ?></div>
-                </div>
-                
-                <div class="position-row">
-                    <div class="position-label">中堅</div>
-                    <input type="hidden" name="red_chuken" value="<?= isset($red_initial_order[3]) ? $red_initial_order[3] : '' ?>">
-                    <div class="player-display"><?php 
-                        if (isset($red_initial_order[3])) {
-                            foreach ($red_players as $player) {
-                                if ($player['id'] == $red_initial_order[3]) {
-                                    echo htmlspecialchars($player['name']);
-                                    break;
+                            ?></div>
+                        </div>
+                        
+                        <div class="position-row">
+                            <div class="position-label">中堅</div>
+                            <input type="hidden" name="red_chuken" value="<?= isset($red_initial_order[3]) ? $red_initial_order[3] : '' ?>">
+                            <div class="player-display"><?php 
+                                if (isset($red_initial_order[3])) {
+                                    foreach ($red_players as $player) {
+                                        if ($player['id'] == $red_initial_order[3]) {
+                                            echo htmlspecialchars($player['name']);
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    echo '（未登録）';
                                 }
-                            }
-                        } else {
-                            echo '（未登録）';
-                        }
-                    ?></div>
-                </div>
-                
-                <div class="position-row">
-                    <div class="position-label">副将</div>
-                    <input type="hidden" name="red_fukusho" value="<?= isset($red_initial_order[4]) ? $red_initial_order[4] : '' ?>">
-                    <div class="player-display"><?php 
-                        if (isset($red_initial_order[4])) {
-                            foreach ($red_players as $player) {
-                                if ($player['id'] == $red_initial_order[4]) {
-                                    echo htmlspecialchars($player['name']);
-                                    break;
+                            ?></div>
+                        </div>
+                        
+                        <div class="position-row">
+                            <div class="position-label">副将</div>
+                            <input type="hidden" name="red_fukusho" value="<?= isset($red_initial_order[4]) ? $red_initial_order[4] : '' ?>">
+                            <div class="player-display"><?php 
+                                if (isset($red_initial_order[4])) {
+                                    foreach ($red_players as $player) {
+                                        if ($player['id'] == $red_initial_order[4]) {
+                                            echo htmlspecialchars($player['name']);
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    echo '（未登録）';
                                 }
-                            }
-                        } else {
-                            echo '（未登録）';
-                        }
-                    ?></div>
-                </div>
-                
-                <div class="position-row">
-                    <div class="position-label">大将</div>
-                    <input type="hidden" name="red_taisho" value="<?= isset($red_initial_order[5]) ? $red_initial_order[5] : '' ?>">
-                    <div class="player-display"><?php 
-                        if (isset($red_initial_order[5])) {
-                            foreach ($red_players as $player) {
-                                if ($player['id'] == $red_initial_order[5]) {
-                                    echo htmlspecialchars($player['name']);
-                                    break;
+                            ?></div>
+                        </div>
+                        
+                        <div class="position-row">
+                            <div class="position-label">大将</div>
+                            <input type="hidden" name="red_taisho" value="<?= isset($red_initial_order[5]) ? $red_initial_order[5] : '' ?>">
+                            <div class="player-display"><?php 
+                                if (isset($red_initial_order[5])) {
+                                    foreach ($red_players as $player) {
+                                        if ($player['id'] == $red_initial_order[5]) {
+                                            echo htmlspecialchars($player['name']);
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    echo '（未登録）';
                                 }
-                            }
-                        } else {
-                            echo '（未登録）';
-                        }
-                    ?></div>
+                            ?></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 白チーム -->
+                    <div class="team-section">
+                        <div class="team-header white">白チーム</div>
+                        
+                        <div class="position-row">
+                            <div class="position-label">先鋒</div>
+                            <input type="hidden" name="white_senpo" value="<?= isset($white_initial_order[1]) ? $white_initial_order[1] : '' ?>">
+                            <div class="player-display"><?php 
+                                if (isset($white_initial_order[1])) {
+                                    foreach ($white_players as $player) {
+                                        if ($player['id'] == $white_initial_order[1]) {
+                                            echo htmlspecialchars($player['name']);
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    echo '（未登録）';
+                                }
+                            ?></div>
+                        </div>
+                        
+                        <div class="position-row">
+                            <div class="position-label">次鋒</div>
+                            <input type="hidden" name="white_jiho" value="<?= isset($white_initial_order[2]) ? $white_initial_order[2] : '' ?>">
+                            <div class="player-display"><?php 
+                                if (isset($white_initial_order[2])) {
+                                    foreach ($white_players as $player) {
+                                        if ($player['id'] == $white_initial_order[2]) {
+                                            echo htmlspecialchars($player['name']);
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    echo '（未登録）';
+                                }
+                            ?></div>
+                        </div>
+                        
+                        <div class="position-row">
+                            <div class="position-label">中堅</div>
+                            <input type="hidden" name="white_chuken" value="<?= isset($white_initial_order[3]) ? $white_initial_order[3] : '' ?>">
+                            <div class="player-display"><?php 
+                                if (isset($white_initial_order[3])) {
+                                    foreach ($white_players as $player) {
+                                        if ($player['id'] == $white_initial_order[3]) {
+                                            echo htmlspecialchars($player['name']);
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    echo '（未登録）';
+                                }
+                            ?></div>
+                        </div>
+                        
+                        <div class="position-row">
+                            <div class="position-label">副将</div>
+                            <input type="hidden" name="white_fukusho" value="<?= isset($white_initial_order[4]) ? $white_initial_order[4] : '' ?>">
+                            <div class="player-display"><?php 
+                                if (isset($white_initial_order[4])) {
+                                    foreach ($white_players as $player) {
+                                        if ($player['id'] == $white_initial_order[4]) {
+                                            echo htmlspecialchars($player['name']);
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    echo '（未登録）';
+                                }
+                            ?></div>
+                        </div>
+                        
+                        <div class="position-row">
+                            <div class="position-label">大将</div>
+                            <input type="hidden" name="white_taisho" value="<?= isset($white_initial_order[5]) ? $white_initial_order[5] : '' ?>">
+                            <div class="player-display"><?php 
+                                if (isset($white_initial_order[5])) {
+                                    foreach ($white_players as $player) {
+                                        if ($player['id'] == $white_initial_order[5]) {
+                                            echo htmlspecialchars($player['name']);
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    echo '（未登録）';
+                                }
+                            ?></div>
+                        </div>
+                    </div>
                 </div>
             </div>
             
-            <!-- 白チーム -->
-            <div class="team-section">
-                <div class="team-header white">白チーム</div>
-                
-                <div class="position-row">
-                    <div class="position-label">先鋒</div>
-                    <input type="hidden" name="white_senpo" value="<?= isset($white_initial_order[1]) ? $white_initial_order[1] : '' ?>">
-                    <div class="player-display"><?php 
-                        if (isset($white_initial_order[1])) {
-                            foreach ($white_players as $player) {
-                                if ($player['id'] == $white_initial_order[1]) {
-                                    echo htmlspecialchars($player['name']);
-                                    break;
-                                }
-                            }
-                        } else {
-                            echo '（未登録）';
-                        }
-                    ?></div>
-                </div>
-                
-                <div class="position-row">
-                    <div class="position-label">次鋒</div>
-                    <input type="hidden" name="white_jiho" value="<?= isset($white_initial_order[2]) ? $white_initial_order[2] : '' ?>">
-                    <div class="player-display"><?php 
-                        if (isset($white_initial_order[2])) {
-                            foreach ($white_players as $player) {
-                                if ($player['id'] == $white_initial_order[2]) {
-                                    echo htmlspecialchars($player['name']);
-                                    break;
-                                }
-                            }
-                        } else {
-                            echo '（未登録）';
-                        }
-                    ?></div>
-                </div>
-                
-                <div class="position-row">
-                    <div class="position-label">中堅</div>
-                    <input type="hidden" name="white_chuken" value="<?= isset($white_initial_order[3]) ? $white_initial_order[3] : '' ?>">
-                    <div class="player-display"><?php 
-                        if (isset($white_initial_order[3])) {
-                            foreach ($white_players as $player) {
-                                if ($player['id'] == $white_initial_order[3]) {
-                                    echo htmlspecialchars($player['name']);
-                                    break;
-                                }
-                            }
-                        } else {
-                            echo '（未登録）';
-                        }
-                    ?></div>
-                </div>
-                
-                <div class="position-row">
-                    <div class="position-label">副将</div>
-                    <input type="hidden" name="white_fukusho" value="<?= isset($white_initial_order[4]) ? $white_initial_order[4] : '' ?>">
-                    <div class="player-display"><?php 
-                        if (isset($white_initial_order[4])) {
-                            foreach ($white_players as $player) {
-                                if ($player['id'] == $white_initial_order[4]) {
-                                    echo htmlspecialchars($player['name']);
-                                    break;
-                                }
-                            }
-                        } else {
-                            echo '（未登録）';
-                        }
-                    ?></div>
-                </div>
-                
-                <div class="position-row">
-                    <div class="position-label">大将</div>
-                    <input type="hidden" name="white_taisho" value="<?= isset($white_initial_order[5]) ? $white_initial_order[5] : '' ?>">
-                    <div class="player-display"><?php 
-                        if (isset($white_initial_order[5])) {
-                            foreach ($white_players as $player) {
-                                if ($player['id'] == $white_initial_order[5]) {
-                                    echo htmlspecialchars($player['name']);
-                                    break;
-                                }
-                            }
-                        } else {
-                            echo '（未登録）';
-                        }
-                    ?></div>
-                </div>
+            <div class="buttons">
+                <button type="button" class="btn btn-back" onclick="history.back()">戻る</button>
+                <button type="submit" class="btn btn-submit">決定</button>
             </div>
-        </div>
-        
-        <div class="buttons">
-            <button type="button" class="btn btn-back" onclick="history.back()">戻る</button>
-            <button type="submit" class="btn btn-submit">決定</button>
-        </div>
-    </form>
+        </form>
+    </div>
 </div>
 
 </body>

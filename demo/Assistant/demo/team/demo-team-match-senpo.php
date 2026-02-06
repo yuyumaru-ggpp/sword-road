@@ -1,94 +1,8 @@
-<?php
-require_once 'team_db.php';
-
-// セッションチェック
-checkTeamSessionWithResults();
-
-// セッション変数を取得
-$vars = getTeamVariables();
-$tournament_id = $vars['tournament_id'];
-$division_id   = $vars['division_id'];
-$match_number  = $vars['match_number'];
-$team_red_id   = $vars['team_red_id'];
-$team_white_id = $vars['team_white_id'];
-
-/* DB接続 */
-
-/* 大会・部門情報取得 */
-$sql = "
-    SELECT
-        t.title AS tournament_name,
-        d.name  AS division_name
-    FROM tournaments t
-    JOIN departments d ON d.tournament_id = t.id
-    WHERE d.id = :division_id
-";
-$stmt = $pdo->prepare($sql);
-$stmt->execute([':division_id' => $division_id]);
-$info = $stmt->fetch(PDO::FETCH_ASSOC);
-
-if (!$info) {
-    exit('試合情報が取得できません');
-}
-
-// チーム名を取得
-$sql = "SELECT name FROM teams WHERE id = :team_id";
-$stmt = $pdo->prepare($sql);
-
-$stmt->execute([':team_id' => $team_red_id]);
-$team_red_name = $stmt->fetchColumn();
-
-$stmt->execute([':team_id' => $team_white_id]);
-$team_white_name = $stmt->fetchColumn();
-
-// オーダー情報から大将の選手を取得
-$red_order = $_SESSION['team_red_order'] ?? [];
-$white_order = $_SESSION['team_white_order'] ?? [];
-
-$red_player_name = '';
-$white_player_name = '';
-
-if (isset($red_order['大将'])) {
-    $sql = "SELECT name FROM players WHERE id = :id";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([':id' => $red_order['大将']]);
-    $red_player_name = $stmt->fetchColumn();
-}
-
-if (isset($white_order['大将'])) {
-    $sql = "SELECT name FROM players WHERE id = :id";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([':id' => $white_order['大将']]);
-    $white_player_name = $stmt->fetchColumn();
-}
-
-// セッションから保存済みデータを取得
-$savedData = $_SESSION['match_results']['大将'] ?? null;
-
-/* POST処理 */
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-    $input = json_decode(file_get_contents('php://input'), true);
-    if (!$input) {
-        echo json_encode(['status' => 'ng', 'message' => 'Invalid input']);
-        exit;
-    }
-
-    // セッションに保存
-    if (!isset($_SESSION['match_results'])) {
-        $_SESSION['match_results'] = [];
-    }
-    $_SESSION['match_results']['大将'] = $input;
-    
-    echo json_encode(['status' => 'ok']);
-    exit;
-}
-?>
 <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>団体戦 大将</title>
+<title>団体戦 先鋒 - デモ</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 * {
@@ -99,6 +13,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 html, body {
     height: 100%;
+    margin: 0;
+    padding: 0;
     overflow: hidden;
 }
 
@@ -114,8 +30,8 @@ body {
 .container {
     width: 100%;
     max-width: 1000px;
-    height: calc(100vh - 16px);
-    max-height: 900px;
+    height: 100%;
+    max-height: calc(100vh - 16px);
     background: #ffffff;
     border-radius: 20px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -125,29 +41,43 @@ body {
     position: relative;
 }
 
+.demo-notice {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: #fef5e7;
+    color: #7d6608;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 10px;
+    text-align: center;
+    border-left: 3px solid #f39c12;
+    z-index: 101;
+}
+
 .position-header {
     position: absolute;
     top: 0;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 24px;
+    font-size: 22px;
     font-weight: bold;
     color: white;
-    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-    padding: 12px 40px;
+    background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
+    padding: 10px 36px;
     text-align: center;
     z-index: 100;
-    border-radius: 0 0 16px 16px;
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    border-radius: 0 0 14px 14px;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
 
 .header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 60px 20px 15px;
+    padding: 54px 15px 12px;
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
@@ -161,15 +91,16 @@ body {
     font-size: 13px;
     font-weight: 600;
     border: 1px solid rgba(255, 255, 255, 0.3);
+    white-space: nowrap;
 }
 
 .main-content {
     flex: 1;
-    padding: 20px;
+    padding: 15px;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
     min-height: 0;
+    overflow-y: auto;
 }
 
 .content-wrapper {
@@ -182,22 +113,22 @@ body {
 .match-section {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .player-info {
     background: #f7fafc;
-    padding: 12px;
+    padding: 10px;
     border-radius: 10px;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .info-row {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 6px;
-    font-size: 14px;
+    gap: 8px;
+    margin-bottom: 5px;
+    font-size: 13px;
 }
 
 .info-row:last-child {
@@ -205,7 +136,7 @@ body {
 }
 
 .info-label {
-    min-width: 80px;
+    min-width: 75px;
     font-weight: 600;
     color: #4a5568;
 }
@@ -213,34 +144,34 @@ body {
 .info-value {
     font-weight: 700;
     color: #2d3748;
-    font-size: 16px;
+    font-size: 15px;
 }
 
 .score-display {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 15px 0;
+    padding: 12px 0;
 }
 
 .score-group {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 
 .score-numbers {
     display: flex;
-    gap: 20px;
-    font-size: 14px;
+    gap: 16px;
+    font-size: 13px;
     font-weight: bold;
     color: #4a5568;
 }
 
 .score-numbers span {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -248,12 +179,12 @@ body {
 
 .radio-circles {
     display: flex;
-    gap: 20px;
+    gap: 16px;
 }
 
 .radio-circle {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     background: #e2e8f0;
     cursor: pointer;
@@ -273,7 +204,7 @@ body {
 
 .divider-section {
     position: relative;
-    margin: 20px 0;
+    margin: 15px 0;
     text-align: center;
 }
 
@@ -290,26 +221,26 @@ body {
     display: flex;
     align-items: center;
     background: white;
-    padding: 10px 15px;
+    padding: 8px 12px;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .score-dropdowns {
     display: flex;
-    gap: 20px;
+    gap: 16px;
 }
 
 .dropdown-container {
     position: relative;
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
 }
 
 .score-dropdown {
     width: 100%;
     height: 100%;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: bold;
     background: white;
     border: 2px solid #cbd5e0;
@@ -348,7 +279,7 @@ body {
 
 .dropdown-item {
     padding: 10px 16px;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: bold;
     text-align: center;
     cursor: pointer;
@@ -369,7 +300,7 @@ body {
 .draw-container-wrapper {
     position: absolute;
     top: 50%;
-    right: -100px;
+    right: -90px;
     transform: translateY(-50%);
     background: white;
     padding: 10px 0;
@@ -380,8 +311,8 @@ body {
 }
 
 .draw-button {
-    padding: 8px 16px;
-    font-size: 14px;
+    padding: 7px 14px;
+    font-size: 13px;
     background: white;
     border: 2px solid #cbd5e0;
     border-radius: 8px;
@@ -406,8 +337,8 @@ body {
 .bottom-area {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding-top: 15px;
+    gap: 10px;
+    padding-top: 12px;
     border-top: 1px solid #e2e8f0;
     flex-shrink: 0;
 }
@@ -418,8 +349,8 @@ body {
 }
 
 .cancel-button {
-    padding: 8px 20px;
-    font-size: 13px;
+    padding: 7px 18px;
+    font-size: 12px;
     background: white;
     border: 2px solid #e2e8f0;
     border-radius: 8px;
@@ -437,14 +368,14 @@ body {
 .bottom-buttons {
     display: flex;
     justify-content: center;
-    gap: 15px;
+    gap: 12px;
 }
 
 .bottom-button {
     flex: 1;
     max-width: 200px;
-    padding: 14px 20px;
-    font-size: 16px;
+    padding: 12px 18px;
+    font-size: 15px;
     font-weight: 600;
     border: none;
     border-radius: 12px;
@@ -473,19 +404,8 @@ body {
     box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
 }
 
-.submit-button {
-    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-    color: white;
-}
-
-.submit-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4);
-}
-
 .next-button:active,
-.back-button:active,
-.submit-button:active {
+.back-button:active {
     transform: translateY(0);
 }
 
@@ -510,125 +430,18 @@ body {
 
 /* 小さい画面での調整 */
 @media (max-height: 750px) {
-    body {
-        padding: 5px;
-    }
-
-    .container {
-        max-height: calc(100vh - 10px);
-        border-radius: 16px;
-    }
-
     .position-header {
-        font-size: 20px;
-        padding: 10px 32px;
+        font-size: 18px;
+        padding: 8px 28px;
     }
 
     .header {
-        padding: 50px 15px 12px;
+        padding: 48px 12px 10px;
     }
 
     .header-badge {
         font-size: 12px;
         padding: 5px 12px;
-    }
-
-    .main-content {
-        padding: 15px;
-    }
-
-    .player-info {
-        padding: 10px;
-        margin-bottom: 8px;
-    }
-
-    .info-row {
-        font-size: 13px;
-        gap: 8px;
-        margin-bottom: 5px;
-    }
-
-    .info-value {
-        font-size: 14px;
-    }
-
-    .score-display {
-        padding: 12px 0;
-    }
-
-    .score-numbers,
-    .radio-circles {
-        gap: 16px;
-    }
-
-    .score-numbers span,
-    .radio-circle {
-        width: 36px;
-        height: 36px;
-    }
-
-    .dropdown-container {
-        width: 36px;
-        height: 36px;
-    }
-
-    .score-dropdown {
-        font-size: 14px;
-    }
-
-    .divider-section {
-        margin: 15px 0;
-    }
-
-    .draw-container-wrapper {
-        right: -90px;
-    }
-
-    .draw-button {
-        padding: 6px 14px;
-        font-size: 13px;
-    }
-
-    .bottom-area {
-        gap: 10px;
-        padding-top: 12px;
-    }
-
-    .cancel-button {
-        padding: 7px 18px;
-        font-size: 12px;
-    }
-
-    .bottom-button {
-        padding: 12px 18px;
-        font-size: 15px;
-    }
-}
-
-/* スマートフォン縦向き */
-@media (max-width: 600px) {
-    body {
-        padding: 4px;
-    }
-
-    .container {
-        max-height: calc(100vh - 8px);
-        border-radius: 12px;
-    }
-
-    .position-header {
-        font-size: 18px;
-        padding: 8px 24px;
-        border-radius: 0 0 12px 12px;
-    }
-
-    .header {
-        padding: 46px 12px 10px;
-    }
-
-    .header-badge {
-        font-size: 11px;
-        padding: 4px 10px;
     }
 
     .main-content {
@@ -646,10 +459,6 @@ body {
         margin-bottom: 4px;
     }
 
-    .info-label {
-        min-width: 70px;
-    }
-
     .info-value {
         font-size: 13px;
     }
@@ -658,11 +467,7 @@ body {
         padding: 10px 0;
     }
 
-    .score-numbers {
-        font-size: 12px;
-        gap: 14px;
-    }
-
+    .score-numbers,
     .radio-circles {
         gap: 14px;
     }
@@ -671,19 +476,6 @@ body {
     .radio-circle {
         width: 32px;
         height: 32px;
-        font-size: 12px;
-    }
-
-    .divider-section {
-        margin: 12px 0;
-    }
-
-    .middle-controls {
-        padding: 8px 12px;
-    }
-
-    .score-dropdowns {
-        gap: 14px;
     }
 
     .dropdown-container {
@@ -693,7 +485,10 @@ body {
 
     .score-dropdown {
         font-size: 13px;
-        border-width: 1px;
+    }
+
+    .divider-section {
+        margin: 12px 0;
     }
 
     .draw-container-wrapper {
@@ -701,14 +496,8 @@ body {
     }
 
     .draw-button {
-        padding: 5px 12px;
+        padding: 6px 12px;
         font-size: 12px;
-        border-width: 1px;
-    }
-
-    .dropdown-item {
-        padding: 8px 14px;
-        font-size: 13px;
     }
 
     .bottom-area {
@@ -717,45 +506,150 @@ body {
     }
 
     .cancel-button {
-        padding: 6px 14px;
+        padding: 6px 16px;
         font-size: 11px;
-        border-width: 1px;
     }
 
     .bottom-button {
         padding: 10px 16px;
         font-size: 14px;
-        max-width: 180px;
-    }
-
-    .bottom-buttons {
-        gap: 12px;
     }
 }
 
-/* スマートフォン横向き */
-@media (max-width: 900px) and (max-height: 500px) {
+/* 非常に小さい画面 */
+@media (max-height: 650px) {
+    .position-header {
+        font-size: 16px;
+        padding: 6px 24px;
+    }
+
+    .header {
+        padding: 42px 10px 8px;
+    }
+
+    .header-badge {
+        font-size: 11px;
+        padding: 4px 10px;
+    }
+
+    .main-content {
+        padding: 10px;
+    }
+
+    .player-info {
+        padding: 6px;
+        margin-bottom: 5px;
+    }
+
+    .info-row {
+        font-size: 11px;
+        gap: 5px;
+        margin-bottom: 3px;
+    }
+
+    .info-label {
+        min-width: 65px;
+    }
+
+    .info-value {
+        font-size: 12px;
+    }
+
+    .score-display {
+        padding: 8px 0;
+    }
+
+    .score-numbers,
+    .radio-circles {
+        gap: 12px;
+    }
+
+    .score-numbers span,
+    .radio-circle {
+        width: 28px;
+        height: 28px;
+        font-size: 11px;
+    }
+
+    .dropdown-container {
+        width: 28px;
+        height: 28px;
+    }
+
+    .score-dropdown {
+        font-size: 12px;
+        border-width: 1px;
+    }
+
+    .divider-section {
+        margin: 10px 0;
+    }
+
+    .middle-controls {
+        padding: 6px 10px;
+    }
+
+    .score-dropdowns {
+        gap: 12px;
+    }
+
+    .draw-container-wrapper {
+        right: -70px;
+    }
+
+    .draw-button {
+        padding: 5px 10px;
+        font-size: 11px;
+        border-width: 1px;
+    }
+
+    .dropdown-item {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+
+    .bottom-area {
+        gap: 6px;
+        padding-top: 8px;
+    }
+
+    .cancel-button {
+        padding: 5px 14px;
+        font-size: 10px;
+        border-width: 1px;
+    }
+
+    .bottom-button {
+        padding: 8px 14px;
+        font-size: 13px;
+        max-width: 180px;
+    }
+}
+
+/* スマートフォン縦向き */
+@media (max-width: 600px) {
     body {
-        padding: 3px;
+        padding: 4px;
     }
 
     .container {
-        max-height: calc(100vh - 6px);
-        border-radius: 10px;
+        max-height: calc(100vh - 8px);
+        border-radius: 12px;
     }
 
     .position-header {
         font-size: 16px;
         padding: 6px 20px;
+        border-radius: 0 0 10px 10px;
     }
 
     .header {
-        padding: 40px 10px 8px;
+        padding: 42px 10px 8px;
     }
 
     .header-badge {
-        font-size: 10px;
-        padding: 3px 8px;
+        font-size: 11px;
+        padding: 4px 10px;
     }
 
     .main-content {
@@ -828,13 +722,13 @@ body {
     }
 
     .draw-button {
-        padding: 4px 10px;
+        padding: 5px 10px;
         font-size: 11px;
         border-width: 1px;
     }
 
     .dropdown-item {
-        padding: 6px 12px;
+        padding: 7px 12px;
         font-size: 12px;
     }
 
@@ -859,16 +753,145 @@ body {
         gap: 10px;
     }
 }
+
+/* スマートフォン横向き */
+@media (max-width: 900px) and (max-height: 500px) {
+    body {
+        padding: 3px;
+    }
+
+    .container {
+        max-height: calc(100vh - 6px);
+        border-radius: 10px;
+    }
+
+    .position-header {
+        font-size: 14px;
+        padding: 5px 18px;
+    }
+
+    .header {
+        padding: 38px 8px 6px;
+        gap: 5px;
+    }
+
+    .header-badge {
+        font-size: 10px;
+        padding: 3px 8px;
+    }
+
+    .main-content {
+        padding: 8px;
+    }
+
+    .player-info {
+        padding: 5px;
+        margin-bottom: 4px;
+    }
+
+    .info-row {
+        font-size: 10px;
+        gap: 4px;
+        margin-bottom: 2px;
+    }
+
+    .info-label {
+        min-width: 55px;
+    }
+
+    .info-value {
+        font-size: 11px;
+    }
+
+    .score-display {
+        padding: 6px 0;
+    }
+
+    .score-numbers {
+        font-size: 10px;
+        gap: 10px;
+    }
+
+    .radio-circles {
+        gap: 10px;
+    }
+
+    .score-numbers span,
+    .radio-circle {
+        width: 24px;
+        height: 24px;
+        font-size: 10px;
+    }
+
+    .divider-section {
+        margin: 8px 0;
+    }
+
+    .middle-controls {
+        padding: 5px 8px;
+    }
+
+    .score-dropdowns {
+        gap: 10px;
+    }
+
+    .dropdown-container {
+        width: 24px;
+        height: 24px;
+    }
+
+    .score-dropdown {
+        font-size: 11px;
+        border-width: 1px;
+    }
+
+    .draw-container-wrapper {
+        right: -60px;
+    }
+
+    .draw-button {
+        padding: 4px 8px;
+        font-size: 10px;
+        border-width: 1px;
+    }
+
+    .dropdown-item {
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+
+    .bottom-area {
+        gap: 5px;
+        padding-top: 6px;
+    }
+
+    .cancel-button {
+        padding: 4px 10px;
+        font-size: 9px;
+        border-width: 1px;
+    }
+
+    .bottom-button {
+        padding: 7px 12px;
+        font-size: 12px;
+        max-width: 140px;
+    }
+
+    .bottom-buttons {
+        gap: 8px;
+    }
+}
 </style>
 </head>
 <body>
 <div class="container">
-    <div class="position-header">大将</div>
+    <div class="demo-notice">⚠️ デモ</div>
+    <div class="position-header">先鋒</div>
     
     <div class="header">
         <div class="header-badge">団体戦</div>
-        <div class="header-badge"><?= htmlspecialchars($info['tournament_name']) ?></div>
-        <div class="header-badge"><?= htmlspecialchars($info['division_name']) ?></div>
+        <div class="header-badge">2024年度 全国選手権大会</div>
+        <div class="header-badge">男子団体</div>
     </div>
 
     <div class="main-content">
@@ -877,11 +900,11 @@ body {
                 <div class="player-info" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);">
                     <div class="info-row">
                         <div class="info-label">チーム名</div>
-                        <div class="info-value"><?= htmlspecialchars($team_red_name) ?></div>
+                        <div class="info-value">東京高校</div>
                     </div>
                     <div class="info-row">
                         <div class="info-label">名前</div>
-                        <div class="info-value"><?= htmlspecialchars($red_player_name ?: '───') ?></div>
+                        <div class="info-value">山田 太郎</div>
                     </div>
                 </div>
                 <div class="score-display">
@@ -974,11 +997,11 @@ body {
                 <div class="player-info" style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);">
                     <div class="info-row">
                         <div class="info-label">名前</div>
-                        <div class="info-value"><?= htmlspecialchars($white_player_name ?: '───') ?></div>
+                        <div class="info-value">伊藤 一朗</div>
                     </div>
                     <div class="info-row">
                         <div class="info-label">チーム名</div>
-                        <div class="info-value"><?= htmlspecialchars($team_white_name) ?></div>
+                        <div class="info-value">神奈川学園</div>
                     </div>
                 </div>
             </div>
@@ -990,49 +1013,20 @@ body {
             </div>
 
             <div class="bottom-buttons">
-                <button type="button" class="bottom-button back-button" onclick="history.back()">戻る</button>
-                <button type="button" class="bottom-button submit-button" id="nextButton">送信（確認へ）</button>
+                <button type="button" class="bottom-button back-button" onclick="handleBack()">戻る</button>
+                <button type="button" class="bottom-button next-button" id="nextButton">次鋒へ</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-const savedData = <?= json_encode($savedData) ?>;
-
-const data = savedData ? {
-    red: savedData.red || { selected: [] },
-    white: savedData.white || { selected: [] },
-    scores: savedData.scores || ['▼','▼','▼'],
-    special: savedData.special || 'none'
-} : {
+const data = {
     red: { selected: [] },
     white: { selected: [] },
     scores: ['▼','▼','▼'],
     special: 'none'
 };
-
-function load() {
-    document.querySelectorAll('.middle-controls .score-dropdown').forEach((b,i) => {
-        b.textContent = data.scores[i];
-    });
-    document.querySelectorAll('.red-circles .radio-circle').forEach((c,i) => {
-        c.classList.toggle('selected', (data.red.selected || []).includes(i));
-    });
-    document.querySelectorAll('.white-circles .radio-circle').forEach((c,i) => {
-        c.classList.toggle('selected', (data.white.selected || []).includes(i));
-    });
-    const drawButton = document.getElementById('drawButton');
-    if (data.special === 'ippon') {
-        drawButton.textContent = '一本勝';
-    } else if (data.special === 'extend') {
-        drawButton.textContent = '延長';
-    } else if (data.special === 'draw') {
-        drawButton.textContent = '引分け';
-    } else {
-        drawButton.textContent = '-';
-    }
-}
 
 function saveLocal() {
     data.scores = Array.from(document.querySelectorAll('.middle-controls .score-dropdown')).map(b=>b.textContent);
@@ -1093,87 +1087,59 @@ document.getElementById('cancelButton').addEventListener('click',()=>{
         data.white = { selected: [] };
         data.scores = ['▼','▼','▼'];
         data.special = 'none';
-        load();
+        document.querySelectorAll('.radio-circle').forEach(c=>c.classList.remove('selected'));
+        document.querySelectorAll('.score-dropdown').forEach(b=>b.textContent='▼');
+        document.getElementById('drawButton').textContent = '-';
     }
 });
 
-// 途中経過を計算する関数
-function calculateProgress() {
-    const matchResults = <?= json_encode($_SESSION['match_results'] ?? []) ?>;
-    let redWins = 0;
-    let whiteWins = 0;
-    let redPoints = 0;
-    let whitePoints = 0;
-    
-    const positions = ['先鋒', '次鋒', '中堅', '副将', '大将'];
-    
-    positions.forEach(pos => {
-        const result = matchResults[pos];
-        if (!result) return;
-        
-        const scores = result.scores || [];
-        const redSelected = result.red?.selected || [];
-        const whiteSelected = result.white?.selected || [];
-        
-        // 得点計算
-        let redPosPoints = 0;
-        let whitePosPoints = 0;
-        
-        redSelected.forEach(idx => {
-            if (scores[idx] && scores[idx] !== '▼' && scores[idx] !== '▲' && scores[idx] !== '×' && scores[idx] !== '') {
-                redPosPoints++;
-            }
-        });
-        
-        whiteSelected.forEach(idx => {
-            if (scores[idx] && scores[idx] !== '▼' && scores[idx] !== '▲' && scores[idx] !== '×' && scores[idx] !== '') {
-                whitePosPoints++;
-            }
-        });
-        
-        redPoints += redPosPoints;
-        whitePoints += whitePosPoints;
-        
-        // 勝者判定
-        if (redPosPoints > whitePosPoints) {
-            redWins++;
-        } else if (whitePosPoints > redPosPoints) {
-            whiteWins++;
-        }
-    });
-    
-    return { redWins, whiteWins, redPoints, whitePoints };
-}
-
-document.getElementById('nextButton').onclick=async()=>{
+document.getElementById('nextButton').onclick = () => {
     saveLocal();
-    try{
-        const r=await fetch(location.href,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
-        const j=await r.json();
-        if(j.status==='ok'){
-            // 途中経過を計算
-            const progress = calculateProgress();
-            
-            // 勝者数と得本数が両方同点かチェック
-            const isTie = (progress.redWins === progress.whiteWins && 
-                           progress.redPoints === progress.whitePoints);
-            
-            if (isTie) {
-                // 同点の場合は代表決定戦を確認
-                if (confirm('勝者数と得本数が同点です。代表決定戦を行いますか？')) {
-                    window.location.href = 'team-match-daihyo.php';
-                } else {
-                    window.location.href = 'team-match-confirm.php';
-                }
-            } else {
-                // 同点でない場合は確認画面へ
-                window.location.href = 'team-match-confirm.php';
-            }
-        } else { alert('保存失敗'); }
-    }catch(e){ alert('エラー発生'); console.error(e); }
+    showConfirmation();
 };
 
-load();
+function showConfirmation() {
+    const message = `
+        <div style="background: #fff; border-radius: 16px; padding: 30px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-width: 500px; margin: 20px auto;">
+            <div style="font-size: 48px; margin-bottom: 20px;">✓</div>
+            <h3 style="font-size: 20px; margin-bottom: 15px; color: #2d3748;">先鋒戦を保存しました</h3>
+            <p style="font-size: 16px; color: #4a5568; margin-bottom: 25px; line-height: 1.6;">
+                次鋒から大将まで同じように入力します。<br>
+                次は代表決定戦の画面に移動します。
+            </p>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button onclick="closeConfirmation()" style="flex: 1; max-width: 180px; padding: 14px 20px; font-size: 15px; font-weight: 600; background: #e2e8f0; color: #4a5568; border: none; border-radius: 10px; cursor: pointer; transition: all 0.3s ease;">
+                    キャンセル
+                </button>
+                <button onclick="continueToNext()" style="flex: 1; max-width: 180px; padding: 14px 20px; font-size: 15px; font-weight: 600; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; cursor: pointer; transition: all 0.3s ease;">
+                    次へ進む
+                </button>
+            </div>
+        </div>
+    `;
+    
+    const overlay = document.createElement('div');
+    overlay.id = 'confirmOverlay';
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; backdrop-filter: blur(4px);';
+    overlay.innerHTML = message;
+    document.body.appendChild(overlay);
+}
+
+function closeConfirmation() {
+    const overlay = document.getElementById('confirmOverlay');
+    if (overlay) {
+        overlay.remove();
+    }
+}
+
+function continueToNext() {
+    // 代表決定戦の画面へ遷移
+    window.location.href = 'demo-team-representative.php';
+}
+
+function handleBack() {
+    window.location.href = 'demo-team-order-registration.php';
+}
 </script>
 </body>
 </html>

@@ -12,10 +12,9 @@ $match_number  = $vars['match_number'];
 $team_red_id   = $vars['team_red_id'];
 $team_white_id = $vars['team_white_id'];
 
+/* DB接続 */
 
-/* ===============================
-   大会・部門・チーム情報取得
-=============================== */
+/* 大会・部門情報取得 */
 $sql = "
     SELECT
         t.title AS tournament_name,
@@ -62,12 +61,11 @@ if (isset($white_order['中堅'])) {
     $stmt->execute([':id' => $white_order['中堅']]);
     $white_player_name = $stmt->fetchColumn();
 }
-// セッションから保存済みデータを取得
-$savedData = $_SESSION['match_results']['中堅'] ?? null; // ポジション名を変更
 
-/* ===============================
-   POST（試合結果保存）
-=============================== */
+// セッションから保存済みデータを取得
+$savedData = $_SESSION['match_results']['中堅'] ?? null;
+
+/* POST処理 */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $input = json_decode(file_get_contents('php://input'), true);
@@ -92,566 +90,903 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <meta charset="UTF-8">
 <title>団体戦 中堅</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body { 
-    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Sans','Meiryo',sans-serif; 
-    background:#f5f5f5; 
-    padding:0.5rem; 
-    min-height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-.container { 
-    max-width:1200px;
-    width:100%;
-    height:98vh;
-    max-height:900px;
-    background:white; 
-    padding:clamp(1rem, 2vh, 2rem) clamp(0.8rem, 2vh, 1.5rem); 
-    border-radius:8px; 
-    box-shadow:0 10px 30px rgba(0,0,0,0.1); 
-    position:relative; 
-    display:flex;
-    flex-direction:column;
-    overflow-y:auto;
+html, body {
+    height: 100%;
+    overflow: hidden;
 }
 
-.position-header { 
-    position:absolute; 
-    top:0;
-    left:50%;
-    transform:translateX(-50%);
-    font-size:clamp(1.5rem, 3vh, 2.5rem); 
-    font-weight:bold; 
-    color:#dc2626; 
-    background:#fee2e2;
-    padding:0.8rem 3rem; 
-    text-align:center; 
-    z-index:100; 
-    border-radius:0 0 12px 12px;
-    box-shadow:0 4px 8px rgba(220,38,38,0.2);
+body {
+    font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Meiryo', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
 }
 
-.header { 
-    display:flex; 
-    flex-wrap:wrap;
-    align-items:center; 
-    gap:clamp(0.5rem, 1vh, 1rem); 
-    margin-bottom:clamp(1.5rem, 3vh, 2rem);
-    padding-top:clamp(3rem, 6vh, 5rem);
-    font-size:clamp(1rem, 2.5vh, 1.5rem); 
-    font-weight:bold; 
+.container {
+    width: 100%;
+    max-width: 1000px;
+    height: calc(100vh - 16px);
+    max-height: 900px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+.position-header {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 24px;
+    font-weight: bold;
+    color: white;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    padding: 12px 40px;
+    text-align: center;
+    z-index: 100;
+    border-radius: 0 0 16px 16px;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 60px 20px 15px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.header-badge {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    padding: 6px 14px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.main-content {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    min-height: 0;
 }
 
 .content-wrapper {
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    justify-content:space-evenly;
-    min-height:0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
 }
 
-.match-section { 
-    display:flex;
-    flex-direction:column;
-    gap:clamp(0.2rem, 0.4vh, 0.5rem);
-    flex-shrink:0;
+.match-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
-.upper-section {
-    margin-bottom:clamp(1.5rem, 3vh, 3rem);
+.player-info {
+    background: #f7fafc;
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 10px;
 }
 
-.row { 
-    display:flex; 
-    align-items:center; 
-    font-size:clamp(1.2rem, 2.5vh, 1.8rem); 
-    gap:clamp(0.5rem, 1vw, 1rem);
-    margin-bottom:clamp(0.5rem, 1vh, 1rem);
-    flex-wrap:wrap;
+.info-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+    font-size: 14px;
 }
 
-.label { 
-    min-width:clamp(70px, 10vw, 100px); 
-    font-weight:bold; 
-    font-size:clamp(1.2rem, 2.5vh, 1.8rem);
+.info-row:last-child {
+    margin-bottom: 0;
 }
 
-.value { 
-    min-width:clamp(100px, 15vw, 150px); 
-    word-break:break-all;
-    font-size:clamp(1.4rem, 3vh, 2.2rem);
-    font-weight:bold;
+.info-label {
+    min-width: 80px;
+    font-weight: 600;
+    color: #4a5568;
 }
 
-.score-display { 
-    display:flex; 
-    justify-content:center; 
-    align-items:center; 
-    width:100%;
-    padding:0;
-    margin:0;
-    margin-bottom:clamp(1rem, 2vh, 2rem);
+.info-value {
+    font-weight: 700;
+    color: #2d3748;
+    font-size: 16px;
 }
 
-.score-group { 
-    display:flex; 
-    flex-direction:column; 
-    align-items:center; 
-    gap:clamp(0.25rem, 0.6vh, 0.5rem);
+.score-display {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 15px 0;
 }
 
-.score-numbers { 
-    display:flex; 
-    gap:clamp(1rem, 3vw, 2.5rem); 
-    font-size:clamp(1rem, 2.5vh, 1.5rem); 
-    font-weight:bold;
+.score-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
 }
 
-.score-numbers span { 
-    width:clamp(35px, 6vw, 50px); 
-    height:clamp(35px, 6vw, 50px);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    flex-shrink:0;
-    box-sizing:border-box;
+.score-numbers {
+    display: flex;
+    gap: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #4a5568;
 }
 
-.radio-circles { 
-    display:flex; 
-    gap:clamp(1rem, 3vw, 2.5rem);
+.score-numbers span {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.radio-circle { 
-    width:clamp(35px, 6vw, 50px); 
-    height:clamp(35px, 6vw, 50px); 
-    border-radius:50%; 
-    background:#d1d5db; 
-    cursor:pointer; 
-    transition:all 0.2s; 
-    box-shadow:0 2px 4px rgba(0,0,0,0.1); 
-    flex-shrink:0;
-    box-sizing:border-box;
-}
-.radio-circle.selected { 
-    background:#ef4444; 
-    transform:scale(1.1); 
-    box-shadow:0 0 0 3px rgba(239,68,68,0.3); 
-}
-.radio-circle:hover { opacity:0.9; }
-
-.divider-section { 
-    position:relative; 
-    margin:clamp(2rem, 3.5vh, 3.5rem) 0; 
-    text-align:center; 
-    flex-shrink:0;
+.radio-circles {
+    display: flex;
+    gap: 20px;
 }
 
-.divider { 
-    border:none; 
-    border-top:3px dashed #000; 
+.radio-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.middle-controls { 
-    position:absolute; 
-    top:50%; 
-    left:50%; 
-    transform:translate(-50%,-50%); 
-    display:flex; 
-    align-items:center;
-    background:white; 
-    padding:clamp(0.8rem, 1.5vh, 1.5rem) clamp(0.8rem, 2vw, 1.5rem); 
+.radio-circle.selected {
+    background: #ef4444;
+    transform: scale(1.15);
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
 }
 
-.score-dropdowns { 
-    display:flex; 
-    gap:clamp(1rem, 3vw, 2.5rem);
+.radio-circle:hover {
+    opacity: 0.8;
 }
 
-.dropdown-container { 
-    position:relative; 
-    width:clamp(35px, 6vw, 50px);
-    height:clamp(35px, 6vw, 50px);
-    flex-shrink:0;
-    box-sizing:border-box;
+.divider-section {
+    position: relative;
+    margin: 20px 0;
+    text-align: center;
 }
 
-.score-dropdown { 
-    width:100%;
-    height:100%;
-    font-size:clamp(1rem, 2.5vh, 1.5rem); 
-    font-weight:bold; 
-    background:white; 
-    border:2px solid #000; 
-    border-radius:8px; 
-    cursor:pointer; 
-    display:flex; 
-    align-items:center; 
-    justify-content:center; 
-    transition:all 0.2s;
-    box-sizing:border-box;
-}
-.score-dropdown:hover { background:#fef3c7; }
-
-.dropdown-menu, .draw-dropdown-menu { 
-    display:none; 
-    position:absolute; 
-    background:white; 
-    border:2px solid #000; 
-    border-radius:8px; 
-    min-width:70px; 
-    max-height:clamp(200px, 40vh, 300px); 
-    overflow-y:auto; 
-    box-shadow:0 8px 20px rgba(0,0,0,0.2); 
-    z-index:1000; 
-    padding:8px 0; 
-}
-.dropdown-menu.show, .draw-dropdown-menu.show { display:block; }
-
-.dropdown-item { 
-    padding:clamp(8px, 1.5vh, 12px) clamp(12px, 2vw, 18px); 
-    font-size:clamp(0.95rem, 2vh, 1.3rem); 
-    font-weight:bold; 
-    text-align:center; 
-    cursor:pointer; 
-    user-select:none; 
-    transition:all 0.15s; 
-}
-.dropdown-item:hover { background:#fee2e2; color:#dc2626; }
-.dropdown-item:active { background:#ef4444; color:white; }
-
-.draw-container-wrapper {
-    position:absolute;
-    top:50%;
-    left:calc(50% + clamp(8rem, 15vw, 12rem));
-    transform:translateY(-50%);
-    background:white;
-    padding:clamp(0.8rem, 1.5vh, 1.5rem) 0;
+.divider {
+    border: none;
+    border-top: 2px dashed #cbd5e0;
 }
 
-.draw-container { position:relative; }
-
-.draw-button { 
-    padding:clamp(0.4rem, 1vh, 0.6rem) clamp(0.8rem, 2vw, 1.3rem); 
-    font-size:clamp(0.85rem, 1.8vh, 1.1rem); 
-    background:white; 
-    border:2px solid #000; 
-    border-radius:8px; 
-    font-weight:bold; 
-    cursor:pointer; 
-    white-space:nowrap;
-}
-.draw-button:hover { background:#fef3c7; }
-
-.draw-dropdown-menu { 
-    right:auto;
-    left:50%;
-    transform:translateX(-50%);
-    top:calc(100% + 4px);
-}
-
-.dropdown-menu::-webkit-scrollbar, .draw-dropdown-menu::-webkit-scrollbar { width:6px; }
-.dropdown-menu::-webkit-scrollbar-track, .draw-dropdown-menu::-webkit-scrollbar-track { background:#f1f1f1; border-radius:10px; }
-.dropdown-menu::-webkit-scrollbar-thumb, .draw-dropdown-menu::-webkit-scrollbar-thumb { background:#c0c0c0; border-radius:10px; }
-
-.bottom-area {
-    display:flex;
-    flex-direction:column;
-    gap:clamp(0.8rem, 1.5vh, 1.5rem);
-    margin-top:clamp(0.8rem, 1.5vh, 1.5rem);
-    flex-shrink:0;
-}
-
-.bottom-right-button { 
-    display:flex;
-    justify-content:flex-end;
-}
-
-.cancel-button { 
-    padding:clamp(0.4rem, 1vh, 0.6rem) clamp(1.2rem, 3vw, 2rem); 
-    font-size:clamp(0.85rem, 1.8vh, 1.1rem); 
-    background:white; 
-    border:2px solid #000; 
-    border-radius:25px; 
-    font-weight:bold; 
-    cursor:pointer; 
-}
-
-.bottom-buttons { 
-    display:flex; 
-    justify-content:center; 
-    gap:clamp(0.8rem, 2vw, 1.5rem); 
-}
-
-.bottom-button { 
-    padding:clamp(0.5rem, 1.2vh, 0.7rem) clamp(1.5rem, 4vw, 2.5rem); 
-    font-size:clamp(0.9rem, 2vh, 1.2rem); 
-    border-radius:25px; 
-    font-weight:bold; 
-    cursor:pointer; 
-    white-space:nowrap;
-}
-
-.back-button { background:white; border:2px solid #000; }
-.next-button { background:#3b82f6; color:white; border:2px solid #3b82f6; }
-.next-button:hover { background:#2563eb; }
-
-/* 途中経過表示 */
-.score-summary {
-    position: fixed;
-    top: 1rem;
-    right: 1rem;
+.middle-controls {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    align-items: center;
     background: white;
-    border: 3px solid #000;
+    padding: 10px 15px;
     border-radius: 12px;
-    padding: 1rem 1.5rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    z-index: 1000;
-    min-width: 200px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.score-summary-title {
-    font-size: 1rem;
+.score-dropdowns {
+    display: flex;
+    gap: 20px;
+}
+
+.dropdown-container {
+    position: relative;
+    width: 40px;
+    height: 40px;
+}
+
+.score-dropdown {
+    width: 100%;
+    height: 100%;
+    font-size: 16px;
+    font-weight: bold;
+    background: white;
+    border: 2px solid #cbd5e0;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.score-dropdown:hover {
+    border-color: #667eea;
+    background: #f7fafc;
+}
+
+.dropdown-menu,
+.draw-dropdown-menu {
+    display: none;
+    position: absolute;
+    background: white;
+    border: 2px solid #cbd5e0;
+    border-radius: 8px;
+    min-width: 70px;
+    max-height: 250px;
+    overflow-y: auto;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    padding: 6px 0;
+}
+
+.dropdown-menu.show,
+.draw-dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-item {
+    padding: 10px 16px;
+    font-size: 15px;
     font-weight: bold;
     text-align: center;
-    margin-bottom: 0.75rem;
-    border-bottom: 2px solid #000;
-    padding-bottom: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s;
 }
 
-.score-summary-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-    font-size: 0.95rem;
+.dropdown-item:hover {
+    background: #eef2ff;
+    color: #667eea;
 }
 
-.score-summary-label {
+.dropdown-item:active {
+    background: #667eea;
+    color: white;
+}
+
+.draw-container-wrapper {
+    position: absolute;
+    top: 50%;
+    right: -100px;
+    transform: translateY(-50%);
+    background: white;
+    padding: 10px 0;
+}
+
+.draw-container {
+    position: relative;
+}
+
+.draw-button {
+    padding: 8px 16px;
+    font-size: 14px;
+    background: white;
+    border: 2px solid #cbd5e0;
+    border-radius: 8px;
     font-weight: bold;
-    color: #374151;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
 }
 
-.score-summary-values {
+.draw-button:hover {
+    border-color: #667eea;
+    background: #f7fafc;
+}
+
+.draw-dropdown-menu {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    top: calc(100% + 4px);
+}
+
+.bottom-area {
     display: flex;
-    gap: 1rem;
-    font-weight: bold;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 15px;
+    border-top: 1px solid #e2e8f0;
+    flex-shrink: 0;
 }
 
-.score-red {
-    color: #dc2626;
+.bottom-right-button {
+    display: flex;
+    justify-content: flex-end;
 }
 
-.score-white {
-    color: #374151;
+.cancel-button {
+    padding: 8px 20px;
+    font-size: 13px;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #4a5568;
+    transition: all 0.2s;
 }
 
-@media (max-width: 768px) {
-    .score-summary {
-        position: static;
-        margin: 1rem auto;
-        max-width: 300px;
+.cancel-button:hover {
+    background: #f7fafc;
+    border-color: #cbd5e0;
+}
+
+.bottom-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.bottom-button {
+    flex: 1;
+    max-width: 200px;
+    padding: 14px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.back-button {
+    background-color: #e2e8f0;
+    color: #4a5568;
+}
+
+.back-button:hover {
+    background-color: #cbd5e0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.next-button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.next-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.next-button:active,
+.back-button:active {
+    transform: translateY(0);
+}
+
+/* スクロールバー */
+.main-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.main-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.main-content::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 10px;
+}
+
+.main-content::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}
+
+/* 小さい画面での調整 */
+@media (max-height: 750px) {
+    body {
+        padding: 5px;
+    }
+
+    .container {
+        max-height: calc(100vh - 10px);
+        border-radius: 16px;
+    }
+
+    .position-header {
+        font-size: 20px;
+        padding: 10px 32px;
+    }
+
+    .header {
+        padding: 50px 15px 12px;
+    }
+
+    .header-badge {
+        font-size: 12px;
+        padding: 5px 12px;
+    }
+
+    .main-content {
+        padding: 15px;
+    }
+
+    .player-info {
+        padding: 10px;
+        margin-bottom: 8px;
+    }
+
+    .info-row {
+        font-size: 13px;
+        gap: 8px;
+        margin-bottom: 5px;
+    }
+
+    .info-value {
+        font-size: 14px;
+    }
+
+    .score-display {
+        padding: 12px 0;
+    }
+
+    .score-numbers,
+    .radio-circles {
+        gap: 16px;
+    }
+
+    .score-numbers span,
+    .radio-circle {
+        width: 36px;
+        height: 36px;
+    }
+
+    .dropdown-container {
+        width: 36px;
+        height: 36px;
+    }
+
+    .score-dropdown {
+        font-size: 14px;
+    }
+
+    .divider-section {
+        margin: 15px 0;
+    }
+
+    .draw-container-wrapper {
+        right: -90px;
+    }
+
+    .draw-button {
+        padding: 6px 14px;
+        font-size: 13px;
+    }
+
+    .bottom-area {
+        gap: 10px;
+        padding-top: 12px;
+    }
+
+    .cancel-button {
+        padding: 7px 18px;
+        font-size: 12px;
+    }
+
+    .bottom-button {
+        padding: 12px 18px;
+        font-size: 15px;
     }
 }
 
+/* スマートフォン縦向き */
+@media (max-width: 600px) {
+    body {
+        padding: 4px;
+    }
 
+    .container {
+        max-height: calc(100vh - 8px);
+        border-radius: 12px;
+    }
+
+    .position-header {
+        font-size: 18px;
+        padding: 8px 24px;
+        border-radius: 0 0 12px 12px;
+    }
+
+    .header {
+        padding: 46px 12px 10px;
+    }
+
+    .header-badge {
+        font-size: 11px;
+        padding: 4px 10px;
+    }
+
+    .main-content {
+        padding: 12px;
+    }
+
+    .player-info {
+        padding: 8px;
+        margin-bottom: 6px;
+    }
+
+    .info-row {
+        font-size: 12px;
+        gap: 6px;
+        margin-bottom: 4px;
+    }
+
+    .info-label {
+        min-width: 70px;
+    }
+
+    .info-value {
+        font-size: 13px;
+    }
+
+    .score-display {
+        padding: 10px 0;
+    }
+
+    .score-numbers {
+        font-size: 12px;
+        gap: 14px;
+    }
+
+    .radio-circles {
+        gap: 14px;
+    }
+
+    .score-numbers span,
+    .radio-circle {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+    }
+
+    .divider-section {
+        margin: 12px 0;
+    }
+
+    .middle-controls {
+        padding: 8px 12px;
+    }
+
+    .score-dropdowns {
+        gap: 14px;
+    }
+
+    .dropdown-container {
+        width: 32px;
+        height: 32px;
+    }
+
+    .score-dropdown {
+        font-size: 13px;
+        border-width: 1px;
+    }
+
+    .draw-container-wrapper {
+        right: -80px;
+    }
+
+    .draw-button {
+        padding: 5px 12px;
+        font-size: 12px;
+        border-width: 1px;
+    }
+
+    .dropdown-item {
+        padding: 8px 14px;
+        font-size: 13px;
+    }
+
+    .bottom-area {
+        gap: 8px;
+        padding-top: 10px;
+    }
+
+    .cancel-button {
+        padding: 6px 14px;
+        font-size: 11px;
+        border-width: 1px;
+    }
+
+    .bottom-button {
+        padding: 10px 16px;
+        font-size: 14px;
+        max-width: 180px;
+    }
+
+    .bottom-buttons {
+        gap: 12px;
+    }
+}
+
+/* スマートフォン横向き */
+@media (max-width: 900px) and (max-height: 500px) {
+    body {
+        padding: 3px;
+    }
+
+    .container {
+        max-height: calc(100vh - 6px);
+        border-radius: 10px;
+    }
+
+    .position-header {
+        font-size: 16px;
+        padding: 6px 20px;
+    }
+
+    .header {
+        padding: 40px 10px 8px;
+    }
+
+    .header-badge {
+        font-size: 10px;
+        padding: 3px 8px;
+    }
+
+    .main-content {
+        padding: 10px;
+    }
+
+    .player-info {
+        padding: 6px;
+        margin-bottom: 5px;
+    }
+
+    .info-row {
+        font-size: 11px;
+        gap: 5px;
+        margin-bottom: 3px;
+    }
+
+    .info-label {
+        min-width: 60px;
+    }
+
+    .info-value {
+        font-size: 12px;
+    }
+
+    .score-display {
+        padding: 8px 0;
+    }
+
+    .score-numbers {
+        font-size: 11px;
+        gap: 12px;
+    }
+
+    .radio-circles {
+        gap: 12px;
+    }
+
+    .score-numbers span,
+    .radio-circle {
+        width: 28px;
+        height: 28px;
+        font-size: 11px;
+    }
+
+    .divider-section {
+        margin: 10px 0;
+    }
+
+    .middle-controls {
+        padding: 6px 10px;
+    }
+
+    .score-dropdowns {
+        gap: 12px;
+    }
+
+    .dropdown-container {
+        width: 28px;
+        height: 28px;
+    }
+
+    .score-dropdown {
+        font-size: 12px;
+        border-width: 1px;
+    }
+
+    .draw-container-wrapper {
+        right: -70px;
+    }
+
+    .draw-button {
+        padding: 4px 10px;
+        font-size: 11px;
+        border-width: 1px;
+    }
+
+    .dropdown-item {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .bottom-area {
+        gap: 6px;
+        padding-top: 8px;
+    }
+
+    .cancel-button {
+        padding: 5px 12px;
+        font-size: 10px;
+        border-width: 1px;
+    }
+
+    .bottom-button {
+        padding: 8px 14px;
+        font-size: 13px;
+        max-width: 160px;
+    }
+
+    .bottom-buttons {
+        gap: 10px;
+    }
+}
 </style>
 </head>
-
 <body>
 <div class="container">
     <div class="position-header">中堅</div>
     
     <div class="header">
-        <span>団体戦</span>
-        <span><?= htmlspecialchars($info['tournament_name']) ?></span>
-        <span><?= htmlspecialchars($info['division_name']) ?></span>
+        <div class="header-badge">団体戦</div>
+        <div class="header-badge"><?= htmlspecialchars($info['tournament_name']) ?></div>
+        <div class="header-badge"><?= htmlspecialchars($info['division_name']) ?></div>
     </div>
 
-    <div class="content-wrapper">
-        <!-- 上段 (赤) -->
-        <div class="match-section upper-section">
-            <div class="row">
-                <div class="label">チーム名</div>
-                <div class="value"><?= htmlspecialchars($team_red_name) ?></div>
-            </div>
-            
-            <div class="row">
-                <div class="label">名前</div>
-                <div class="value"><?= htmlspecialchars($red_player_name ?: '───') ?></div>
-            </div>
-
-            <div class="score-display">
-                <div class="score-group">
-                    <div class="score-numbers">
-                        <span>1</span>
-                        <span>2</span>
-                        <span>3</span>
+    <div class="main-content">
+        <div class="content-wrapper">
+            <div class="match-section upper-section">
+                <div class="player-info" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);">
+                    <div class="info-row">
+                        <div class="info-label">チーム名</div>
+                        <div class="info-value"><?= htmlspecialchars($team_red_name) ?></div>
                     </div>
-                    <div class="radio-circles red-circles">
-                        <div class="radio-circle" data-index="0"></div>
-                        <div class="radio-circle" data-index="1"></div>
-                        <div class="radio-circle" data-index="2"></div>
+                    <div class="info-row">
+                        <div class="info-label">名前</div>
+                        <div class="info-value"><?= htmlspecialchars($red_player_name ?: '───') ?></div>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- 中央 -->
-        <div class="divider-section">
-            <hr class="divider">
-            
-            <div class="middle-controls">
-                <div class="score-dropdowns">
-                    <div class="dropdown-container">
-                        <div class="score-dropdown">▼</div>
-                        <div class="dropdown-menu">
-                            <div class="dropdown-item" data-val="▼">▼</div>
-                            <div class="dropdown-item" data-val="メ">メ</div>
-                            <div class="dropdown-item" data-val="コ">コ</div>
-                            <div class="dropdown-item" data-val="ド">ド</div>
-                            <div class="dropdown-item" data-val="ツ">ツ</div>
-                            <div class="dropdown-item" data-val="反">反</div>
-                            <div class="dropdown-item" data-val="判">判</div>
-                            <div class="dropdown-item" data-val="×">×</div>
+                <div class="score-display">
+                    <div class="score-group">
+                        <div class="score-numbers">
+                            <span>1</span><span>2</span><span>3</span>
                         </div>
-                    </div>
-                    <div class="dropdown-container">
-                        <div class="score-dropdown">▼</div>
-                        <div class="dropdown-menu">
-                            <div class="dropdown-item" data-val="▼">▼</div>
-                            <div class="dropdown-item" data-val="メ">メ</div>
-                            <div class="dropdown-item" data-val="コ">コ</div>
-                            <div class="dropdown-item" data-val="ド">ド</div>
-                            <div class="dropdown-item" data-val="ツ">ツ</div>
-                            <div class="dropdown-item" data-val="反">反</div>
-                            <div class="dropdown-item" data-val="判">判</div>
-                            <div class="dropdown-item" data-val="×">×</div>
-                        </div>
-                    </div>
-                    <div class="dropdown-container">
-                        <div class="score-dropdown">▼</div>
-                        <div class="dropdown-menu">
-                            <div class="dropdown-item" data-val="▼">▼</div>
-                            <div class="dropdown-item" data-val="メ">メ</div>
-                            <div class="dropdown-item" data-val="コ">コ</div>
-                            <div class="dropdown-item" data-val="ド">ド</div>
-                            <div class="dropdown-item" data-val="ツ">ツ</div>
-                            <div class="dropdown-item" data-val="反">反</div>
-                            <div class="dropdown-item" data-val="判">判</div>
-                            <div class="dropdown-item" data-val="×">×</div>
+                        <div class="radio-circles red-circles">
+                            <div class="radio-circle" data-index="0"></div>
+                            <div class="radio-circle" data-index="1"></div>
+                            <div class="radio-circle" data-index="2"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="draw-container-wrapper">
-                <div class="draw-container">
-                    <button type="button" class="draw-button" id="drawButton">-</button>
-                    <div class="draw-dropdown-menu" id="drawMenu">
-                        <div class="dropdown-item">二本勝</div>
-                        <div class="dropdown-item">一本勝</div>
-                        <div class="dropdown-item">延長戦</div>
-                        <div class="dropdown-item">判定</div>
-                        <div class="dropdown-item">引き分け</div>
-                        <div class="dropdown-item">-</div>
+            <div class="divider-section">
+                <hr class="divider">
+                <div class="middle-controls">
+                    <div class="score-dropdowns">
+                        <div class="dropdown-container">
+                            <div class="score-dropdown">▼</div>
+                            <div class="dropdown-menu">
+                                <div class="dropdown-item" data-val="▼">▼</div>
+                                <div class="dropdown-item" data-val="メ">メ</div>
+                                <div class="dropdown-item" data-val="コ">コ</div>
+                                <div class="dropdown-item" data-val="ド">ド</div>
+                                <div class="dropdown-item" data-val="ツ">ツ</div>
+                                <div class="dropdown-item" data-val="反">反</div>
+                                <div class="dropdown-item" data-val="判">判</div>
+                                <div class="dropdown-item" data-val="×">×</div>
+                            </div>
+                        </div>
+                        <div class="dropdown-container">
+                            <div class="score-dropdown">▼</div>
+                            <div class="dropdown-menu">
+                                <div class="dropdown-item" data-val="▼">▼</div>
+                                <div class="dropdown-item" data-val="メ">メ</div>
+                                <div class="dropdown-item" data-val="コ">コ</div>
+                                <div class="dropdown-item" data-val="ド">ド</div>
+                                <div class="dropdown-item" data-val="ツ">ツ</div>
+                                <div class="dropdown-item" data-val="反">反</div>
+                                <div class="dropdown-item" data-val="判">判</div>
+                                <div class="dropdown-item" data-val="×">×</div>
+                            </div>
+                        </div>
+                        <div class="dropdown-container">
+                            <div class="score-dropdown">▼</div>
+                            <div class="dropdown-menu">
+                                <div class="dropdown-item" data-val="▼">▼</div>
+                                <div class="dropdown-item" data-val="メ">メ</div>
+                                <div class="dropdown-item" data-val="コ">コ</div>
+                                <div class="dropdown-item" data-val="ド">ド</div>
+                                <div class="dropdown-item" data-val="ツ">ツ</div>
+                                <div class="dropdown-item" data-val="反">反</div>
+                                <div class="dropdown-item" data-val="判">判</div>
+                                <div class="dropdown-item" data-val="×">×</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="draw-container-wrapper">
+                    <div class="draw-container">
+                        <button type="button" class="draw-button" id="drawButton">-</button>
+                        <div class="draw-dropdown-menu" id="drawMenu">
+                            <div class="dropdown-item">二本勝</div>
+                            <div class="dropdown-item">一本勝</div>
+                            <div class="dropdown-item">延長戦</div>
+                            <div class="dropdown-item">判定</div>
+                            <div class="dropdown-item">引き分け</div>
+                            <div class="dropdown-item">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="match-section lower-section">
+                <div class="score-display">
+                    <div class="score-group">
+                        <div class="radio-circles white-circles">
+                            <div class="radio-circle" data-index="0"></div>
+                            <div class="radio-circle" data-index="1"></div>
+                            <div class="radio-circle" data-index="2"></div>
+                        </div>
+                        <div class="score-numbers">
+                            <span>1</span><span>2</span><span>3</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="player-info" style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);">
+                    <div class="info-row">
+                        <div class="info-label">名前</div>
+                        <div class="info-value"><?= htmlspecialchars($white_player_name ?: '───') ?></div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">チーム名</div>
+                        <div class="info-value"><?= htmlspecialchars($team_white_name) ?></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 下段 (白) -->
-        <div class="match-section lower-section">
-            <div class="score-display">
-                <div class="score-group">
-                    <div class="radio-circles white-circles">
-                        <div class="radio-circle" data-index="0"></div>
-                        <div class="radio-circle" data-index="1"></div>
-                        <div class="radio-circle" data-index="2"></div>
-                    </div>
-                    <div class="score-numbers">
-                        <span>1</span>
-                        <span>2</span>
-                        <span>3</span>
-                    </div>
-                </div>
+        <div class="bottom-area">
+            <div class="bottom-right-button">
+                <button type="button" class="cancel-button" id="cancelButton">入力内容をリセット</button>
             </div>
 
-            <div class="row">
-                <div class="label">名前</div>
-                <div class="value"><?= htmlspecialchars($white_player_name ?: '───') ?></div>
+            <div class="bottom-buttons">
+                <button type="button" class="bottom-button back-button" onclick="history.back()">戻る</button>
+                <button type="button" class="bottom-button next-button" id="nextButton">副将へ</button>
             </div>
-            
-            <div class="row">
-                <div class="label">チーム名</div>
-                <div class="value"><?= htmlspecialchars($team_white_name) ?></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="bottom-area">
-        <div class="bottom-right-button">
-            <button type="button" class="cancel-button" id="cancelButton">入力内容をリセット</button>
-        </div>
-
-        <div class="bottom-buttons">
-            <button type="button" class="bottom-button back-button" onclick="history.back()">戻る</button>
-            <button type="button" class="bottom-button next-button" id="nextButton">次へ（副将）</button>
         </div>
     </div>
 </div>
 
 <script>
-
-// 先取技の〇マーク表示更新
-function updateFirstPointDisplay() {
-    // すべての技から〇マークを削除
-    document.querySelectorAll('.score-dropdown').forEach(dropdown => {
-        dropdown.classList.remove('first-point');
-    });
-    
-    // 赤チームの先取技を探す
-    const redCircles = document.querySelectorAll('.red-circles .radio-circle');
-    const dropdowns = document.querySelectorAll('.middle-controls .score-dropdown');
-    
-    for (let i = 0; i < redCircles.length; i++) {
-        if (redCircles[i].classList.contains('selected')) {
-            if (dropdowns[i]) {
-                dropdowns[i].classList.add('first-point');
-            }
-            break; // 最初の1つだけ
-        }
-    }
-    
-    // 白チームの先取技を探す（赤チームで既に見つかっていない場合）
-    const whiteCircles = document.querySelectorAll('.white-circles .radio-circle');
-    let redHasFirst = false;
-    
-    for (let i = 0; i < redCircles.length; i++) {
-        if (redCircles[i].classList.contains('selected')) {
-            redHasFirst = true;
-            break;
-        }
-    }
-    
-    if (!redHasFirst) {
-        for (let i = 0; i < whiteCircles.length; i++) {
-            if (whiteCircles[i].classList.contains('selected')) {
-                if (dropdowns[i]) {
-                    dropdowns[i].classList.add('first-point');
-                }
-                break; // 最初の1つだけ
-            }
-        }
-    }
-}
-
-// セッションから保存済みデータを復元
 const savedData = <?= json_encode($savedData) ?>;
 
 const data = savedData ? {
@@ -676,8 +1011,6 @@ function load() {
     document.querySelectorAll('.white-circles .radio-circle').forEach((c,i) => {
         c.classList.toggle('selected', (data.white.selected || []).includes(i));
     });
-    
-    // 特殊状態ボタンを復元
     const drawButton = document.getElementById('drawButton');
     if (data.special === 'ippon') {
         drawButton.textContent = '一本勝';
@@ -696,7 +1029,6 @@ function saveLocal() {
         .map(el => parseInt(el.dataset.index));
     data.white.selected = Array.from(document.querySelectorAll('.white-circles .radio-circle.selected'))
         .map(el => parseInt(el.dataset.index));
-    
     const dt = document.getElementById('drawButton').textContent;
     data.special = dt==='二本勝'?'nihon':dt==='一本勝'?'ippon':dt==='延長戦'?'extend':dt==='判定'?'hantei':dt==='引き分け'?'draw':'none';
 }
@@ -704,23 +1036,13 @@ function saveLocal() {
 for (let i = 0; i < 3; i++) {
     const red = document.querySelector(`.red-circles .radio-circle[data-index="${i}"]`);
     const white = document.querySelector(`.white-circles .radio-circle[data-index="${i}"]`);
-
     red.addEventListener('click', () => {
-        if (red.classList.contains('selected')) {
-            red.classList.remove('selected');
-        } else {
-            red.classList.add('selected');
-            white.classList.remove('selected');
-        }
+        if (red.classList.contains('selected')) red.classList.remove('selected');
+        else { red.classList.add('selected'); white.classList.remove('selected'); }
     });
-
     white.addEventListener('click', () => {
-        if (white.classList.contains('selected')) {
-            white.classList.remove('selected');
-        } else {
-            white.classList.add('selected');
-            red.classList.remove('selected');
-        }
+        if (white.classList.contains('selected')) white.classList.remove('selected');
+        else { white.classList.add('selected'); red.classList.remove('selected'); }
     });
 }
 
@@ -745,7 +1067,6 @@ document.getElementById('drawButton').addEventListener('click',e=>{
     document.querySelectorAll('.dropdown-menu').forEach(m=>m.classList.remove('show'));
     document.getElementById('drawMenu').classList.toggle('show');
 });
-
 document.getElementById('drawMenu').querySelectorAll('.dropdown-item').forEach(item=>{
     item.addEventListener('click',()=>{
         document.getElementById('drawButton').textContent=item.textContent;
@@ -757,9 +1078,10 @@ document.addEventListener('click',()=>document.querySelectorAll('.dropdown-menu,
 
 document.getElementById('cancelButton').addEventListener('click',()=>{
     if(confirm('入力内容をリセットしますか?')){
-        data.red={scores:['▼','▼','▼'],selected:-1};
-        data.white={scores:['▲','▲','▲'],selected:-1};
-        data.special='none';
+        data.red = { selected: [] };
+        data.white = { selected: [] };
+        data.scores = ['▼','▼','▼'];
+        data.special = 'none';
         load();
     }
 });
@@ -770,17 +1092,9 @@ document.getElementById('nextButton').onclick=async()=>{
         const r=await fetch(location.href,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
         const j=await r.json();
         if(j.status==='ok'){
-            // 中堅の場合
             window.location.href = 'team-match-fukusho.php';
-            // 副将の場合は以下に変更
-            // window.location.href = 'team-match-taisho.php';
-        } else {
-            alert('保存失敗');
-        }
-    }catch(e){ 
-        alert('エラー発生'); 
-        console.error(e); 
-    }
+        } else { alert('保存失敗'); }
+    }catch(e){ alert('エラー発生'); console.error(e); }
 };
 
 load();
