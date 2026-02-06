@@ -497,9 +497,63 @@ input[type="search"] {
     overflow: hidden;
     transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
 }
+
+/* モバイル対応 */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    h1 {
+        font-size: 1.5em;
+    }
+    .match-card {
+        padding: 12px;
+    }
+    .team-name-text {
+        font-size: 1em;
+    }
+    .score-value {
+        font-size: 1.8em;
+    }
+    .team-vs {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .vs-divider {
+        padding: 10px 0;
+    }
+    .members-section {
+        flex-direction: column;
+        gap: 15px;
+    }
+    .match-players {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .match-vs {
+        padding: 5px 0;
+    }
+    .score-row {
+        flex-direction: column;
+        gap: 15px;
+    }
+    .toggle-details-btn {
+        padding: 10px 20px;
+        font-size: 0.9em;
+    }
+    input[type="search"] {
+        max-width: 100%;
+    }
+}
 </style>
 </head>
 <body>
+  <div style="margin-bottom: 15px;">
+    <a href="tournament-department.php?id=<?= esc($tournament_id) ?>" style="display: inline-block; padding: 10px 20px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; font-size: 0.9em;">
+      ← 部門一覧に戻る
+    </a>
+  </div>
+
   <h1><?= esc($tournament['title']) ?> — <?= esc($department['name']) ?>（団体戦）</h1>
   
   <div class="summary">
