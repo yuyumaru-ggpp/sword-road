@@ -149,6 +149,16 @@ body {
     font-size:0.9rem;
 }
 
+.demo-select {
+    width:150px;
+    padding:0.5rem;
+    border:2px solid #d1d5db;
+    border-radius:6px;
+    text-align:center;
+    font-size:0.9rem;
+    background:white;
+}
+
 .demo-button {
     padding:0.4rem 1.2rem;
     border:2px solid #000;
@@ -380,6 +390,12 @@ body {
         padding:0.6rem;
         font-size:1rem;
     }
+
+    .demo-select {
+        width:180px;
+        padding:0.6rem;
+        font-size:1rem;
+    }
     
     .demo-button {
         padding:0.5rem 1.5rem;
@@ -453,34 +469,33 @@ body {
 <div class="tutorial-container">
     <div class="tutorial-header">
         <div class="tutorial-title">🥋 個人戦システム 使い方ガイド</div>
-        <div class="tutorial-subtitle">選手番号入力から試合結果記録までの完全ガイド</div>
+        <div class="tutorial-subtitle">試合番号入力から試合結果記録までの完全ガイド</div>
     </div>
 
     <div class="tutorial-content">
-        <!-- 選手番号入力セクション -->
+        <!-- 試合番号入力セクション -->
         <div class="section">
             <div class="section-header">
-                <div class="section-icon">👥</div>
-                <div class="section-title">選手番号入力</div>
+                <div class="section-icon">📝</div>
+                <div class="section-title">STEP 1：試合番号入力</div>
             </div>
 
             <div class="steps-grid">
                 <div class="step-card">
                     <div class="step-number">1</div>
-                    <div class="step-title">選手番号を入力</div>
+                    <div class="step-title">試合場を選択</div>
                     <div class="step-description">
-                        対戦する両選手の選手番号を入力します。番号を入力すると自動で選手情報が読み込まれます。
+                        ドロップダウンメニューから試合が行われる試合場を選択します。前回選択した試合場が自動的に選択されています。
                     </div>
                     <div class="step-visual">
                         <div class="demo-ui">
                             <div class="demo-player-section">
-                                <div class="demo-label">選手番号</div>
-                                <input class="demo-input" placeholder="番号を入力" value="A-001">
-                            </div>
-                            <div style="font-size:1.2rem; font-weight:bold; margin:0.5rem 0;">対</div>
-                            <div class="demo-player-section">
-                                <div class="demo-label">選手番号</div>
-                                <input class="demo-input" placeholder="番号を入力" value="B-002">
+                                <div class="demo-label">試合場</div>
+                                <select class="demo-select">
+                                    <option>第1試合場</option>
+                                    <option selected>第2試合場</option>
+                                    <option>第3試合場</option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -488,20 +503,15 @@ body {
 
                 <div class="step-card">
                     <div class="step-number">2</div>
-                    <div class="step-title">不戦勝を記録（必要時）</div>
+                    <div class="step-title">試合番号を入力</div>
                     <div class="step-description">
-                        <strong style="color:#3b82f6;">重要：</strong> 不戦勝の場合、勝利した選手の「不戦勝」ボタンを押します。ボタンは赤色に変わります。
+                        これから記録する試合の番号を入力します。同じ試合場と試合番号の組み合わせは重複登録できません。
                     </div>
                     <div class="step-visual">
                         <div class="demo-ui">
                             <div class="demo-player-section">
-                                <div style="font-size:0.85rem; margin-bottom:0.3rem;">選手A</div>
-                                <button class="demo-button selected">不戦勝</button>
-                            </div>
-                            <div style="margin:0.3rem 0; font-size:0.75rem; color:#666;">← 勝った方を選択</div>
-                            <div class="demo-player-section">
-                                <div style="font-size:0.85rem; margin-bottom:0.3rem;">選手B</div>
-                                <button class="demo-button">不戦勝</button>
+                                <div class="demo-label">試合番号</div>
+                                <input class="demo-input" placeholder="試合番号" value="10">
                             </div>
                         </div>
                     </div>
@@ -511,7 +521,7 @@ body {
                     <div class="step-number">3</div>
                     <div class="step-title">決定して次へ</div>
                     <div class="step-description">
-                        選手番号を入力したら「決定」ボタンを押して試合詳細画面に進みます。
+                        試合場と試合番号を入力したら「決定」ボタンを押して選手選択画面に進みます。
                     </div>
                     <div class="step-visual">
                         <div style="text-align:center; padding:1rem;">
@@ -525,11 +535,83 @@ body {
             </div>
         </div>
 
+        <!-- 選手選択セクション -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-icon">👥</div>
+                <div class="section-title">STEP 2：選手選択</div>
+            </div>
+
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <div class="step-title">選手番号を入力</div>
+                    <div class="step-description">
+                        赤側（上段）と白側（下段）の選手番号を入力します。番号を入力すると自動的に選手が選択されます。
+                    </div>
+                    <div class="step-visual">
+                        <div class="demo-ui">
+                            <div class="demo-player-section">
+                                <div class="demo-label" style="color:#dc2626;">赤 - 選手番号</div>
+                                <input class="demo-input" placeholder="番号を入力" value="1">
+                            </div>
+                            <div style="font-size:1.2rem; font-weight:bold; margin:0.5rem 0;">VS</div>
+                            <div class="demo-player-section">
+                                <div class="demo-label" style="color:#6b7280;">白 - 選手番号</div>
+                                <input class="demo-input" placeholder="番号を入力" value="2">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <div class="step-title">または選手を選択</div>
+                    <div class="step-description">
+                        選手番号の代わりに、ドロップダウンメニューから直接選手を選択することもできます。
+                    </div>
+                    <div class="step-visual">
+                        <div class="demo-ui">
+                            <div class="demo-player-section">
+                                <div class="demo-label">選手を選択</div>
+                                <select class="demo-select">
+                                    <option>選手を選択してください</option>
+                                    <option selected>田中太郎 (Aチーム)</option>
+                                    <option>鈴木花子 (Aチーム)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <div class="step-title">不戦勝の記録（必要時）</div>
+                    <div class="step-description">
+                        <strong style="color:#3b82f6;">重要：</strong> 不戦勝の場合、勝利した選手の「不戦勝」ボタンを押します。ボタンは赤色に変わり、そのまま「決定」で完了画面に進みます。
+                    </div>
+                    <div class="step-visual">
+                        <div class="demo-ui">
+                            <div class="demo-player-section">
+                                <div style="font-size:0.85rem; margin-bottom:0.3rem;">赤側選手</div>
+                                <button class="demo-button selected">不戦勝</button>
+                            </div>
+                            <div style="margin:0.3rem 0; font-size:0.75rem; color:#666;">← 勝った方を選択</div>
+                            <div class="demo-player-section">
+                                <div style="font-size:0.85rem; margin-bottom:0.3rem;">白側選手</div>
+                                <button class="demo-button">不戦勝</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- 試合詳細入力セクション -->
         <div class="section">
             <div class="section-header">
                 <div class="section-icon">📋</div>
-                <div class="section-title">試合詳細入力</div>
+                <div class="section-title">STEP 3：試合詳細入力</div>
             </div>
 
             <div class="steps-grid">
@@ -538,14 +620,14 @@ body {
                     <div class="step-title">ポイントを選択</div>
                     <div class="step-description">
                         中央のドロップダウンから各本のポイントを選択します。<br>
-                        <strong>選択肢：</strong>×、メ、コ、ド、反、ツ、〇
+                        <strong>選択肢：</strong>▼（未選択）、メ、コ、ド、ツ、反、判、×
                     </div>
                     <div class="step-visual">
                         <div class="demo-ui">
                             <div class="demo-score-row">
                                 <div class="demo-dropdown">▼</div>
                                 <div class="demo-dropdown">メ</div>
-                                <div class="demo-dropdown">〇</div>
+                                <div class="demo-dropdown">コ</div>
                             </div>
                             <div style="font-size:0.75rem; color:#666; margin-top:0.3rem;">
                                 ↑ クリックして選択
@@ -558,11 +640,11 @@ body {
                     <div class="step-number">2</div>
                     <div class="step-title">取った本数を記録</div>
                     <div class="step-description">
-                        各選手が取った本数を、丸いボタンで選択します。上段と下段それぞれ記録できます。
+                        各選手が取った本数を、丸いボタンで選択します。赤側（上段）と白側（下段）それぞれ記録できます。複数選択可能です。
                     </div>
                     <div class="step-visual">
                         <div class="demo-ui">
-                            <div style="font-weight:bold; color:#ef4444; margin-bottom:0.3rem; font-size:0.8rem;">上段選手</div>
+                            <div style="font-weight:bold; color:#ef4444; margin-bottom:0.3rem; font-size:0.8rem;">赤側選手</div>
                             <div class="demo-score-row">
                                 <div class="demo-circle"></div>
                                 <div class="demo-circle selected"></div>
@@ -576,13 +658,13 @@ body {
                     <div class="step-number">3</div>
                     <div class="step-title">特殊な試合結果</div>
                     <div class="step-description">
-                        引分け、一本勝、延長などは中央右側のボタンから選択できます。通常の試合は「-」のままでOK。
+                        二本勝、一本勝、延長戦、判定、引き分けなどは中央右側のボタンから選択できます。通常の試合は「-」のままでOK。
                     </div>
                     <div class="step-visual">
                         <div class="demo-ui">
                             <div class="demo-button">-</div>
                             <div style="font-size:0.7rem; color:#999; margin-top:0.5rem; text-align:center;">
-                                引分け / 一本勝 / 延長
+                                二本勝 / 一本勝 / 延長戦<br>判定 / 引き分け
                             </div>
                         </div>
                     </div>
@@ -590,16 +672,34 @@ body {
 
                 <div class="step-card">
                     <div class="step-number">4</div>
-                    <div class="step-title">取り消しと送信</div>
+                    <div class="step-title">リセットと決定</div>
                     <div class="step-description">
-                        入力を間違えた場合は「取り消し」ボタンでリセット。全て入力したら「送信」ボタンで保存します。
+                        入力を間違えた場合は「入力内容をリセット」ボタンでリセット。全て入力したら「決定」ボタンを押して確認画面へ進みます。
                     </div>
                     <div class="step-visual">
                         <div style="text-align:center; padding:1rem;">
-                            <button class="demo-button" style="margin-bottom:0.8rem;">取り消し</button>
+                            <button class="demo-button" style="margin-bottom:0.8rem; color:#ef4444; border-color:#ef4444;">入力内容をリセット</button>
                             <div style="display:flex; gap:0.8rem; justify-content:center;">
+                                <button class="demo-button">戻る</button>
+                                <button class="demo-button primary">決定</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">5</div>
+                    <div class="step-title">確認モーダルでOK</div>
+                    <div class="step-description">
+                        「決定」を押すと確認モーダルが表示されます。「OK」を押すと試合結果が保存され、最初の画面に戻ります。
+                    </div>
+                    <div class="step-visual">
+                        <div class="demo-ui">
+                            <div style="font-size:2rem; margin-bottom:0.5rem;">🏁</div>
+                            <div style="font-weight:bold; font-size:0.9rem; margin-bottom:0.3rem;">練習を終えますか？</div>
+                            <div style="display:flex; gap:0.6rem; margin-top:0.8rem;">
                                 <button class="demo-button">キャンセル</button>
-                                <button class="demo-button primary">送信</button>
+                                <button class="demo-button primary">OK</button>
                             </div>
                         </div>
                     </div>
@@ -613,9 +713,10 @@ body {
                 <span>重要な注意事項</span>
             </div>
             <div class="important-note-text">
-                <strong>選手番号：</strong> 正しい選手番号を入力してください。<br>
-                <strong>不戦勝：</strong> 勝利した選手のボタンを押してください。<br>
-                <strong>上段・下段：</strong> 選手の位置を間違えないように記録してください。<br>
+                <strong>試合場・試合番号：</strong> 最初に正しい試合場と試合番号を入力してください。<br>
+                <strong>選手番号：</strong> 正しい選手番号を入力するか、プルダウンから選択してください。<br>
+                <strong>不戦勝：</strong> 不戦勝の場合は勝利した選手のボタンを押して「決定」してください。通常の試合詳細入力は不要です。<br>
+                <strong>赤・白の位置：</strong> 選手の位置（赤側/白側、上段/下段）を間違えないように記録してください。<br>
                 <strong>確認：</strong> 送信前に入力内容を必ず確認してください。
             </div>
         </div>
