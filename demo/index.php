@@ -1,5 +1,5 @@
 <?php
-// index.php - 保護者向け 大会一覧（あなたの既存構成に動的一覧を統合）
+// index.php - 保護者向け 大会一覧（検索機能強化版）
 session_start();
 require_once 'connect/db_connect.php';
 
@@ -7,15 +7,57 @@ require_once 'connect/db_connect.php';
 $perPage = 12;
 $page = isset($_GET['p']) ? max(1, (int)$_GET['p']) : 1;
 $offset = ($page - 1) * $perPage;
-$keyword = isset($_GET['q']) ? trim((string)$_GET['q']) : '';
 
-// SQL 構築（is_locked は保護者表示に関係ないため無視）
+// 検索パラメータ
+$keyword = isset($_GET['q']) ? trim((string)$_GET['q']) : '';
+$dateFrom = isset($_GET['date_from']) ? trim((string)$_GET['date_from']) : '';
+$dateTo = isset($_GET['date_to']) ? trim((string)$_GET['date_to']) : '';
+$venue = isset($_GET['venue']) ? trim((string)$_GET['venue']) : '';
+$timeFilter = isset($_GET['time']) ? (string)$_GET['time'] : 'all'; // all, upcoming, past
+$sortBy = isset($_GET['sort']) ? (string)$_GET['sort'] : 'date_desc'; // date_desc, date_asc, created_desc
+
+// SQL 構築
 $params = [];
 $where = "WHERE 1=1";
+
+// キーワード検索
 if ($keyword !== '') {
     $where .= " AND (title LIKE :kw OR CAST(event_date AS CHAR) LIKE :kw OR venue LIKE :kw)";
     $params[':kw'] = '%' . $keyword . '%';
 }
+
+// 開催日範囲
+if ($dateFrom !== '') {
+    $where .= " AND event_date >= :date_from";
+    $params[':date_from'] = $dateFrom;
+}
+if ($dateTo !== '') {
+    $where .= " AND event_date <= :date_to";
+    $params[':date_to'] = $dateTo;
+}
+
+// 会場フィルター
+if ($venue !== '') {
+    $where .= " AND venue LIKE :venue";
+    $params[':venue'] = '%' . $venue . '%';
+}
+
+// 時間フィルター
+$today = date('Y-m-d');
+if ($timeFilter === 'upcoming') {
+    $where .= " AND event_date >= :today";
+    $params[':today'] = $today;
+} elseif ($timeFilter === 'past') {
+    $where .= " AND event_date < :today";
+    $params[':today'] = $today;
+}
+
+// ソート順
+$orderBy = match($sortBy) {
+    'date_asc' => 'ORDER BY event_date ASC, id ASC',
+    'created_desc' => 'ORDER BY created_at DESC, id DESC',
+    default => 'ORDER BY event_date DESC, id DESC',
+};
 
 try {
     // 件数取得
@@ -27,21 +69,35 @@ try {
     $totalPages = max(1, (int)ceil($total / $perPage));
 
     // データ取得
-    $sql = "SELECT id, title, venue, event_date, match_field, created_at FROM tournaments {$where} ORDER BY event_date DESC, id DESC LIMIT :limit OFFSET :offset";
+    $sql = "SELECT id, title, venue, event_date, match_field, created_at FROM tournaments {$where} {$orderBy} LIMIT :limit OFFSET :offset";
     $stmt = $pdo->prepare($sql);
     foreach ($params as $k => $v) $stmt->bindValue($k, $v, PDO::PARAM_STR);
     $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
     $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // 会場リスト取得（フィルター用）
+    $venueStmt = $pdo->query("SELECT DISTINCT venue FROM tournaments WHERE venue IS NOT NULL AND venue != '' ORDER BY venue");
+    $venues = $venueStmt->fetchAll(PDO::FETCH_COLUMN);
 } catch (PDOException $e) {
     error_log($e->getMessage());
     $tournaments = [];
+    $venues = [];
     $total = 0;
     $totalPages = 1;
     $errorMessage = '大会一覧の取得に失敗しました。';
 }
+
 $menuClass = (isset($_SESSION['admin_user']) && $_SESSION['admin_user'] === true) ? 'menu-links open' : 'menu-links';
+
+// ハイライト関数
+function highlightKeyword($text, $keyword) {
+    if ($keyword === '') return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+    $escaped = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+    $kwEscaped = htmlspecialchars($keyword, ENT_QUOTES, 'UTF-8');
+    return preg_replace('/(' . preg_quote($kwEscaped, '/') . ')/iu', '<mark>$1</mark>', $escaped);
+}
 ?>
 
 <!DOCTYPE html>
@@ -53,7 +109,6 @@ $menuClass = (isset($_SESSION['admin_user']) && $_SESSION['admin_user'] === true
     <title>大会一覧</title>
     <link rel="stylesheet" href="./style.css">
     <style>
-        /* 最低限の補正（既存 CSS がある場合は不要） */
         .tournament-list {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -69,6 +124,12 @@ $menuClass = (isset($_SESSION['admin_user']) && $_SESSION['admin_user'] === true
             text-decoration: none;
             color: inherit;
             box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .tournament-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .tournament-item h3 {
@@ -108,41 +169,172 @@ $menuClass = (isset($_SESSION['admin_user']) && $_SESSION['admin_user'] === true
             border-radius: 8px;
             margin-bottom: 12px;
         }
+
+        .search-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .search-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .search-field {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .search-field label {
+            font-size: 0.85em;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .search-field input,
+        .search-field select {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            font-size: 0.9em;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #2b7be4;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1e5bb8;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .filter-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .filter-tag {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-tag .remove {
+            cursor: pointer;
+            font-weight: bold;
+            color: #1976d2;
+        }
+
+        .results-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .sort-select {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            background: white;
+            font-size: 0.9em;
+        }
+
+        mark {
+            background: #fff176;
+            padding: 2px 4px;
+            border-radius: 2px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+            margin-left: 6px;
+        }
+
+        .badge-upcoming {
+            background: #d1f4e0;
+            color: #0d7d3e;
+        }
+
+        .badge-past {
+            background: #e0e0e0;
+            color: #616161;
+        }
+
+        .badge-today {
+            background: #fff176;
+            color: #f57c00;
+        }
+
+        @media (max-width: 768px) {
+            .search-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .search-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .results-info {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+        }
     </style>
 </head>
 
 <body>
-    <!-- ヘッダーに佐藤様から提示された説明文を追加予定 -->
     <header>
         <div class="menu-icon" onclick="toggleMenu()">☰</div>
     </header>
 
-    <!-- HTML -->
     <div class="menu-links" id="menuLinks">
         <a href="./administrator/master.php">管理者用ログイン画面</a>
         <a href="./Assistant/login.php">入力補助員用ログイン画面</a>
     </div>
-
-    <!-- CSS（外部または head 内） -->
-    <style>
-        .menu-links {
-            display: none;
-            flex-direction: column;
-            /* 既存スタイル */
-        }
-
-        .menu-links.open {
-            display: flex;
-        }
-    </style>
-
-    <!-- JS -->
-    <script>
-        function toggleMenu() {
-            const menu = document.getElementById('menuLinks');
-            menu.classList.toggle('open');
-        }
-    </script>
 
     <div class="title">
         <h1>大会一覧</h1>
@@ -153,47 +345,150 @@ $menuClass = (isset($_SESSION['admin_user']) && $_SESSION['admin_user'] === true
             <div class="notice"><?= htmlspecialchars($errorMessage, ENT_QUOTES, 'UTF-8') ?></div>
         <?php endif; ?>
 
+        <!-- 検索バー -->
         <div class="search-bar">
-            <form method="get" style="display:flex;gap:8px;width:100%;">
-                <input type="text" name="q" placeholder="大会名や開催日で検索" value="<?= htmlspecialchars($keyword, ENT_QUOTES, 'UTF-8') ?>" style="flex:1;padding:8px;border-radius:6px;border:1px solid #ddd;" />
-                <button type="submit" style="padding:8px 12px;border-radius:6px;background:#2b7be4;color:#fff;border:0;">検索</button>
+            <form method="get" id="searchForm">
+                <div style="display:flex;gap:8px;width:100%;margin-bottom:10px;">
+                    <input type="text" name="q" placeholder="大会名や開催日で検索" value="<?= htmlspecialchars($keyword, ENT_QUOTES, 'UTF-8') ?>" style="flex:1;padding:8px;border-radius:6px;border:1px solid #ddd;" />
+                    <button type="submit" style="padding:8px 12px;border-radius:6px;background:#2b7be4;color:#fff;border:0;">検索</button>
+                    <button type="button" onclick="toggleAdvancedSearch()" style="padding:8px 12px;border-radius:6px;background:#6c757d;color:#fff;border:0;white-space:nowrap;">詳細検索</button>
+                </div>
+
+                <!-- 詳細検索（折りたたみ） -->
+                <div id="advancedSearch" style="display:none;background:#f8f9fa;padding:15px;border-radius:8px;margin-top:10px;">
+                    <div class="search-grid">
+                        <div class="search-field">
+                            <label for="dateFrom">開催日（開始）</label>
+                            <input type="date" id="dateFrom" name="date_from" value="<?= htmlspecialchars($dateFrom, ENT_QUOTES, 'UTF-8') ?>">
+                        </div>
+
+                        <div class="search-field">
+                            <label for="dateTo">開催日（終了）</label>
+                            <input type="date" id="dateTo" name="date_to" value="<?= htmlspecialchars($dateTo, ENT_QUOTES, 'UTF-8') ?>">
+                        </div>
+
+                        <div class="search-field">
+                            <label for="venueFilter">会場</label>
+                            <select id="venueFilter" name="venue">
+                                <option value="">すべて</option>
+                                <?php foreach ($venues as $v): ?>
+                                    <option value="<?= htmlspecialchars($v, ENT_QUOTES, 'UTF-8') ?>" <?= $venue === $v ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($v, ENT_QUOTES, 'UTF-8') ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="search-field">
+                            <label for="timeFilter">期間</label>
+                            <select id="timeFilter" name="time">
+                                <option value="all" <?= $timeFilter === 'all' ? 'selected' : '' ?>>すべて</option>
+                                <option value="upcoming" <?= $timeFilter === 'upcoming' ? 'selected' : '' ?>>今後の大会</option>
+                                <option value="past" <?= $timeFilter === 'past' ? 'selected' : '' ?>>過去の大会</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:15px;">
+                        <button type="button" class="btn btn-secondary" onclick="clearSearch()">クリア</button>
+                        <button type="submit" class="btn btn-primary">🔍 検索</button>
+                    </div>
+                </div>
             </form>
         </div>
 
+        <!-- アクティブフィルター表示 -->
+        <?php
+        $activeFilters = [];
+        if ($keyword !== '') $activeFilters[] = ['label' => "キーワード: {$keyword}", 'param' => 'q'];
+        if ($dateFrom !== '') $activeFilters[] = ['label' => "開始日: {$dateFrom}", 'param' => 'date_from'];
+        if ($dateTo !== '') $activeFilters[] = ['label' => "終了日: {$dateTo}", 'param' => 'date_to'];
+        if ($venue !== '') $activeFilters[] = ['label' => "会場: {$venue}", 'param' => 'venue'];
+        if ($timeFilter !== 'all') $activeFilters[] = ['label' => ($timeFilter === 'upcoming' ? '今後の大会' : '過去の大会'), 'param' => 'time'];
+        ?>
+
+        <?php if (!empty($activeFilters)): ?>
+            <div class="filter-tags">
+                <?php foreach ($activeFilters as $filter): ?>
+                    <div class="filter-tag">
+                        <?= htmlspecialchars($filter['label'], ENT_QUOTES, 'UTF-8') ?>
+                        <span class="remove" onclick="removeFilter('<?= $filter['param'] ?>')">×</span>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+
+        <!-- 結果情報とソート -->
+        <div class="results-info">
+            <div>
+                <strong><?= number_format($total) ?></strong> 件の大会が見つかりました
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label for="sortBy" style="font-size: 0.9em; color: #666;">並び順:</label>
+                <select id="sortBy" name="sort" class="sort-select" onchange="changeSort(this.value)">
+                    <option value="date_desc" <?= $sortBy === 'date_desc' ? 'selected' : '' ?>>開催日が新しい順</option>
+                    <option value="date_asc" <?= $sortBy === 'date_asc' ? 'selected' : '' ?>>開催日が古い順</option>
+                    <option value="created_desc" <?= $sortBy === 'created_desc' ? 'selected' : '' ?>>登録が新しい順</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 大会一覧 -->
         <div class="tournament-list">
             <?php if (empty($tournaments)): ?>
-                <div style="grid-column:1/-1;color:#666;padding:12px">大会が見つかりません。</div>
+                <div style="grid-column:1/-1;color:#666;padding:12px;text-align:center;">
+                    検索条件に一致する大会が見つかりませんでした。
+                </div>
             <?php else: ?>
                 <?php foreach ($tournaments as $t):
-                    $url = './User/tournament-department.php?id=' . urlencode($t['id']); // 詳細ページへのリンク
-                    $title = htmlspecialchars($t['title'], ENT_QUOTES, 'UTF-8');
-                    $date = htmlspecialchars(substr($t['event_date'] ?? '', 0, 10), ENT_QUOTES, 'UTF-8');
-                    $venue = htmlspecialchars($t['venue'] ?? '', ENT_QUOTES, 'UTF-8');
-                    $match_field = htmlspecialchars((string)($t['match_field'] ?? ''), ENT_QUOTES, 'UTF-8');
+                    $url = './User/tournament-department.php?id=' . urlencode($t['id']);
+                    $title = $t['title'];
+                    $eventDate = $t['event_date'] ?? '';
+                    $date = substr($eventDate, 0, 10);
+                    $venueText = $t['venue'] ?? '';
+
+                    // バッジ判定
+                    $badge = '';
+                    if ($eventDate) {
+                        if ($eventDate === $today) {
+                            $badge = '<span class="badge badge-today">本日開催</span>';
+                        } elseif ($eventDate > $today) {
+                            $badge = '<span class="badge badge-upcoming">開催予定</span>';
+                        } else {
+                            $badge = '<span class="badge badge-past">終了</span>';
+                        }
+                    }
                 ?>
                     <a class="tournament-item" href="<?= $url ?>" target="_blank" rel="noopener noreferrer">
-                        <h3><?= $title ?></h3>
-                        <p>開催日: <?= $date ?: '未定' ?></p>
-                        <div style="margin-top:8px;font-size:0.9rem;color:#666;">
-                            <?php if ($venue): ?><span>会場: <?= $venue ?></span><?php endif; ?>
-                        </div>
+                        <h3><?= highlightKeyword($title, $keyword) ?> <?= $badge ?></h3>
+                        <p>📅 <?= $date ?: '未定' ?></p>
+                        <?php if ($venueText): ?>
+                            <p>📍 <?= highlightKeyword($venueText, $keyword) ?></p>
+                        <?php endif; ?>
                     </a>
                 <?php endforeach; ?>
             <?php endif; ?>
         </div>
 
+        <!-- ページネーション -->
         <div class="pagination">
             <?php
             $prevP = max(1, $page - 1);
             $nextP = min($totalPages, $page + 1);
-            $baseQuery = [];
-            if ($keyword !== '') $baseQuery['q'] = $keyword;
+            $baseQuery = array_filter([
+                'q' => $keyword,
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo,
+                'venue' => $venue,
+                'time' => $timeFilter !== 'all' ? $timeFilter : null,
+                'sort' => $sortBy !== 'date_desc' ? $sortBy : null,
+            ]);
             ?>
-            <a href="?<?= http_build_query(array_merge($baseQuery, ['p' => $prevP])) ?>" class="pagination-btn" aria-label="前のページ">← 戻る</a>
-            <div id="pageInfo" style="min-width:160px;text-align:center;color:#666">
-                <?= htmlspecialchars((string)$total, ENT_QUOTES, 'UTF-8') ?> 件 / <?= htmlspecialchars((string)$page, ENT_QUOTES, 'UTF-8') ?> / <?= htmlspecialchars((string)$totalPages, ENT_QUOTES, 'UTF-8') ?> ページ
+            <a href="?<?= http_build_query(array_merge($baseQuery, ['p' => $prevP])) ?>" class="pagination-btn">← 戻る</a>
+            <div style="min-width:160px;text-align:center;color:#666">
+                <?= $page ?> / <?= $totalPages ?> ページ
             </div>
-            <a href="?<?= http_build_query(array_merge($baseQuery, ['p' => $nextP])) ?>" class="pagination-btn" aria-label="次のページ">次へ →</a>
+            <a href="?<?= http_build_query(array_merge($baseQuery, ['p' => $nextP])) ?>" class="pagination-btn">次へ →</a>
         </div>
 
         <footer>
@@ -204,8 +499,50 @@ $menuClass = (isset($_SESSION['admin_user']) && $_SESSION['admin_user'] === true
     <script>
         function toggleMenu() {
             const menu = document.getElementById('menuLinks');
-            menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+            menu.classList.toggle('open');
         }
+
+        function toggleAdvancedSearch() {
+            const advanced = document.getElementById('advancedSearch');
+            const isHidden = advanced.style.display === 'none';
+            advanced.style.display = isHidden ? 'block' : 'none';
+        }
+
+        function clearSearch() {
+            window.location.href = window.location.pathname;
+        }
+
+        function removeFilter(param) {
+            const form = document.getElementById('searchForm');
+            const input = form.querySelector(`[name="${param}"]`);
+            if (input) {
+                if (input.tagName === 'SELECT') {
+                    input.value = input.querySelector('option').value;
+                } else {
+                    input.value = '';
+                }
+            }
+            form.submit();
+        }
+
+        function changeSort(value) {
+            const url = new URL(window.location.href);
+            if (value === 'date_desc') {
+                url.searchParams.delete('sort');
+            } else {
+                url.searchParams.set('sort', value);
+            }
+            url.searchParams.delete('p');
+            window.location.href = url.toString();
+        }
+
+        // 詳細検索フィルターが設定されている場合は自動で開く
+        window.addEventListener('DOMContentLoaded', function() {
+            const hasAdvancedFilters = <?= json_encode($dateFrom !== '' || $dateTo !== '' || $venue !== '' || $timeFilter !== 'all') ?>;
+            if (hasAdvancedFilters) {
+                document.getElementById('advancedSearch').style.display = 'block';
+            }
+        });
     </script>
 </body>
 
