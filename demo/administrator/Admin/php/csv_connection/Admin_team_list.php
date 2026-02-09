@@ -107,7 +107,7 @@ $teams = $stmt->fetchAll();
         </div>
       </div>
     </div>
-    <button class="btn-back" onclick="location.href='./Admin_addition_selection_tournament.php'">戻る</button>
+    <button class="btn-back" onclick="location.href='./Admin_addition_selection_department.php?id=<?= urlencode($tournament_id) ?>'">戻る</button>
   </div>
 
 </body>
