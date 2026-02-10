@@ -532,12 +532,12 @@ body {
                             <div class="demo-team-section">
                                 <div class="demo-team-box">
                                     <input class="demo-input" placeholder="チームID" value="A001">
-                                    <button class="demo-button">選手変更</button>
+                                    <button style="border:2px solid rgba(102,126,234,0.4); border-radius:10px; padding:0.4rem 1rem; background:white; color:#667eea; font-size:0.75rem; font-weight:700; cursor:pointer;">選手変更</button>
                                 </div>
                                 <div class="demo-vs">対</div>
                                 <div class="demo-team-box">
                                     <input class="demo-input" placeholder="チームID" value="B002">
-                                    <button class="demo-button">選手変更</button>
+                                    <button style="border:2px solid rgba(102,126,234,0.4); border-radius:10px; padding:0.4rem 1rem; background:white; color:#667eea; font-size:0.75rem; font-weight:700; cursor:pointer;">選手変更</button>
                                 </div>
                             </div>
                         </div>
@@ -580,19 +580,19 @@ body {
                     <div class="step-number">3</div>
                     <div class="step-title">不戦勝を記録</div>
                     <div class="step-description">
-                        <strong style="color:#dc2626;">重要：</strong> 勝利したチームの「不戦勝」ボタンを押します。ボタンは青色に変わり、もう一度押すと選択解除できます。
+                        <strong style="color:#dc2626;">重要：</strong> 勝利したチームの「不戦勝」ボタンを押します。ボタンは赤色に変わり、もう一度押すと選択解除できます。
                     </div>
                     <div class="step-visual">
                         <div class="demo-ui">
                             <div class="demo-team-section">
                                 <div class="demo-team-box">
                                     <div style="font-weight:bold; margin-bottom:0.3rem; font-size:0.85rem;">チームA</div>
-                                    <button class="demo-button primary">不戦勝</button>
+                                    <button style="border:none; border-radius:10px; padding:0.5rem 2rem; background:linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color:white; font-size:0.9rem; font-weight:700; cursor:pointer;">不戦勝</button>
                                 </div>
                                 <div class="demo-vs">対</div>
                                 <div class="demo-team-box">
                                     <div style="font-weight:bold; margin-bottom:0.3rem; font-size:0.85rem;">チームB</div>
-                                    <button class="demo-button">不戦勝</button>
+                                    <button style="border:2px solid rgba(102,126,234,0.4); border-radius:10px; padding:0.5rem 2rem; background:white; color:#667eea; font-size:0.9rem; font-weight:700; cursor:pointer;">不戦勝</button>
                                 </div>
                             </div>
                             <div style="margin-top:0.5rem; font-size:0.75rem; color:#666;">
@@ -611,8 +611,8 @@ body {
                     <div class="step-visual">
                         <div style="text-align:center; padding:1rem;">
                             <div style="display:flex; gap:0.8rem; justify-content:center; margin-bottom:1rem;">
-                                <button class="demo-button primary">決定</button>
-                                <button class="demo-button">戻る</button>
+                                <button style="border:2px solid #e5e7eb; border-radius:12px; padding:0.7rem 3rem; background:white; color:#667eea; font-size:1rem; font-weight:700; cursor:pointer;">戻る</button>
+                                <button style="border:none; border-radius:12px; padding:0.7rem 3rem; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; font-size:1rem; font-weight:700; cursor:pointer;">決定</button>
                             </div>
                             <div style="font-size:1.5rem; color:#10b981;">✓</div>
                         </div>
@@ -683,7 +683,7 @@ body {
                     </div>
                     <div class="step-visual">
                         <div class="demo-ui">
-                            <div class="demo-button">-</div>
+                            <button style="border:2px solid #667eea; border-radius:10px; padding:0.5rem 1.5rem; background:white; color:#667eea; font-size:0.9rem; font-weight:700; cursor:pointer;">-</button>
                             <div style="font-size:0.7rem; color:#999; margin-top:0.5rem; text-align:center;">
                                 引分け / 一本勝 / 延長<br>赤不戦勝 / 白不戦勝
                             </div>
@@ -700,8 +700,8 @@ body {
                     <div class="step-visual">
                         <div class="demo-ui">
                             <div style="display:flex; gap:0.5rem;">
-                                <div class="demo-button" style="background:#ef4444; color:white; border-color:#ef4444;">次へ</div>
-                                <div class="demo-button" style="background:#ef4444; color:white; border-color:#ef4444;">戻る</div>
+                                <button style="border:none; border-radius:10px; padding:0.4rem 1.2rem; background:linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color:white; font-size:0.8rem; font-weight:700; cursor:pointer;">次へ</button>
+                                <button style="border:none; border-radius:10px; padding:0.4rem 1.2rem; background:linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color:white; font-size:0.8rem; font-weight:700; cursor:pointer;">戻る</button>
                             </div>
                             <div style="font-size:0.75rem; color:#666; margin-top:0.8rem; text-align:center;">
                                 先鋒 → 次鋒 → 中堅<br>→ 副将 → 大将
@@ -718,10 +718,10 @@ body {
                     </div>
                     <div class="step-visual">
                         <div style="text-align:center; padding:1rem;">
-                            <button class="demo-button" style="margin-bottom:0.8rem;">取り消し</button>
+                            <button style="margin-bottom:0.8rem; color:#ef4444; border:2px solid rgba(239,68,68,0.3); background:white; border-radius:50px; padding:0.4rem 1.2rem; font-weight:700; cursor:pointer;">取り消し</button>
                             <div style="display:flex; gap:0.8rem; justify-content:center;">
-                                <button class="demo-button">キャンセル</button>
-                                <button class="demo-button primary">送信</button>
+                                <button style="border:2px solid #e5e7eb; border-radius:12px; padding:0.7rem 2rem; background:white; color:#667eea; font-size:0.9rem; font-weight:700; cursor:pointer;">キャンセル</button>
+                                <button style="border:none; border-radius:12px; padding:0.7rem 2rem; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; font-size:0.9rem; font-weight:700; cursor:pointer;">送信</button>
                             </div>
                         </div>
                     </div>
