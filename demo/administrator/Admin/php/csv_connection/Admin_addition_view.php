@@ -70,7 +70,7 @@ $players = $stmt->fetchAll();
         </div>
 
         <!-- 削除ボタン（フォーム） -->
-        <form action="delete_players.php" method="POST" id="delete-form"
+        <form action="#" method="POST" id="delete-form"
           onsubmit="return confirm('選択した選手を削除しますか？');">
           <input type="hidden" name="dept" value="<?= $department_id ?>">
           <input type="hidden" name="id" value="<?= $tournament_id ?>">
@@ -129,7 +129,7 @@ $players = $stmt->fetchAll();
 
                   <td class="col-action">
                     <button class="btn btn-outline btn-sm"
-                      onclick="if(confirm('削除しますか？')) location.href='delete_players.php?single=<?= $p['id'] ?>&id=<?= $tournament_id ?>&dept=<?= $department_id ?>'">
+                      onclick="#">
                       <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M3 6h18"></path>
                         <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>

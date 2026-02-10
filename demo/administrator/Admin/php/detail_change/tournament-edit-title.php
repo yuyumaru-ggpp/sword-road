@@ -15,23 +15,23 @@ if (!$id) {
 }
 
 // POST処理（更新）
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $new_title = $_POST['new_title'] ?? '';
+// if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+//     $new_title = $_POST['new_title'] ?? '';
 
-    if ($new_title !== '') {
-        $sql = "UPDATE tournaments 
-        SET title = :title,
-            updated_at = NOW()
-        WHERE id = :id";
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindValue(':title', $new_title, PDO::PARAM_STR);
-        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-        $stmt->execute();
+//     if ($new_title !== '') {
+//         $sql = "UPDATE tournaments 
+//         SET title = :title,
+//             updated_at = NOW()
+//         WHERE id = :id";
+//         $stmt = $pdo->prepare($sql);
+//         $stmt->bindValue(':title', $new_title, PDO::PARAM_STR);
+//         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+//         $stmt->execute();
 
-        header("Location: Admin_selection.php");
-        exit;
-    }
-}
+//         header("Location: Admin_selection.php");
+//         exit;
+//     }
+// }
 
 // 現在の大会名取得
 $sql = "SELECT title FROM tournaments WHERE id = :id";
