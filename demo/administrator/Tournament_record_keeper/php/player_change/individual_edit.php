@@ -114,8 +114,7 @@ if (!$player) {
 
 <body>
     <div class="breadcrumb">
-        <a href="../tournament-detail.php?id=<?= $tournament_id ?>" class="breadcrumb-link">メニュー></a>
-        <a href="player-category-select.php?id=<?= $tournament_id ?>" class="breadcrumb-link">選手変更></a>
+        <a href="../tournament_editor_menu.php?id=<?= htmlspecialchars($tournament_id, ENT_QUOTES, 'UTF-8') ?>" class="breadcrumb-link">メニュー ></a> <a href="player-category-select.php?id=<?= $tournament_id ?>" class="breadcrumb-link">選手変更></a>
         <a href="individual.php?id=<?= $tournament_id ?>&dept=<?= $department_id ?>" class="breadcrumb-link">個人戦></a>
         <a href="#" class="breadcrumb-link">選手編集</a>
     </div>

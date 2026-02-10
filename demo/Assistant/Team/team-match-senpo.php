@@ -130,7 +130,7 @@ body {
     background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
     padding: 12px 40px;
     text-align: center;
-    z-index: 100;
+    z-index: 200;
     border-radius: 0 0 16px 16px;
     box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
@@ -363,7 +363,7 @@ body {
 .draw-container-wrapper {
     position: absolute;
     top: 50%;
-    right: -100px;
+    right: 65px;
     transform: translateY(-50%);
     background: white;
     padding: 10px 0;
@@ -564,7 +564,7 @@ body {
     }
 
     .draw-container-wrapper {
-        right: -90px;
+        right: 58px;
     }
 
     .draw-button {
@@ -680,7 +680,7 @@ body {
     }
 
     .draw-container-wrapper {
-        right: -80px;
+        right: 50px;
     }
 
     .draw-button {
@@ -807,7 +807,7 @@ body {
     }
 
     .draw-container-wrapper {
-        right: -70px;
+        right: 43px;
     }
 
     .draw-button {

@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $inserted = 0;
     $pdo->beginTransaction();
     try {
-      $sql = "INSERT INTO departments (tournament_id, name, distinction, created_at, updated_at)
+      $sql = "INSERT INTO departments (tournament_id, name, distinction, created_at, update_at)
         VALUES (:tournament_id, :name, :distinction, NOW(), NOW())";
       $stmt = $pdo->prepare($sql);
 

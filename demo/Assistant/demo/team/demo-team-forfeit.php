@@ -295,6 +295,116 @@ body {
     transform: translateY(0);
 }
 
+/* 確認ダイアログのオーバーレイ */
+.confirm-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    backdrop-filter: blur(4px);
+    overflow-y: auto;
+}
+
+.confirm-dialog {
+    background: #fff;
+    border-radius: 16px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    max-width: 500px;
+    width: 100%;
+    margin: auto;
+}
+
+.confirm-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+}
+
+.confirm-title {
+    font-size: 20px;
+    margin-bottom: 15px;
+    color: #2d3748;
+}
+
+.confirm-details {
+    background: #f7fafc;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.confirm-label {
+    font-size: 14px;
+    color: #718096;
+    margin-bottom: 8px;
+}
+
+.confirm-team-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 12px;
+}
+
+.confirm-team-loser {
+    font-size: 16px;
+    color: #718096;
+}
+
+.confirm-message {
+    font-size: 16px;
+    color: #4a5568;
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
+
+.confirm-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.confirm-btn {
+    flex: 1;
+    min-width: 140px;
+    max-width: 180px;
+    padding: 14px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.confirm-btn-back {
+    background: #e2e8f0;
+    color: #4a5568;
+}
+
+.confirm-btn-back:hover {
+    background: #cbd5e0;
+}
+
+.confirm-btn-continue {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.confirm-btn-continue:hover {
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
 /* 小さい画面での調整 */
 @media (max-height: 700px) {
     .main-content {
@@ -544,6 +654,107 @@ body {
     .team-number-input {
         font-size: 13px;
     }
+
+    .confirm-overlay {
+        padding: 15px;
+    }
+
+    .confirm-dialog {
+        padding: 20px;
+    }
+
+    .confirm-icon {
+        font-size: 36px;
+        margin-bottom: 15px;
+    }
+
+    .confirm-title {
+        font-size: 18px;
+        margin-bottom: 12px;
+    }
+
+    .confirm-details {
+        padding: 12px;
+        margin-bottom: 15px;
+    }
+
+    .confirm-label {
+        font-size: 13px;
+        margin-bottom: 6px;
+    }
+
+    .confirm-team-name {
+        font-size: 15px;
+        margin-bottom: 10px;
+    }
+
+    .confirm-team-loser {
+        font-size: 15px;
+    }
+
+    .confirm-message {
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+
+    .confirm-btn {
+        min-width: 120px;
+        padding: 12px 16px;
+        font-size: 14px;
+    }
+}
+
+/* 確認ダイアログのスクロール対応 */
+@media (max-height: 500px) {
+    .confirm-overlay {
+        padding: 10px;
+        align-items: flex-start;
+    }
+
+    .confirm-dialog {
+        padding: 20px 15px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+
+    .confirm-icon {
+        font-size: 32px;
+        margin-bottom: 10px;
+    }
+
+    .confirm-title {
+        font-size: 16px;
+        margin-bottom: 10px;
+    }
+
+    .confirm-details {
+        padding: 10px;
+        margin-bottom: 12px;
+    }
+
+    .confirm-label {
+        font-size: 12px;
+        margin-bottom: 5px;
+    }
+
+    .confirm-team-name {
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+
+    .confirm-team-loser {
+        font-size: 14px;
+    }
+
+    .confirm-message {
+        font-size: 13px;
+        margin-bottom: 15px;
+    }
+
+    .confirm-btn {
+        padding: 10px 14px;
+        font-size: 13px;
+    }
 }
 </style>
 </head>
@@ -686,40 +897,43 @@ document.getElementById('teamForm').addEventListener('submit', function(e) {
 
 function showForfeitConfirmation(winner, winnerTeam, loserTeam) {
     const color = winner === 'red' ? '赤' : '白';
-    const message = `
-        <div style="background: #fff; border-radius: 16px; padding: 30px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-width: 500px; margin: 20px auto;">
-            <div style="font-size: 48px; margin-bottom: 20px;">✓</div>
-            <h3 style="font-size: 20px; margin-bottom: 15px; color: #2d3748;">不戦勝を登録しました</h3>
-            <div style="background: #f7fafc; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-                <div style="font-size: 14px; color: #718096; margin-bottom: 8px;">勝者：${color}</div>
-                <div style="font-size: 16px; font-weight: 600; color: #2d3748; margin-bottom: 12px;">${winnerTeam}</div>
-                <div style="font-size: 14px; color: #718096; margin-bottom: 8px;">敗者</div>
-                <div style="font-size: 16px; color: #718096;">${loserTeam}</div>
-            </div>
-            <p style="font-size: 16px; color: #4a5568; margin-bottom: 25px; line-height: 1.6;">
-                不戦勝の操作はこれで終わります。<br>続けますか？最初に戻りますか？
-            </p>
-            <div style="display: flex; gap: 12px; justify-content: center;">
-                <button onclick="backToStart()" style="flex: 1; max-width: 180px; padding: 14px 20px; font-size: 15px; font-weight: 600; background: #e2e8f0; color: #4a5568; border: none; border-radius: 10px; cursor: pointer; transition: all 0.3s ease;">
-                    最初に戻る
-                </button>
-                <button onclick="continueToNext()" style="flex: 1; max-width: 180px; padding: 14px 20px; font-size: 15px; font-weight: 600; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; cursor: pointer; transition: all 0.3s ease;">
-                    続ける
-                </button>
-            </div>
+    
+    // オーバーレイを作成
+    const overlay = document.createElement('div');
+    overlay.id = 'confirmOverlay';
+    overlay.className = 'confirm-overlay';
+    
+    // ダイアログを作成
+    const dialog = document.createElement('div');
+    dialog.className = 'confirm-dialog';
+    dialog.innerHTML = `
+        <div class="confirm-icon">✓</div>
+        <h3 class="confirm-title">不戦勝を登録しました</h3>
+        <div class="confirm-details">
+            <div class="confirm-label">勝者：${color}</div>
+            <div class="confirm-team-name">${winnerTeam}</div>
+            <div class="confirm-label">敗者</div>
+            <div class="confirm-team-loser">${loserTeam}</div>
+        </div>
+        <p class="confirm-message">
+            不戦勝の操作はこれで終わります。<br>続けますか？最初に戻りますか？
+        </p>
+        <div class="confirm-buttons">
+            <button onclick="backToStart()" class="confirm-btn confirm-btn-back">
+                最初に戻る
+            </button>
+            <button onclick="continueToNext()" class="confirm-btn confirm-btn-continue">
+                続ける
+            </button>
         </div>
     `;
     
-    // 画面全体をオーバーレイで覆う
-    const overlay = document.createElement('div');
-    overlay.id = 'confirmOverlay';
-    overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; backdrop-filter: blur(4px);';
-    overlay.innerHTML = message;
+    overlay.appendChild(dialog);
     document.body.appendChild(overlay);
 }
 
 function backToStart() {
-    window.location.href = 'match_input_demo.php';
+    window.location.href = '../../index.php';
 }
 
 function continueToNext() {

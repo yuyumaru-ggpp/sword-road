@@ -4,6 +4,7 @@
 // - 団体戦で player_number が未設定になる問題を解消（部門内で連番を採番）
 // - パフォーマンス改善：MAX(player_number) を毎回問い合わせず、インメモリでインクリメント
 // - トランザクション単位をチーム毎にして失敗時はロールバック
+// - 個人戦・団体戦の両方でヘッダー自動判定を実装
 // 配置場所と require_once のパスは環境に合わせて調整してください
 
 session_start();
@@ -206,12 +207,50 @@ try {
         fclose($mem);
     } else {
         // -------------------------------
-        // 団体戦 CSV 登録処理（横流れ） - 改良版
+        // 団体戦 CSV 登録処理（横流れ） - 改良版（ヘッダー自動判定付き）
         // CSVフォーマット想定: team_name, abbreviation, player1_name, player1_furigana, player2_name, player2_furigana, ...
         // - 部門内の player_number は一度 MAX を取得してインメモリでインクリメント
         // - team_number は一度 MAX を取得してインメモリでインクリメント
         // - 各チームはトランザクションで処理（失敗時はそのチームのみロールバック）
+        // - ヘッダー有無を自動判定
         // -------------------------------
+
+        // CSV全体を読み込んで文字コード変換・BOM除去
+        fclose($csv);
+        $raw = file_get_contents($_FILES['csv_file']['tmp_name']);
+        if ($raw === false) throw new Exception("CSV読み取り失敗");
+
+        // 文字コード変換（SJIS-win 等を想定）と BOM 除去
+        $contents = mb_convert_encoding($raw, 'UTF-8', 'SJIS-win, SJIS, EUC-JP, UTF-8');
+        $contents = preg_replace('/^\xEF\xBB\xBF/', '', $contents);
+
+        // メモリストリームに書き戻して fgetcsv で安全に読む
+        $mem = fopen('php://memory', 'r+');
+        fwrite($mem, $contents);
+        rewind($mem);
+
+        // 先頭行を読み取って「ヘッダっぽいか」を判定する
+        $firstRow = fgetcsv($mem);
+        if ($firstRow === false) throw new Exception("CSVが空です");
+
+        // 判定ルール（簡易）
+        // - 明示的に no_header パラメータがある場合はヘッダ無し扱い
+        // - 先頭行のいずれかのセルに「チーム」「略称」「選手」「name」「abbreviation」等の語が含まれる場合はヘッダとみなす
+        $forceNoHeader = isset($_GET['no_header']) && $_GET['no_header'] == '1';
+        $headerKeywords = ['チーム', '略称', '選手', 'name', 'team', 'abbreviation', 'furigana', 'フリガナ', 'ふりがな', '先鋒', '次鋒', '中堅', '副将', '大将'];
+        $isHeader = false;
+        if (!$forceNoHeader) {
+            foreach ($firstRow as $cell) {
+                $cell = mb_strtolower(trim((string)$cell));
+                foreach ($headerKeywords as $kw) {
+                    if ($cell === '') continue;
+                    if (mb_stripos($cell, $kw) !== false) {
+                        $isHeader = true;
+                        break 2;
+                    }
+                }
+            }
+        }
 
         // 部門内の現在の最大 player_number を一度取得してインメモリでインクリメント
         $stmt = $pdo->prepare("
@@ -235,11 +274,36 @@ try {
         $stmtInsertPlayer = $pdo->prepare("INSERT INTO players (name, furigana, player_number, team_id, substitute_flg) VALUES (:name, :furigana, :pnum, :team_id, 0)");
         $stmtInsertOrder = $pdo->prepare("INSERT INTO orders (team_id, player_id, order_detail) VALUES (:team_id, :player_id, :od)");
 
-        while (($row = fgetcsv($csv)) !== false) {
-            if (count($row) < 4) continue;
-            $team_name = convert_encoding(trim($row[0]));
+        // データ行を収集
+        $rowsToProcess = [];
+        if ($isHeader) {
+            // 先頭行はヘッダなのでスキップ
+        } else {
+            // 先頭行をデータとして処理
+            $rowsToProcess[] = $firstRow;
+        }
+
+        // 残りの行を読み込み
+        while (($row = fgetcsv($mem)) !== false) {
+            $rowsToProcess[] = $row;
+        }
+
+        // 各行を処理
+        $lineNo = $isHeader ? 1 : 0; // ヘッダがある場合は1から、ない場合は0からカウント
+        foreach ($rowsToProcess as $row) {
+            $lineNo++;
+            
+            if (count($row) < 4) {
+                if (count($row) > 0 && trim($row[0]) !== '') {
+                    $summary['errors'][] = "行{$lineNo}: 列不足（最低4列必要）";
+                }
+                continue;
+            }
+            
+            $team_name = trim($row[0]);
             if ($team_name === '') continue;
-            $abbreviation = convert_encoding(trim($row[1]));
+            
+            $abbreviation = trim($row[1]);
 
             // トランザクション開始（チーム単位）
             $pdo->beginTransaction();
@@ -256,12 +320,11 @@ try {
                 $summary['teams_created']++;
 
                 // 選手登録（先鋒〜補員） - CSVは2列目以降が選手名・フリガナのペア
-                $order_detail = 1;
                 // --- チーム内の選手配列を作る（CSVの2列目以降が name, furigana のペア） ---
                 $playersForTeam = [];
                 for ($i = 2; $i < count($row); $i += 2) {
-                    $player_name = convert_encoding(trim($row[$i] ?? ''));
-                    $furigana = convert_encoding(trim($row[$i + 1] ?? ''));
+                    $player_name = trim($row[$i] ?? '');
+                    $furigana = trim($row[$i + 1] ?? '');
                     if ($player_name === '') continue;
                     $playersForTeam[] = ['name' => $player_name, 'furigana' => $furigana];
                 }
@@ -270,8 +333,6 @@ try {
 
                 // 人数に応じた order_detail の割当テーブル
                 $positionMap = [
-                    1 => [3],
-                    2 => [1, 5],
                     3 => [1, 3, 5],
                     4 => [1, 2, 4, 5],
                     5 => [1, 2, 3, 4, 5]
@@ -318,13 +379,13 @@ try {
                 $pdo->commit();
             } catch (Exception $e) {
                 $pdo->rollBack();
-                $summary['errors'][] = "チーム登録失敗: {$team_name} - " . $e->getMessage();
+                $summary['errors'][] = "行{$lineNo}: チーム登録失敗: {$team_name} - " . $e->getMessage();
                 // 続行（次の行へ）
             }
         }
-    }
 
-    fclose($csv);
+        fclose($mem);
+    }
 
     // 完了メッセージ（簡易）
     $msg = "CSVの登録が完了しました。\n";
@@ -340,7 +401,8 @@ try {
     exit;
 } catch (Exception $e) {
     // 想定外のエラー
-    fclose($csv);
+    if (isset($csv) && is_resource($csv)) fclose($csv);
+    if (isset($mem) && is_resource($mem)) fclose($mem);
     $err = "処理中にエラーが発生しました: " . $e->getMessage();
     echo "<script>alert(" . json_encode($err) . "); history.back();</script>";
     exit;
