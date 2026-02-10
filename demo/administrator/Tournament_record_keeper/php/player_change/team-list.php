@@ -43,8 +43,8 @@ $teams = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <body>
 
     <div class="breadcrumb">
-        <a href="../tournament-detail.php?id=<?= $tournament_id ?>" class="breadcrumb-link">メニュー></a>
-        <a href="player-category-select.php?id=<?= $tournament_id ?>" class="breadcrumb-link">選手変更></a>
+        <a href="../tournament_editor_menu.php?id=<?= htmlspecialchars($tournament_id, ENT_QUOTES, 'UTF-8') ?>" class="breadcrumb-link">メニュー ></a>
+        <a href="category-select.php?id=<?= $tournament_id ?>" class="breadcrumb-link">選手変更></a>
         <a href="#" class="breadcrumb-link"><?= htmlspecialchars($department['name']) ?> ></a>
     </div>
     
