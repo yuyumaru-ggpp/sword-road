@@ -623,7 +623,7 @@ body {
                 </div>
 
                 <div class="action-buttons">
-                    <button type="button" class="action-button back-button" onclick="history.back()">戻る</button>
+                    <button type="button" class="action-button back-button" onclick="location.href='match_input.php'">戻る</button>
                     <button type="submit" class="action-button confirm-button" id="confirmButton">決定</button>
                 </div>
             </div>
