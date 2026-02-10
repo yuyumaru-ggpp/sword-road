@@ -7,7 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // DB接続
-require_once '../../conect/db_connect.php';
+require_once '../../connect/db_connect.php';
 
 
 /* ===============================

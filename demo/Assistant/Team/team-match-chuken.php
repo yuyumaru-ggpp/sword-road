@@ -136,7 +136,7 @@ body {
     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     padding: 12px 40px;
     text-align: center;
-    z-index: 100;
+    z-index: 200;
     border-radius: 0 0 16px 16px;
     box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }

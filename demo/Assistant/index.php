@@ -10,7 +10,7 @@ if (!isset($_SESSION['tournament_id'])) {
 $tournament_id = $_SESSION['tournament_id'];
 
 /* ---------- DB接続 ---------- */
-require_once '../conect/db_connect.php';
+require_once '../connect/db_connect.php';
 
 /* ---------- 部門取得 ---------- */
 $sql = "

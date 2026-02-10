@@ -2,7 +2,7 @@
 session_start();
 
 //DB接続
-require_once '../conect/db_connect.php'; 
+require_once '../connect/db_connect.php'; 
 /* ---------- ログイン処理 ---------- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 

@@ -12,7 +12,7 @@ $tournament_id = $_SESSION['tournament_id'];
 $division_id = (int) $_GET['division_id'];
 
 /* ---------- DB接続 ---------- */
-require_once '../../conect/db_connect.php';
+require_once '../../connect/db_connect.php';
 
 /* ---------- 大会・部門情報取得 ---------- */
 $sql = "
