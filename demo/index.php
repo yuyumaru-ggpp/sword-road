@@ -466,8 +466,9 @@ function highlightKeyword($text, $keyword) {
             <a href="?<?= http_build_query(array_merge($baseQuery, ['p' => $nextP])) ?>" class="pagination-btn">次へ →</a>
         </div>
 
-        <footer>
-            <div class="school-name">MCL盛岡情報ビジネス＆デザイン専門学校</div>
+        <footer class="school-name">
+            <div>企画：盛岡剣道協会</div>
+            <div>制作：情報ビジネス＆デザイン専門学校</div>
         </footer>
     </div>
 
