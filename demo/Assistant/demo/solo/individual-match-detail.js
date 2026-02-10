@@ -208,25 +208,18 @@ function initEventListeners() {
 
     /* ----- モーダル・OK → POSTしてindex.phpに遷移 ----- */
     document.getElementById('modalOkBtn').addEventListener('click', async () => {
-        try {
-            const r = await fetch(location.href, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            const j = await r.json();
-            if (j.status === 'ok') {
-                window.location.href = '../../index.php';
-            } else {
-                hideModal();
-                alert('保存に失敗しました');
-            }
-        } catch (e) {
-            hideModal();
-            alert('エラー発生');
-            console.error(e);
-        }
-    });
+    // 非同期でPOST送信（結果を待たない）
+    fetch(location.href, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    }).catch(err => console.error('POST失敗:', err));
+    
+    // すぐに遷移
+    setTimeout(() => {
+        window.location.href = '../../index.php';
+    }, 100); // 100msだけPOSTの時間を与える
+});
 }
 
 /* ===== 初期化 ===== */
