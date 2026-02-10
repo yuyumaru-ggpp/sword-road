@@ -2,7 +2,6 @@
 session_start();
 require_once '../../connect/db_connect.php';
 
-
 /* セッションチェック */
 if (!isset($_SESSION['tournament_id'], $_SESSION['division_id'], $_SESSION['match_number'])) {
     header('Location: match_input.php');
