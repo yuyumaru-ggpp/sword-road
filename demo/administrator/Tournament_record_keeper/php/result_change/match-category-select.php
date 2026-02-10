@@ -46,7 +46,7 @@ $back_link = ($user_role === 'recorder') ? '../../recorder_top.php' : '../../Adm
 <body>
 
     <div class="breadcrumb">
-        <a href="../tournament-detail.php?id=<?= htmlspecialchars($tournament_id, ENT_QUOTES, 'UTF-8') ?>" class="breadcrumb-link">メニュー ></a>
+        <a href="../tournament_editor_menu.php?id=<?= htmlspecialchars($tournament_id, ENT_QUOTES, 'UTF-8') ?>" class="breadcrumb-link">メニュー ></a>
         <a href="#" class="breadcrumb-link">試合内容変更 ></a>
     </div>
 
