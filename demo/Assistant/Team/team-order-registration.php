@@ -152,29 +152,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 html, body {
     height: 100%;
-    overflow: hidden;
+    width: 100%;
 }
 
 body {
     font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Meiryo', sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-attachment: fixed;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 8px;
+    min-height: 100vh;
 }
 
 .container {
     width: 100%;
     max-width: 1100px;
-    height: calc(100vh - 16px);
-    max-height: 900px;
     background: #ffffff;
     border-radius: 20px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    margin: auto;
 }
 
 .header {
@@ -187,6 +187,7 @@ body {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    border-radius: 20px 20px 0 0;
 }
 
 .header-badge {
@@ -200,11 +201,9 @@ body {
 }
 
 .main-content {
-    flex: 1;
     padding: 20px;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
 }
 
 .match-info {
@@ -243,18 +242,12 @@ body {
 }
 
 .teams-wrapper {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    min-height: 0;
-    padding-bottom: 5px;
+    margin-bottom: 15px;
 }
 
 .teams-container {
     display: flex;
     gap: 20px;
-    margin-bottom: 15px;
 }
 
 .team-section {
@@ -306,6 +299,7 @@ body {
     background: #f7fafc;
     color: #2d3748;
     font-weight: 600;
+    word-break: break-all;
 }
 
 .buttons {
@@ -314,6 +308,7 @@ body {
     padding-top: 15px;
     border-top: 1px solid #e2e8f0;
     flex-shrink: 0;
+    margin-top: 10px;
 }
 
 .btn {
@@ -353,84 +348,6 @@ body {
     transform: translateY(0);
 }
 
-/* 小さい画面での調整 */
-@media (max-height: 750px) {
-    body {
-        padding: 4px;
-    }
-
-    .container {
-        max-height: calc(100vh - 8px);
-        border-radius: 16px;
-    }
-
-    .header {
-        padding: 8px 10px;
-    }
-
-    .header-badge {
-        font-size: 11px;
-        padding: 3px 10px;
-    }
-
-    .main-content {
-        padding: 10px;
-    }
-
-    .match-info {
-        padding: 6px 10px;
-        gap: 8px;
-        margin-bottom: 8px;
-    }
-
-    .match-info-item {
-        font-size: 11px;
-    }
-
-    .note {
-        font-size: 10px;
-        padding: 5px;
-        margin-bottom: 8px;
-        line-height: 1.4;
-    }
-
-    .team-header {
-        font-size: 13px;
-        padding: 5px;
-        margin-bottom: 6px;
-    }
-
-    .position-row {
-        margin-bottom: 5px;
-        gap: 5px;
-    }
-
-    .position-label {
-        font-size: 11px;
-        min-width: 38px;
-    }
-
-    .player-display {
-        padding: 5px 8px;
-        font-size: 11px;
-    }
-
-    .btn {
-        padding: 9px 14px;
-        font-size: 13px;
-    }
-
-    .buttons {
-        padding-top: 8px;
-        gap: 10px;
-    }
-
-    .teams-container {
-        gap: 10px;
-        margin-bottom: 0;
-    }
-}
-
 /* タブレット縦向き・横向き */
 @media (max-width: 900px) {
     .teams-container {
@@ -439,77 +356,158 @@ body {
 
     .team-section {
         width: 100%;
-        max-width: 500px;
-        margin: 0 auto;
+        max-width: none;
     }
 }
 
 /* スマートフォン縦向き */
 @media (max-width: 600px) {
     body {
-        padding: 4px;
+        padding: 8px;
     }
 
     .container {
-        max-height: calc(100vh - 8px);
         border-radius: 12px;
     }
 
     .header {
-        padding: 6px 8px;
+        padding: 10px 12px;
+        gap: 6px;
+        border-radius: 12px 12px 0 0;
+    }
+
+    .header-badge {
+        font-size: 11px;
+        padding: 5px 10px;
+    }
+
+    .main-content {
+        padding: 15px;
+    }
+
+    .match-info {
+        padding: 10px 12px;
+        gap: 8px;
+        margin-bottom: 12px;
+        flex-direction: column;
+    }
+
+    .match-info-item {
+        font-size: 12px;
+    }
+
+    .note {
+        font-size: 11px;
+        padding: 8px;
+        margin-bottom: 12px;
+        line-height: 1.4;
+    }
+
+    .teams-container {
+        gap: 15px;
+    }
+
+    .team-header {
+        font-size: 14px;
+        padding: 8px;
+        margin-bottom: 10px;
+    }
+
+    .position-row {
+        margin-bottom: 8px;
+        gap: 8px;
+    }
+
+    .position-label {
+        font-size: 12px;
+        min-width: 45px;
+    }
+
+    .player-display {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+
+    .btn {
+        padding: 12px 16px;
+        font-size: 14px;
+    }
+
+    .buttons {
+        padding-top: 12px;
+        gap: 10px;
+    }
+
+    .teams-wrapper {
+        margin-bottom: 12px;
+    }
+}
+
+/* スマートフォン横向き */
+@media (max-width: 900px) and (max-height: 500px) {
+    body {
+        padding: 6px;
+    }
+
+    .container {
+        border-radius: 10px;
+    }
+
+    .header {
+        padding: 6px 10px;
+        border-radius: 10px 10px 0 0;
     }
 
     .header-badge {
         font-size: 10px;
-        padding: 3px 8px;
+        padding: 4px 8px;
     }
 
     .main-content {
-        padding: 8px;
+        padding: 10px;
     }
 
     .match-info {
-        padding: 5px 8px;
+        padding: 6px 10px;
         gap: 6px;
-        margin-bottom: 6px;
-        font-size: 11px;
+        margin-bottom: 8px;
     }
 
     .match-info-item {
-        font-size: 10px;
+        font-size: 11px;
     }
 
     .note {
-        font-size: 9px;
-        padding: 4px 6px;
-        margin-bottom: 6px;
+        font-size: 10px;
+        padding: 6px;
+        margin-bottom: 8px;
         line-height: 1.3;
     }
 
     .teams-container {
-        gap: 8px;
-        margin-bottom: 0;
+        flex-direction: row;
+        gap: 10px;
     }
 
     .team-header {
         font-size: 12px;
-        padding: 4px;
-        margin-bottom: 5px;
+        padding: 6px;
+        margin-bottom: 8px;
     }
 
     .position-row {
-        margin-bottom: 4px;
-        gap: 4px;
+        margin-bottom: 6px;
+        gap: 6px;
     }
 
     .position-label {
-        font-size: 10px;
-        min-width: 32px;
+        font-size: 11px;
+        min-width: 35px;
     }
 
     .player-display {
-        padding: 4px 6px;
-        font-size: 10px;
+        padding: 6px 8px;
+        font-size: 11px;
         border-width: 1px;
     }
 
@@ -519,156 +517,35 @@ body {
     }
 
     .buttons {
-        padding-top: 6px;
+        padding-top: 8px;
         gap: 8px;
-    }
-
-    .team-section {
-        max-width: 100%;
     }
 
     .teams-wrapper {
-        padding-bottom: 3px;
-    }
-}
-
-/* スマートフォン横向き */
-@media (max-width: 900px) and (max-height: 500px) {
-    body {
-        padding: 3px;
-    }
-
-    .container {
-        max-width: 98%;
-        max-height: calc(100vh - 6px);
-        border-radius: 10px;
-    }
-
-    .header {
-        padding: 5px 8px;
-    }
-
-    .header-badge {
-        font-size: 9px;
-        padding: 3px 8px;
-    }
-
-    .main-content {
-        padding: 8px;
-    }
-
-    .match-info {
-        padding: 4px 8px;
-        gap: 6px;
-        margin-bottom: 6px;
-    }
-
-    .match-info-item {
-        font-size: 10px;
-    }
-
-    .note {
-        font-size: 8px;
-        padding: 4px;
-        margin-bottom: 6px;
-        line-height: 1.2;
-    }
-
-    .teams-container {
-        flex-direction: row;
-        gap: 8px;
-        margin-bottom: 6px;
-    }
-
-    .team-header {
-        font-size: 11px;
-        padding: 4px;
-        margin-bottom: 5px;
-    }
-
-    .position-row {
-        margin-bottom: 4px;
-        gap: 4px;
-    }
-
-    .position-label {
-        font-size: 10px;
-        min-width: 30px;
-    }
-
-    .player-display {
-        padding: 4px 6px;
-        font-size: 10px;
-        border-width: 1px;
-    }
-
-    .btn {
-        padding: 6px 12px;
-        font-size: 12px;
-    }
-
-    .buttons {
-        padding-top: 6px;
-        gap: 8px;
-    }
-
-    .team-section {
-        max-width: none;
+        margin-bottom: 8px;
     }
 }
 
 /* 小さいスマートフォン */
 @media (max-width: 400px) {
     .header-badge {
-        font-size: 11px;
-        padding: 5px 10px;
+        font-size: 10px;
+        padding: 4px 8px;
     }
 
     .match-info-item {
-        font-size: 12px;
+        font-size: 11px;
     }
 
     .position-label {
         min-width: 40px;
-        font-size: 12px;
+        font-size: 11px;
     }
-}
 
-/* カスタムスクロールバー */
-.main-content::-webkit-scrollbar {
-    width: 6px;
-}
-
-.main-content::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-}
-
-.main-content::-webkit-scrollbar-thumb {
-    background: #cbd5e0;
-    border-radius: 10px;
-}
-
-.main-content::-webkit-scrollbar-thumb:hover {
-    background: #a0aec0;
-}
-
-.teams-wrapper::-webkit-scrollbar {
-    width: 6px;
-}
-
-.teams-wrapper::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-}
-
-.teams-wrapper::-webkit-scrollbar-thumb {
-    background: #cbd5e0;
-    border-radius: 10px;
-}
-
-.teams-wrapper::-webkit-scrollbar-thumb:hover {
-    background: #a0aec0;
+    .player-display {
+        font-size: 11px;
+        padding: 6px 8px;
+    }
 }
 </style>
 </head>
@@ -693,7 +570,7 @@ body {
             ※選手変更は必ず本部に届けてから変更してください
         </div>
         
-        <form method="POST" style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
+        <form method="POST" style="flex: 1; display: flex; flex-direction: column;">
             <div class="teams-wrapper">
                 <div class="teams-container">
                     <!-- 赤チーム -->
@@ -879,7 +756,7 @@ body {
             </div>
             
             <div class="buttons">
-                <button type="button" class="btn btn-back" onclick="history.back()">戻る</button>
+                <button type="button" class="btn btn-back" onclick="location.href='team-forfeit.php'">戻る</button>
                 <button type="submit" class="btn btn-submit">決定</button>
             </div>
         </form>

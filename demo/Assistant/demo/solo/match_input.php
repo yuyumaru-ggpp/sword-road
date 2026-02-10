@@ -126,19 +126,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         html, body {
             height: 100%;
-            overflow: hidden;
+            overflow-x: hidden;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
+            min-height: 100vh;
             position: relative;
         }
 
         body::before {
             content: '';
-            position: absolute;
+            position: fixed;
             top: -50%;
             left: -50%;
             width: 200%;
@@ -147,6 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background-size: 50px 50px;
             animation: backgroundMove 20s linear infinite;
             pointer-events: none;
+            z-index: 0;
         }
 
         @keyframes backgroundMove {
@@ -156,10 +157,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         .container {
             width: 100%;
-            height: 100%;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            padding: min(3vh, 20px);
+            padding: 15px;
             position: relative;
             z-index: 1;
         }
@@ -167,12 +168,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .header {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
-            border-radius: min(3vw, 16px);
-            padding: min(2.5vh, 18px) min(3vw, 25px);
+            border-radius: 16px;
+            padding: 16px 20px;
             box-shadow: 
                 0 10px 40px rgba(0, 0, 0, 0.15),
                 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
-            margin-bottom: min(2vh, 15px);
+            margin-bottom: 15px;
             animation: slideDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
@@ -190,21 +191,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .header-content {
             display: flex;
             flex-wrap: wrap;
-            gap: min(2vw, 12px);
+            gap: 10px;
             align-items: center;
-            font-size: clamp(14px, 2.5vh, 20px);
+            font-size: 14px;
             font-weight: 700;
-            line-height: 1.3;
+            line-height: 1.4;
         }
 
         .badge {
             display: inline-flex;
             align-items: center;
-            padding: min(1.2vh, 8px) min(2.5vw, 18px);
+            padding: 6px 14px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            border-radius: min(2vw, 10px);
-            font-size: clamp(12px, 2vh, 16px);
+            border-radius: 8px;
+            font-size: 13px;
             font-weight: 700;
             letter-spacing: 0.05em;
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
@@ -213,24 +214,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         .header-text {
             color: #1f2937;
-            white-space: nowrap;
         }
 
         .main-content {
             background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(20px);
-            border-radius: min(4vw, 24px);
-            padding: min(5vh, 40px) min(5vw, 35px) min(4vh, 30px);
+            border-radius: 24px;
+            padding: 30px 25px;
             box-shadow: 
                 0 20px 60px rgba(0, 0, 0, 0.3),
                 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            flex: 1;
-            min-height: 0;
             animation: fadeIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+            margin-bottom: 15px;
         }
 
         @keyframes fadeIn {
@@ -247,18 +242,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         form {
             width: 100%;
             max-width: 500px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            margin: 0 auto;
         }
 
         h2 {
-            font-size: clamp(20px, 4vh, 32px);
+            font-size: 22px;
             font-weight: 800;
-            margin-bottom: min(5vh, 40px);
+            margin-bottom: 30px;
             text-align: center;
-            line-height: 1.3;
+            line-height: 1.4;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -268,13 +260,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         .input-wrapper {
             width: 100%;
-            max-width: 500px;
-            margin-bottom: min(4vh, 30px);
-            position: relative;
+            margin-bottom: 25px;
         }
 
         .input-label {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             margin-bottom: 10px;
             text-align: center;
@@ -283,12 +273,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         input[type="text"], select {
             width: 100%;
-            padding: min(2.5vh, 18px) min(4vw, 28px);
-            font-size: clamp(18px, 3.5vh, 26px);
+            padding: 16px 20px;
+            font-size: 18px;
             font-weight: 600;
             text-align: center;
             border: 3px solid transparent;
-            border-radius: min(3vw, 16px);
+            border-radius: 14px;
             outline: none;
             background: linear-gradient(white, white) padding-box,
                         linear-gradient(135deg, #667eea, #764ba2) border-box;
@@ -301,9 +291,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         input[type="text"]:focus, select:focus {
             border-color: #666;
-        }
-
-        input[type="text"]:focus {
             box-shadow: 
                 0 15px 40px rgba(102, 126, 234, 0.3),
                 0 0 0 1px rgba(255, 255, 255, 0.9) inset;
@@ -330,25 +317,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         .button-group {
             display: flex;
-            gap: min(3vw, 20px);
+            gap: 15px;
             justify-content: center;
             width: 100%;
+            margin-top: 30px;
         }
 
         button {
             flex: 1;
-            padding: min(2vh, 14px) min(4vw, 30px);
-            font-size: clamp(16px, 2.5vh, 20px);
+            padding: 14px 25px;
+            font-size: 16px;
             font-weight: 700;
             border: none;
-            border-radius: min(2.5vw, 14px);
+            border-radius: 12px;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             position: relative;
             overflow: hidden;
             letter-spacing: 0.05em;
-            white-space: nowrap;
         }
 
         button::before {
@@ -364,7 +351,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             transition: width 0.6s, height 0.6s;
         }
 
-        button:hover::before {
+        button:active::before {
             width: 300px;
             height: 300px;
         }
@@ -379,11 +366,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border: 2px solid rgba(102, 126, 234, 0.3);
         }
 
-        button[value="back"]:hover {
+        button[value="back"]:active {
             background: #fff;
             border-color: #667eea;
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
-            transform: translateY(-2px);
         }
 
         button[value="submit"] {
@@ -391,18 +376,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: #fff;
         }
 
-        button[value="submit"]:hover {
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-            transform: translateY(-2px);
-        }
-
         .error {
             color: #ef4444;
             background: rgba(239, 68, 68, 0.1);
-            padding: min(1.5vh, 10px) min(2.5vw, 16px);
-            border-radius: min(2vw, 10px);
-            margin-top: min(1.5vh, 10px);
-            font-size: clamp(12px, 2vh, 14px);
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 14px;
             font-weight: 600;
             text-align: center;
             border: 2px solid rgba(239, 68, 68, 0.3);
@@ -415,88 +395,106 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             75% { transform: translateX(10px); }
         }
 
-        /* 縦長画面（スマホ縦向き） */
-        @media (max-height: 700px) {
+        /* タブレット以上 */
+        @media (min-width: 768px) {
             .container {
-                padding: 2vh 2vw;
+                padding: 20px;
+                justify-content: center;
             }
 
             .header {
-                padding: 1.5vh 3vw;
-                margin-bottom: 1.5vh;
+                max-width: 600px;
+                margin-left: auto;
+                margin-right: auto;
             }
 
             .main-content {
-                padding: 3vh 4vw 2.5vh;
+                max-width: 600px;
+                margin-left: auto;
+                margin-right: auto;
+                padding: 40px 35px;
             }
 
             h2 {
-                font-size: clamp(18px, 3.5vh, 26px);
-                margin-bottom: 3vh;
+                font-size: 26px;
+                margin-bottom: 35px;
             }
 
-            .input-wrapper {
-                margin-bottom: 2.5vh;
+            .input-label {
+                font-size: 17px;
             }
 
-            input[type="text"] {
-                padding: 2vh 3vw;
-                font-size: clamp(16px, 3vh, 22px);
+            input[type="text"], select {
+                font-size: 20px;
+                padding: 18px 24px;
             }
 
             button {
-                padding: 1.5vh 3vw;
-                font-size: clamp(14px, 2.2vh, 18px);
-            }
-        }
-
-        /* 極端に縦長の画面 */
-        @media (max-height: 600px) {
-            h2 {
-                font-size: clamp(16px, 3vh, 22px);
-                margin-bottom: 2vh;
+                font-size: 18px;
+                padding: 16px 30px;
             }
 
-            .input-wrapper {
-                margin-bottom: 2vh;
+            button:hover::before {
+                width: 300px;
+                height: 300px;
             }
 
-            .error {
-                padding: 1vh 2vw;
-                margin-top: 1vh;
-                font-size: clamp(11px, 1.8vh, 13px);
-            }
-        }
-
-        /* 横長画面（タブレット横向きなど） */
-        @media (min-aspect-ratio: 4/3) and (max-height: 800px) {
-            .container {
-                max-width: 900px;
-                margin: 0 auto;
+            button[value="back"]:hover {
+                background: #fff;
+                border-color: #667eea;
+                box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+                transform: translateY(-2px);
             }
 
-            .header-content {
-                font-size: clamp(14px, 2.2vh, 18px);
-            }
-
-            h2 {
-                font-size: clamp(20px, 3.5vh, 28px);
+            button[value="submit"]:hover {
+                box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+                transform: translateY(-2px);
             }
         }
 
         /* 小型スマホ */
         @media (max-width: 360px) {
+            .container {
+                padding: 12px;
+            }
+
+            .header {
+                padding: 12px 16px;
+                border-radius: 12px;
+            }
+
             .header-content {
                 gap: 8px;
+                font-size: 13px;
             }
 
             .badge {
-                font-size: clamp(11px, 1.8vh, 14px);
-                padding: 6px 12px;
+                font-size: 12px;
+                padding: 5px 12px;
             }
 
-            .header-text {
-                font-size: clamp(12px, 2.2vh, 16px);
+            .main-content {
+                padding: 25px 20px;
+                border-radius: 20px;
+            }
+
+            h2 {
+                font-size: 20px;
+                margin-bottom: 25px;
+            }
+
+            .input-label {
+                font-size: 15px;
+            }
+
+            input[type="text"], select {
+                font-size: 16px;
+                padding: 14px 18px;
+            }
+
+            button {
+                font-size: 15px;
+                padding: 12px 20px;
             }
 
             .button-group {
@@ -518,10 +516,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <div class="main-content">
-        <h2>試合情報を入力してください</h2>
-
         <form method="POST">
-            <h2>試合番号を入力してください</h2>
+            <h2>試合情報を入力してください</h2>
 
             <div class="input-wrapper">
                 <div class="input-label">試合場</div>
