@@ -66,15 +66,14 @@ $error = '';
 $show_completion = false;
 $forfeit_winner_name = '';
 
-/* ===============================
-   リセット処理（続けて入力する）
-=============================== */
 if (isset($_GET['reset']) && $_GET['reset'] === '1') {
     // 完了画面フラグをクリア
     unset($_SESSION['show_forfeit_completion']);
     unset($_SESSION['forfeit_winner_name']);
     unset($_SESSION['forfeit_data']);
-    header('Location: ' . $_SERVER['PHP_SELF']);
+    
+    // 明示的に通常画面へリダイレクト（GETパラメータなし）
+    header('Location: ' . strtok($_SERVER['PHP_SELF'], '?'));
     exit;
 }
 
@@ -931,7 +930,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <!-- アクションボタン -->
                 <div class="action-buttons">
-                    <button type="button" class="action-button back-button" onclick="history.back()">戻る</button>
+                    <button type="button" class="action-button back-button" onclick="goBack()">戻る</button>
                     <button type="submit" class="action-button confirm-button">決定</button>
                 </div>
             </form>
@@ -942,6 +941,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <script>
 <?php if (!$show_completion): ?>
+// 戻るボタンの処理
+function goBack() {
+    location.href = 'match_input.php';
+}
+
 const upperBtn = document.getElementById('upperForfeit');
 const lowerBtn = document.getElementById('lowerForfeit');
 const forfeitInput = document.getElementById('forfeitInput');
