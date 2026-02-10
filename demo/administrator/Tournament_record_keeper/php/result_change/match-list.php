@@ -1,18 +1,9 @@
 <?php
 session_start();
+require_once '../../../../connect/db_connect.php';
 
-// db_connect.php 読み込み（このファイルから3階層上）
-$dbPath = dirname(__DIR__, 3) . '/db_connect.php';
-if (!file_exists($dbPath)) {
-    header('Content-Type: text/plain; charset=utf-8', true, 500);
-    echo "db_connect.php が見つかりません: " . $dbPath;
-    exit;
-}
-require_once $dbPath;
-
-// ログインチェック
-if (!isset($_SESSION['admin_user'])) {
-    header("Location: ../../login.php");
+if (!isset($_SESSION['tournament_editor'])) {
+    header('Location: ../../login.php');
     exit;
 }
 
@@ -86,7 +77,7 @@ $matches = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <body>
 
 <div class="breadcrumb">
-    <a href="../tournament-detail.php?id=<?= $tournament_id ?>" class="breadcrumb-link">メニュー ></a>
+    <a href="../tournament_editor_menu.php?id=<?= htmlspecialchars($tournament_id, ENT_QUOTES, 'UTF-8') ?>" class="breadcrumb-link">メニュー ></a>
     <a href="match-category-select.php?id=<?= $tournament_id ?>" class="breadcrumb-link">試合内容変更 ></a>
 </div>
 

@@ -6,21 +6,21 @@ require_once 'team_db.php';
 =============================== */
 if (
     !isset(
-        $_SESSION['tournament_id'],
-        $_SESSION['division_id'],
-        $_SESSION['match_number'],
-        $_SESSION['team_red_id'],
-        $_SESSION['team_white_id']
-    )
+    $_SESSION['tournament_id'],
+    $_SESSION['division_id'],
+    $_SESSION['match_number'],
+    $_SESSION['team_red_id'],
+    $_SESSION['team_white_id']
+)
 ) {
     header('Location: match_input.php');
     exit;
 }
 
 $tournament_id = $_SESSION['tournament_id'];
-$division_id   = $_SESSION['division_id'];
-$match_number  = $_SESSION['match_number'];
-$team_red_id   = $_SESSION['team_red_id'];
+$division_id = $_SESSION['division_id'];
+$match_number = $_SESSION['match_number'];
+$team_red_id = $_SESSION['team_red_id'];
 $team_white_id = $_SESSION['team_white_id'];
 
 
@@ -104,37 +104,61 @@ foreach ($white_order_from_db as $order) {
     $white_initial_order[$order['order_detail']] = $order['player_id'];
 }
 
-/* ===============================
-   POST処理
-=============================== */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
-    // オーダー情報をセッションに保存
-    $_SESSION['team_red_order'] = [
-        '先鋒' => $_POST['red_senpo'] ?? null,
-        '次鋒' => $_POST['red_jiho'] ?? null,
-        '中堅' => $_POST['red_chuken'] ?? null,
-        '副将' => $_POST['red_fukusho'] ?? null,
-        '大将' => $_POST['red_taisho'] ?? null
-    ];
+    // バリデーション: 全ポジションに選手が登録されているかチェック
+    $redPositions = ['red_senpo', 'red_jiho', 'red_chuken', 'red_fukusho', 'red_taisho'];
+    $whitePositions = ['white_senpo', 'white_jiho', 'white_chuken', 'white_fukusho', 'white_taisho'];
     
-    $_SESSION['team_white_order'] = [
-        '先鋒' => $_POST['white_senpo'] ?? null,
-        '次鋒' => $_POST['white_jiho'] ?? null,
-        '中堅' => $_POST['white_chuken'] ?? null,
-        '副将' => $_POST['white_fukusho'] ?? null,
-        '大将' => $_POST['white_taisho'] ?? null
-    ];
+    $errors = [];
     
-    // チーム名をセッションに保存
-    $_SESSION['team_red_name'] = $team_red_name;
-    $_SESSION['team_white_name'] = $team_white_name;
+    foreach ($redPositions as $pos) {
+        if (empty($_POST[$pos])) {
+            $errors[] = "赤チームの" . str_replace(['red_', 'senpo', 'jiho', 'chuken', 'fukusho', 'taisho'], ['', '先鋒', '次鋒', '中堅', '副将', '大将'], $pos) . "が未登録です";
+        }
+    }
     
-    // match_resultsを初期化（重要！）
-    $_SESSION['match_results'] = [];
+    foreach ($whitePositions as $pos) {
+        if (empty($_POST[$pos])) {
+            $errors[] = "白チームの" . str_replace(['white_', 'senpo', 'jiho', 'chuken', 'fukusho', 'taisho'], ['', '先鋒', '次鋒', '中堅', '副将', '大将'], $pos) . "が未登録です";
+        }
+    }
     
-    header('Location: team-match-senpo.php');
-    exit;
+    if (!empty($errors)) {
+        // エラーメッセージを表示
+        echo '<div style="color: red; padding: 20px; background: #ffe0e0; margin: 20px; border-radius: 8px;">';
+        foreach ($errors as $error) {
+            echo '<p>' . htmlspecialchars($error) . '</p>';
+        }
+        echo '</div>';
+    } else {
+        // オーダー情報をセッションに保存（上記の修正版）
+        $_SESSION['team_red_order'] = [
+            '先鋒' => !empty($_POST['red_senpo']) ? (int)$_POST['red_senpo'] : null,
+            '次鋒' => !empty($_POST['red_jiho']) ? (int)$_POST['red_jiho'] : null,
+            '中堅' => !empty($_POST['red_chuken']) ? (int)$_POST['red_chuken'] : null,
+            '副将' => !empty($_POST['red_fukusho']) ? (int)$_POST['red_fukusho'] : null,
+            '大将' => !empty($_POST['red_taisho']) ? (int)$_POST['red_taisho'] : null
+        ];
+        
+        $_SESSION['team_white_order'] = [
+            '先鋒' => !empty($_POST['white_senpo']) ? (int)$_POST['white_senpo'] : null,
+            '次鋒' => !empty($_POST['white_jiho']) ? (int)$_POST['white_jiho'] : null,
+            '中堅' => !empty($_POST['white_chuken']) ? (int)$_POST['white_chuken'] : null,
+            '副将' => !empty($_POST['white_fukusho']) ? (int)$_POST['white_fukusho'] : null,
+            '大将' => !empty($_POST['white_taisho']) ? (int)$_POST['white_taisho'] : null
+        ];
+        
+        // チーム名をセッションに保存
+        $_SESSION['team_red_name'] = $team_red_name;
+        $_SESSION['team_white_name'] = $team_white_name;
+        
+        // match_resultsを初期化（重要！）
+        $_SESSION['match_results'] = [];
+        
+        header('Location: team-match-senpo.php');
+        exit;
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -591,13 +615,14 @@ body {
                                 } else {
                                     echo '（未登録）';
                                 }
-                            ?></div>
-                        </div>
-                        
-                        <div class="position-row">
-                            <div class="position-label">次鋒</div>
-                            <input type="hidden" name="red_jiho" value="<?= isset($red_initial_order[2]) ? $red_initial_order[2] : '' ?>">
-                            <div class="player-display"><?php 
+                                ?></div>
+                            </div>
+
+                            <div class="position-row">
+                                <div class="position-label">次鋒</div>
+                                <input type="hidden" name="red_jiho"
+                                    value="<?= isset($red_initial_order[2]) ? $red_initial_order[2] : '' ?>">
+                                <div class="player-display"><?php
                                 if (isset($red_initial_order[2])) {
                                     foreach ($red_players as $player) {
                                         if ($player['id'] == $red_initial_order[2]) {
@@ -608,13 +633,14 @@ body {
                                 } else {
                                     echo '（未登録）';
                                 }
-                            ?></div>
-                        </div>
-                        
-                        <div class="position-row">
-                            <div class="position-label">中堅</div>
-                            <input type="hidden" name="red_chuken" value="<?= isset($red_initial_order[3]) ? $red_initial_order[3] : '' ?>">
-                            <div class="player-display"><?php 
+                                ?></div>
+                            </div>
+
+                            <div class="position-row">
+                                <div class="position-label">中堅</div>
+                                <input type="hidden" name="red_chuken"
+                                    value="<?= isset($red_initial_order[3]) ? $red_initial_order[3] : '' ?>">
+                                <div class="player-display"><?php
                                 if (isset($red_initial_order[3])) {
                                     foreach ($red_players as $player) {
                                         if ($player['id'] == $red_initial_order[3]) {
@@ -625,13 +651,14 @@ body {
                                 } else {
                                     echo '（未登録）';
                                 }
-                            ?></div>
-                        </div>
-                        
-                        <div class="position-row">
-                            <div class="position-label">副将</div>
-                            <input type="hidden" name="red_fukusho" value="<?= isset($red_initial_order[4]) ? $red_initial_order[4] : '' ?>">
-                            <div class="player-display"><?php 
+                                ?></div>
+                            </div>
+
+                            <div class="position-row">
+                                <div class="position-label">副将</div>
+                                <input type="hidden" name="red_fukusho"
+                                    value="<?= isset($red_initial_order[4]) ? $red_initial_order[4] : '' ?>">
+                                <div class="player-display"><?php
                                 if (isset($red_initial_order[4])) {
                                     foreach ($red_players as $player) {
                                         if ($player['id'] == $red_initial_order[4]) {
@@ -642,13 +669,14 @@ body {
                                 } else {
                                     echo '（未登録）';
                                 }
-                            ?></div>
-                        </div>
-                        
-                        <div class="position-row">
-                            <div class="position-label">大将</div>
-                            <input type="hidden" name="red_taisho" value="<?= isset($red_initial_order[5]) ? $red_initial_order[5] : '' ?>">
-                            <div class="player-display"><?php 
+                                ?></div>
+                            </div>
+
+                            <div class="position-row">
+                                <div class="position-label">大将</div>
+                                <input type="hidden" name="red_taisho"
+                                    value="<?= isset($red_initial_order[5]) ? $red_initial_order[5] : '' ?>">
+                                <div class="player-display"><?php
                                 if (isset($red_initial_order[5])) {
                                     foreach ($red_players as $player) {
                                         if ($player['id'] == $red_initial_order[5]) {
@@ -659,18 +687,19 @@ body {
                                 } else {
                                     echo '（未登録）';
                                 }
-                            ?></div>
+                                ?></div>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <!-- 白チーム -->
-                    <div class="team-section">
-                        <div class="team-header white">白チーム</div>
-                        
-                        <div class="position-row">
-                            <div class="position-label">先鋒</div>
-                            <input type="hidden" name="white_senpo" value="<?= isset($white_initial_order[1]) ? $white_initial_order[1] : '' ?>">
-                            <div class="player-display"><?php 
+
+                        <!-- 白チーム -->
+                        <div class="team-section">
+                            <div class="team-header white">白チーム</div>
+
+                            <div class="position-row">
+                                <div class="position-label">先鋒</div>
+                                <input type="hidden" name="white_senpo"
+                                    value="<?= isset($white_initial_order[1]) ? $white_initial_order[1] : '' ?>">
+                                <div class="player-display"><?php
                                 if (isset($white_initial_order[1])) {
                                     foreach ($white_players as $player) {
                                         if ($player['id'] == $white_initial_order[1]) {
@@ -681,13 +710,14 @@ body {
                                 } else {
                                     echo '（未登録）';
                                 }
-                            ?></div>
-                        </div>
-                        
-                        <div class="position-row">
-                            <div class="position-label">次鋒</div>
-                            <input type="hidden" name="white_jiho" value="<?= isset($white_initial_order[2]) ? $white_initial_order[2] : '' ?>">
-                            <div class="player-display"><?php 
+                                ?></div>
+                            </div>
+
+                            <div class="position-row">
+                                <div class="position-label">次鋒</div>
+                                <input type="hidden" name="white_jiho"
+                                    value="<?= isset($white_initial_order[2]) ? $white_initial_order[2] : '' ?>">
+                                <div class="player-display"><?php
                                 if (isset($white_initial_order[2])) {
                                     foreach ($white_players as $player) {
                                         if ($player['id'] == $white_initial_order[2]) {
@@ -698,13 +728,14 @@ body {
                                 } else {
                                     echo '（未登録）';
                                 }
-                            ?></div>
-                        </div>
-                        
-                        <div class="position-row">
-                            <div class="position-label">中堅</div>
-                            <input type="hidden" name="white_chuken" value="<?= isset($white_initial_order[3]) ? $white_initial_order[3] : '' ?>">
-                            <div class="player-display"><?php 
+                                ?></div>
+                            </div>
+
+                            <div class="position-row">
+                                <div class="position-label">中堅</div>
+                                <input type="hidden" name="white_chuken"
+                                    value="<?= isset($white_initial_order[3]) ? $white_initial_order[3] : '' ?>">
+                                <div class="player-display"><?php
                                 if (isset($white_initial_order[3])) {
                                     foreach ($white_players as $player) {
                                         if ($player['id'] == $white_initial_order[3]) {
@@ -715,13 +746,14 @@ body {
                                 } else {
                                     echo '（未登録）';
                                 }
-                            ?></div>
-                        </div>
-                        
-                        <div class="position-row">
-                            <div class="position-label">副将</div>
-                            <input type="hidden" name="white_fukusho" value="<?= isset($white_initial_order[4]) ? $white_initial_order[4] : '' ?>">
-                            <div class="player-display"><?php 
+                                ?></div>
+                            </div>
+
+                            <div class="position-row">
+                                <div class="position-label">副将</div>
+                                <input type="hidden" name="white_fukusho"
+                                    value="<?= isset($white_initial_order[4]) ? $white_initial_order[4] : '' ?>">
+                                <div class="player-display"><?php
                                 if (isset($white_initial_order[4])) {
                                     foreach ($white_players as $player) {
                                         if ($player['id'] == $white_initial_order[4]) {
@@ -732,13 +764,14 @@ body {
                                 } else {
                                     echo '（未登録）';
                                 }
-                            ?></div>
-                        </div>
-                        
-                        <div class="position-row">
-                            <div class="position-label">大将</div>
-                            <input type="hidden" name="white_taisho" value="<?= isset($white_initial_order[5]) ? $white_initial_order[5] : '' ?>">
-                            <div class="player-display"><?php 
+                                ?></div>
+                            </div>
+
+                            <div class="position-row">
+                                <div class="position-label">大将</div>
+                                <input type="hidden" name="white_taisho"
+                                    value="<?= isset($white_initial_order[5]) ? $white_initial_order[5] : '' ?>">
+                                <div class="player-display"><?php
                                 if (isset($white_initial_order[5])) {
                                     foreach ($white_players as $player) {
                                         if ($player['id'] == $white_initial_order[5]) {
@@ -749,7 +782,8 @@ body {
                                 } else {
                                     echo '（未登録）';
                                 }
-                            ?></div>
+                                ?></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -761,7 +795,7 @@ body {
             </div>
         </form>
     </div>
-</div>
 
 </body>
+
 </html>

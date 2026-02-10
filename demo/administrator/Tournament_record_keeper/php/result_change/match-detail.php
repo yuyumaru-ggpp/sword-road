@@ -1,18 +1,9 @@
 <?php
 session_start();
+require_once '../../../../connect/db_connect.php';
 
-// db_connect のパスを環境に合わせて調整してください
-$dbPath = dirname(__DIR__, 3) . '/db_connect.php';
-if (!file_exists($dbPath)) {
-    header('Content-Type: text/plain; charset=utf-8', true, 500);
-    echo "db_connect.php が見つかりません: " . $dbPath;
-    exit;
-}
-require_once $dbPath;
-
-// ログインチェック（必要に応じて調整）
-if (!isset($_SESSION['admin_user'])) {
-    header("Location: ../../login.php");
+if (!isset($_SESSION['tournament_editor'])) {
+    header('Location: ../../login.php');
     exit;
 }
 
@@ -304,9 +295,9 @@ $uiData = [
                 if (upperRow) upperRow.classList.toggle('show', show);
                 if (lowerRow) lowerRow.classList.toggle('show', show);
                 if (!show) {
+                    // 延長でない場合は判定ボタンをリセット（自動判定に任せる）
                     if (upperDecisionBtn) upperDecisionBtn.classList.remove('active');
                     if (lowerDecisionBtn) lowerDecisionBtn.classList.remove('active');
-                    data.final_winner = '';
                 }
             }
 
@@ -355,8 +346,9 @@ $uiData = [
                 reflectWinnersToUI();
             }
 
-            function saveLocal() {
-                data.scores_a = Array.from(upperScoreDropdowns).map(b => b ? b.textContent.trim() : '▼');
+            // 自動判定関数：技の勝者をカウントして最終勝者を自動設定
+            function autoCalculateFinalWinner() {
+                // 技の勝者をカウント
                 const winners = ['', '', ''];
                 upperRadioItems.forEach((item, i) => {
                     const c = item.querySelector('.radio-circle');
@@ -366,13 +358,70 @@ $uiData = [
                     const c = item.querySelector('.radio-circle');
                     if (c && c.classList.contains('selected')) winners[i] = 'white';
                 });
+
+                // 勝利数をカウント
+                let redWins = 0;
+                let whiteWins = 0;
+                winners.forEach(w => {
+                    if (w === 'red') redWins++;
+                    if (w === 'white') whiteWins++;
+                });
+
+                // 判定状態をチェック
+                const dt = drawButton ? drawButton.textContent.trim() : '-';
+                const isExtension = dt === '延長';
+
+                // 最終勝者を自動判定
+                if (isExtension) {
+                    // 延長の場合は判定ボタンが押されていればそれを優先
+                    // 押されていなければ技の数で判定
+                    if (upperDecisionBtn && upperDecisionBtn.classList.contains('active')) {
+                        data.final_winner = 'red';
+                    } else if (lowerDecisionBtn && lowerDecisionBtn.classList.contains('active')) {
+                        data.final_winner = 'white';
+                    } else {
+                        // 判定ボタンが押されていない場合は技の数で判定
+                        if (redWins > whiteWins) {
+                            data.final_winner = 'red';
+                        } else if (whiteWins > redWins) {
+                            data.final_winner = 'white';
+                        } else {
+                            data.final_winner = '';
+                        }
+                    }
+                } else {
+                    // 通常の場合は技の数で自動判定
+                    if (redWins > whiteWins) {
+                        data.final_winner = 'red';
+                        if (upperDecisionBtn) upperDecisionBtn.classList.add('active');
+                        if (lowerDecisionBtn) lowerDecisionBtn.classList.remove('active');
+                    } else if (whiteWins > redWins) {
+                        data.final_winner = 'white';
+                        if (lowerDecisionBtn) lowerDecisionBtn.classList.add('active');
+                        if (upperDecisionBtn) upperDecisionBtn.classList.remove('active');
+                    } else {
+                        // 同数または0-0の場合は判定ボタンをリセット
+                        data.final_winner = '';
+                        if (upperDecisionBtn) upperDecisionBtn.classList.remove('active');
+                        if (lowerDecisionBtn) lowerDecisionBtn.classList.remove('active');
+                    }
+                }
+
+                return winners;
+            }
+
+            function saveLocal() {
+                data.scores_a = Array.from(upperScoreDropdowns).map(b => b ? b.textContent.trim() : '▼');
+                
+                // 自動判定を実行
+                const winners = autoCalculateFinalWinner();
                 data.winners = winners;
-                data.final_winner = (upperDecisionBtn && upperDecisionBtn.classList.contains('active')) ? 'red' : (lowerDecisionBtn && lowerDecisionBtn.classList.contains('active')) ? 'white' : '';
+                
                 const dt = drawButton ? drawButton.textContent.trim() : '-';
                 data.judgement = dt === '一本勝' ? '一本勝' : dt === '延長' ? '延長' : dt === '引分け' ? '引分け' : '';
             }
 
-            // 判定ボタン（排他）
+            // 判定ボタン（延長時のみ表示・手動設定可能）
             if (upperDecisionBtn && lowerDecisionBtn) {
                 upperDecisionBtn.addEventListener('click', () => {
                     if (upperDecisionBtn.classList.contains('active')) {
@@ -406,7 +455,6 @@ $uiData = [
                     const was = circle.classList.contains('selected');
                     if (was) {
                         circle.classList.remove('selected');
-                        data.winners[i] = '';
                     } else {
                         circle.classList.add('selected');
                         const lowerItem = document.querySelector(`.lower-circles .radio-item[data-index="${i}"]`);
@@ -414,9 +462,8 @@ $uiData = [
                             const lc = lowerItem.querySelector('.radio-circle');
                             if (lc) lc.classList.remove('selected');
                         }
-                        data.winners[i] = 'red';
                     }
-                    saveLocal();
+                    saveLocal(); // 自動判定を実行
                 });
             });
             lowerRadioItems.forEach((item, i) => {
@@ -426,7 +473,6 @@ $uiData = [
                     const was = circle.classList.contains('selected');
                     if (was) {
                         circle.classList.remove('selected');
-                        data.winners[i] = '';
                     } else {
                         circle.classList.add('selected');
                         const upperItem = document.querySelector(`.upper-circles .radio-item[data-index="${i}"]`);
@@ -434,9 +480,8 @@ $uiData = [
                             const uc = upperItem.querySelector('.radio-circle');
                             if (uc) uc.classList.remove('selected');
                         }
-                        data.winners[i] = 'white';
                     }
-                    saveLocal();
+                    saveLocal(); // 自動判定を実行
                 });
             });
 

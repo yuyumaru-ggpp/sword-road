@@ -25,12 +25,12 @@ if (!isset($_SESSION['admin_user'])) {
         <h1 class="title">大会運営責任者メニュー</h1>
 
         <div class="button-grid">
-            <button class="menu-button" onclick="location.href='Admin_selection.php'">
+            <button class="menu-button" onclick="location.href='detail_change/Admin_selection.php'">
                 <span class="icon">□</span>
                 <span class="button-text">大会詳細変更</span>
             </button>
 
-            <button class="menu-button" onclick="location.href='Admin_unlock.php'">
+            <button class="menu-button" onclick="location.href='lock/Admin_unlock.php'">
                 <span class="icon">🔓</span>
                 <span class="button-text">大会ロック解除</span>
             </button>
@@ -38,6 +38,11 @@ if (!isset($_SESSION['admin_user'])) {
             <button class="menu-button" onclick="location.href='csv_connection/Admin_addition_selection_tournament.php'">
                 <span class="icon">⤓</span>
                 <span class="button-text">登録・閲覧・削除</span>
+            </button>
+
+            <button class="menu-button" onclick="location.href='change_pass/admin_change_password.php'">
+                <span class="icon">🛡</span>
+                <span class="button-text">パスワード変更</span>
             </button>
         </div>
 

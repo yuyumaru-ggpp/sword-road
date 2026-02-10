@@ -1,9 +1,10 @@
 <?php
 session_start();
+require_once '../../../../connect/db_connect.php';
 
 // ログインチェック
 if (!isset($_SESSION['admin_user'])) {
-    header("Location: ../login.php");
+    header("Location: ../../login.php");
     exit;
 }
 
@@ -24,7 +25,7 @@ $tournament_password = $_POST['tournament_password'];
 <head>
     <meta charset="UTF-8">
     <title>大会登録確認</title>
-    <link rel="stylesheet" href="../css/Admin_registration_confirm.css">
+    <link rel="stylesheet" href="../../css/Admin_registration_confirm.css">
 </head>
 <body>
 

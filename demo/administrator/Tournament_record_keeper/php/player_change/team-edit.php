@@ -1,10 +1,9 @@
 <?php
 session_start();
-require_once '../../../db_connect.php'; // 環境に合わせてパスを調整してください
+require_once '../../../../connect/db_connect.php';
 
-// ログインチェック
-if (!isset($_SESSION['admin_user'])) {
-    header("Location: ../../login.php");
+if (!isset($_SESSION['tournament_editor'])) {
+    header('Location: ../../login.php');
     exit;
 }
 
@@ -47,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message = $new ? "チームを棄権にしました。" : "チームの棄権を解除しました。";
     }
 
-    // オーダー保存（orders テーブルを上書き）
+    // オーダー保存（orders テーブルを上書き） - 改良版
     if (isset($_POST['save_order'])) {
         $order = $_POST['order_slot'] ?? []; // associative: order_detail => player_id (string or empty)
         try {
@@ -55,21 +54,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // 既存のこのチームの orders を削除
             $del = $pdo->prepare("DELETE FROM orders WHERE team_id = :tid");
-            $del->execute([':tid' => (int)$team_id]);
+            $del->bindValue(':tid', (int)$team_id, PDO::PARAM_INT);
+            $del->execute();
 
-            // 挿入（player_id は文字列として保存）
+            // 挿入（player_id が空のものは挿入しない）
             $ins = $pdo->prepare("INSERT INTO orders (team_id, player_id, order_detail) VALUES (:tid, :pid, :od)");
             foreach ($order as $od => $pid) {
                 $odInt = (int)$od;
-                $pidVal = ($pid === '' ? null : (string)$pid);
-                $ins->execute([':tid' => (int)$team_id, ':pid' => $pidVal, ':od' => $odInt]);
+
+                // 空文字や未割当はスキップ
+                if ($pid === '' || $pid === null) {
+                    continue;
+                }
+
+                // player_id が数値か確認（不正な値はスキップしてログに残す）
+                if (!ctype_digit((string)$pid)) {
+                    error_log("orders insert skipped: invalid player_id for team {$team_id}, od={$odInt}, pid=" . print_r($pid, true));
+                    continue;
+                }
+
+                // player が実際に存在し、かつ team_id が一致するか確認（安全対策）
+                $chk = $pdo->prepare("SELECT id FROM players WHERE id = :pid AND team_id = :tid LIMIT 1");
+                $chk->execute([':pid' => (int)$pid, ':tid' => (int)$team_id]);
+                $found = $chk->fetch(PDO::FETCH_ASSOC);
+                if (!$found) {
+                    // 存在しない player_id はスキップしてログに残す
+                    error_log("orders insert skipped: player not found or not in team. team={$team_id}, pid={$pid}, od={$odInt}");
+                    continue;
+                }
+
+                $ins->bindValue(':tid', (int)$team_id, PDO::PARAM_INT);
+                $ins->bindValue(':pid', (int)$pid, PDO::PARAM_INT);
+                $ins->bindValue(':od', $odInt, PDO::PARAM_INT);
+                $ins->execute();
             }
 
             $pdo->commit();
             $message = "オーダーを保存しました。";
         } catch (Exception $e) {
             $pdo->rollBack();
-            $message = "オーダー保存中にエラーが発生しました。";
+            error_log("order save error: " . $e->getMessage() . " | team={$team_id} | post=" . print_r($_POST['order_slot'] ?? [], true));
+            $message = "オーダー保存中にエラーが発生しました。サーバログを確認してください。";
         }
     }
 }
@@ -125,27 +150,7 @@ foreach ($orderMap as $k => $v) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>チーム編集（オーダー）</title>
-<link rel="stylesheet" href="../../css/player_change/team-list-style.css"> <!-- 必要に応じて調整 -->
-<style>
-/* 最低限のスタイル（既存CSSと併用可） */
-.container{max-width:920px;margin:28px auto;padding:18px}
-.header{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
-.title{font-size:20px;margin:0}
-.team-name{font-size:16px;margin:0;color:#6b7280}
-.note{font-size:13px;color:#6b7280;margin:8px 0}
-.form-container{background:#fff;border:1px solid #e6e9ee;padding:16px;border-radius:10px}
-.form-row{display:flex;gap:12px;align-items:center;margin-bottom:12px}
-.position-label{min-width:56px;font-weight:700}
-.player-input{flex:1;padding:10px;border:1px solid #d1d5db;border-radius:8px}
-.small-btn{margin-left:8px;padding:8px;border-radius:8px;border:1px solid #e6e9ee;background:#fff;cursor:pointer}
-.small-btn[disabled]{opacity:0.5;cursor:not-allowed}
-.button-container{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
-.action-button{padding:10px 14px;border-radius:8px;background:#0b74de;color:#fff;border:none}
-.action-button.secondary{background:#fff;color:#111;border:1px solid #e6e9ee}
-.action-button.danger{background:#d9534f}
-.message{margin:10px 0;padding:10px;border-radius:8px}
-@media (max-width:640px){.form-row{flex-direction:column;align-items:stretch}}
-</style>
+<link rel="stylesheet" href="../../css/player_change/team-list-style.css">
 </head>
 <body>
 <div class="container">

@@ -2,7 +2,7 @@
 session_start();
 
 //DB接続
-require_once '../conect/db_connect.php'; 
+require_once '../connect/db_connect.php'; 
 /* ---------- ログイン処理 ---------- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
@@ -13,7 +13,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     SELECT
         id,
         title,
-        password
+        password,
+        is_locked
     FROM
         tournaments
     WHERE
@@ -34,12 +35,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // ▼ 平文比較(hashなら password_verify を使う)
     if ($password === $tournament['password']) {
 
-      // セッションに大会情報保存
-      $_SESSION['tournament_id'] = $tournament['id'];
-      $_SESSION['tournament_title'] = $tournament['title'];
+      // ロック確認
+      if ($tournament['is_locked'] == 1) {
+        $error = "この大会はロックされています";
+      } else {
+        // セッションに大会情報保存
+        $_SESSION['tournament_id'] = $tournament['id'];
+        $_SESSION['tournament_title'] = $tournament['title'];
 
-      header("Location: index.php");
-      exit;
+        header("Location: index.php");
+        exit;
+      }
     } else {
       $error = "IDまたはパスワードが違います";
     }
@@ -117,6 +123,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       background-color: #ccc;
       color: #333;
     }
+
+    .error-message {
+      color: #d32f2f;
+      background-color: #ffebee;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      font-size: 14px;
+      border-left: 4px solid #d32f2f;
+    }
+
+    .warning-icon {
+      font-size: 18px;
+      margin-right: 8px;
+    }
   </style>
 </head>
 
@@ -125,7 +146,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <h2>ログイン画面</h2>
 
     <?php if (!empty($error)): ?>
-      <p style="color:red;"><?php echo htmlspecialchars($error); ?></p>
+      <div class="error-message">
+        <span class="warning-icon">⚠</span><?php echo htmlspecialchars($error); ?>
+      </div>
     <?php endif; ?>
 
     <form method="POST">

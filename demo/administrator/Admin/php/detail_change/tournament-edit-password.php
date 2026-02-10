@@ -1,9 +1,10 @@
 <?php
 session_start();
-require_once '../../db_connect.php';
+require_once '../../../../connect/db_connect.php';
 
+// ログインチェック
 if (!isset($_SESSION['admin_user'])) {
-    header("Location: ../login.php");
+    header("Location: ../../login.php");
     exit;
 }
 
@@ -51,7 +52,7 @@ $tournament = $stmt->fetch(PDO::FETCH_ASSOC);
 <head>
     <meta charset="UTF-8">
     <title>パスワード変更</title>
-    <link rel="stylesheet" href="../css/Admin_registration_namechange.css">
+    <link rel="stylesheet" href="../../css/Admin_registration_namechange.css">
 </head>
 <body>
 

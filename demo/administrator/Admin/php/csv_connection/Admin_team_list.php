@@ -1,12 +1,12 @@
 <?php
 session_start();
+require_once '../../../../connect/db_connect.php';
 
+// ログインチェック
 if (!isset($_SESSION['admin_user'])) {
-  header("Location: ../../login.php");
-  exit;
+    header("Location: ../../login.php");
+    exit;
 }
-
-require_once '../../../db_connect.php';
 
 // GETパラメータ取得
 $tournament_id = $_GET['id'] ?? null;
@@ -107,7 +107,7 @@ $teams = $stmt->fetchAll();
         </div>
       </div>
     </div>
-    <button class="btn-back" onclick="location.href='./Admin_addition_selection_tournament.php'">戻る</button>
+    <button class="btn-back" onclick="location.href='./Admin_addition_selection_department.php?id=<?= urlencode($tournament_id) ?>'">戻る</button>
   </div>
 
 </body>
