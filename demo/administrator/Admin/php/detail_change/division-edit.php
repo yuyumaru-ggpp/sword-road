@@ -1,10 +1,10 @@
 <?php
 session_start();
-require_once '../../db_connect.php';
+require_once '../../../../connect/db_connect.php';
 
-// 管理者チェック
+// ログインチェック
 if (!isset($_SESSION['admin_user'])) {
-    header("Location: ../login.php");
+    header("Location: ../../login.php");
     exit;
 }
 
@@ -125,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
   <meta charset="utf-8">
   <title>部門編集</title>
-  <link rel="stylesheet" href="../css/Admin_registration_namechange.css">
+  <link rel="stylesheet" href="../../css/Admin_registration_namechange.css">
   <style>
     .container { max-width:720px; margin:3rem auto; padding:1rem; }
     .breadcrumb { margin-bottom:1rem; }

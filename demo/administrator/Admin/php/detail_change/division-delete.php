@@ -1,10 +1,10 @@
 <?php
 session_start();
-require_once '../../db_connect.php';
+require_once '../../../../connect/db_connect.php';
 
 // ログインチェック
 if (!isset($_SESSION['admin_user'])) {
-    header("Location: ../login.php");
+    header("Location: ../../login.php");
     exit;
 }
 
@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
   <meta charset="utf-8">
   <title>部門削除確認</title>
-  <link rel="stylesheet" href="../css/Admin_registration_namechange.css">
+  <link rel="stylesheet" href="../../css/Admin_registration_namechange.css">
   <style>
     .container { max-width:640px; margin:3rem auto; padding:1rem; }
     .card { background:#fff; padding:1.5rem; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.04); text-align:center; }

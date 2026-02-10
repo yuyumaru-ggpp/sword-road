@@ -1,13 +1,12 @@
 <?php
 session_start();
-require_once '../../db_connect.php';
+require_once '../../../../connect/db_connect.php';
 
 // ログインチェック
 if (!isset($_SESSION['admin_user'])) {
-  header("Location: ../login.php");
-  exit;
+    header("Location: ../../login.php");
+    exit;
 }
-
 // 大会ID取得
 $tournament_id = filter_input(INPUT_GET, 'tournament_id', FILTER_VALIDATE_INT);
 if (!$tournament_id) {
@@ -44,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $inserted = 0;
     $pdo->beginTransaction();
     try {
-      $sql = "INSERT INTO departments (tournament_id, name, distinction, created_at, updated_at)
+      $sql = "INSERT INTO departments (tournament_id, name, distinction, created_at, update_at)
         VALUES (:tournament_id, :name, :distinction, NOW(), NOW())";
       $stmt = $pdo->prepare($sql);
 
@@ -108,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>部門登録</title>
-  <link rel="stylesheet" href="../css/Admin_registration_selection_create.css">
+  <link rel="stylesheet" href="../../css/Admin_registration_selection_create.css">
 </head>
 
 <body>
