@@ -526,8 +526,8 @@ body {
                     <div class="step-visual">
                         <div style="text-align:center; padding:1rem;">
                             <div style="display:flex; gap:0.8rem; justify-content:center;">
-                                <button class="demo-button">戻る</button>
-                                <button class="demo-button primary">決定</button>
+                                <button style="border:2px solid #e5e7eb; border-radius:12px; padding:0.7rem 3rem; background:white; color:#667eea; font-size:1rem; font-weight:700; cursor:pointer;">戻る</button>
+                                <button style="border:none; border-radius:12px; padding:0.7rem 3rem; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; font-size:1rem; font-weight:700; cursor:pointer;">決定</button>
                             </div>
                         </div>
                     </div>
@@ -594,12 +594,12 @@ body {
                         <div class="demo-ui">
                             <div class="demo-player-section">
                                 <div style="font-size:0.85rem; margin-bottom:0.3rem;">赤側選手</div>
-                                <button class="demo-button selected">不戦勝</button>
+                                <button style="border:2px solid rgba(102,126,234,0.4); border-radius:10px; padding:0.5rem 2rem; background:white; color:#667eea; font-size:0.9rem; font-weight:700; cursor:pointer;">不戦勝</button>
                             </div>
                             <div style="margin:0.3rem 0; font-size:0.75rem; color:#666;">← 勝った方を選択</div>
                             <div class="demo-player-section">
                                 <div style="font-size:0.85rem; margin-bottom:0.3rem;">白側選手</div>
-                                <button class="demo-button">不戦勝</button>
+                                <button style="border:none; border-radius:10px; padding:0.5rem 2rem; background:linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color:white; font-size:0.9rem; font-weight:700; cursor:pointer;">不戦勝</button>
                             </div>
                         </div>
                     </div>
@@ -662,7 +662,7 @@ body {
                     </div>
                     <div class="step-visual">
                         <div class="demo-ui">
-                            <div class="demo-button">-</div>
+                            <button style="border:2px solid #667eea; border-radius:10px; padding:0.5rem 1.5rem; background:white; color:#667eea; font-size:0.9rem; font-weight:700; cursor:pointer;">-</button>
                             <div style="font-size:0.7rem; color:#999; margin-top:0.5rem; text-align:center;">
                                 二本勝 / 一本勝 / 延長戦<br>判定 / 引き分け
                             </div>
@@ -678,10 +678,10 @@ body {
                     </div>
                     <div class="step-visual">
                         <div style="text-align:center; padding:1rem;">
-                            <button class="demo-button" style="margin-bottom:0.8rem; color:#ef4444; border-color:#ef4444;">入力内容をリセット</button>
+                            <button style="margin-bottom:0.8rem; color:#ef4444; border:2px solid rgba(239,68,68,0.3); background:white; border-radius:50px; padding:0.4rem 1.2rem; font-weight:700; cursor:pointer;">入力内容をリセット</button>
                             <div style="display:flex; gap:0.8rem; justify-content:center;">
-                                <button class="demo-button">戻る</button>
-                                <button class="demo-button primary">決定</button>
+                                <button style="border:2px solid #e5e7eb; border-radius:12px; padding:0.7rem 3rem; background:white; color:#667eea; font-size:1rem; font-weight:700; cursor:pointer;">戻る</button>
+                                <button style="border:none; border-radius:12px; padding:0.7rem 3rem; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; font-size:1rem; font-weight:700; cursor:pointer;">決定</button>
                             </div>
                         </div>
                     </div>
@@ -698,8 +698,8 @@ body {
                             <div style="font-size:2rem; margin-bottom:0.5rem;">🏁</div>
                             <div style="font-weight:bold; font-size:0.9rem; margin-bottom:0.3rem;">練習を終えますか？</div>
                             <div style="display:flex; gap:0.6rem; margin-top:0.8rem;">
-                                <button class="demo-button">キャンセル</button>
-                                <button class="demo-button primary">OK</button>
+                                <button style="border:2px solid #e5e7eb; border-radius:12px; padding:0.5rem 2rem; background:white; color:#667eea; font-size:0.9rem; font-weight:700; cursor:pointer;">キャンセル</button>
+                                <button style="border:none; border-radius:12px; padding:0.5rem 2rem; background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; font-size:0.9rem; font-weight:700; cursor:pointer;">OK</button>
                             </div>
                         </div>
                     </div>
