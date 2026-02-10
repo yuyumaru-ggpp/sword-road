@@ -113,7 +113,7 @@ body {
 
 .position-header {
     position: absolute;
-    top: 0;
+    top: max(0px, env(safe-area-inset-top));
     left: 50%;
     transform: translateX(-50%);
     font-size: 24px;
