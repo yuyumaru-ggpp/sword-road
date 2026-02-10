@@ -363,7 +363,7 @@ body {
 .draw-container-wrapper {
     position: absolute;
     top: 50%;
-    right: -100px;
+    right: 65px;
     transform: translateY(-50%);
     background: white;
     padding: 10px 0;
@@ -564,7 +564,7 @@ body {
     }
 
     .draw-container-wrapper {
-        right: -90px;
+        right: 58px;
     }
 
     .draw-button {
@@ -680,7 +680,7 @@ body {
     }
 
     .draw-container-wrapper {
-        right: -80px;
+        right: 50px;
     }
 
     .draw-button {
@@ -807,7 +807,7 @@ body {
     }
 
     .draw-container-wrapper {
-        right: -70px;
+        right: 43px;
     }
 
     .draw-button {
