@@ -122,7 +122,7 @@ body {
     background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
     padding: 12px 40px;
     text-align: center;
-    z-index: 100;
+    z-index: 200;
     border-radius: 0 0 16px 16px;
     box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
