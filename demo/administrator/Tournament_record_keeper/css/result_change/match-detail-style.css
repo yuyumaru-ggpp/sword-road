@@ -1,304 +1,324 @@
-/* ------------------------------
-   RESET
------------------------------- */
+/* ===================================
+   基本設定
+=================================== */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 0.5rem;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+html {
+    height: 100%;
 }
 
-/* ------------------------------
-   CONTAINER
------------------------------- */
-.container {
-    max-width: 1200px;
-    width: 100%;
-    height: auto;
-    max-height: none;
-    background: white;
-    padding: clamp(1.5rem, 2.5vh, 2.5rem) clamp(1rem, 2vh, 2rem);
-    border-radius: 16px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+body {
+    min-height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-attachment: fixed;
+    display: flex;
     position: relative;
+    padding: 0;
+    margin: 0;
+}
+
+/* ===================================
+   コンテナ
+=================================== */
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    padding: min(2vh, 18px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
+    min-height: 100vh;
 }
 
-/* ------------------------------
-   HEADER
------------------------------- */
+/* ===================================
+   ヘッダー
+=================================== */
 .header {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: clamp(0.5rem, 1vh, 1rem);
-    margin-bottom: clamp(1.5rem, 3vh, 2rem);
-    padding: clamp(0.8rem, 1.5vh, 1.2rem);
-    font-size: clamp(1rem, 2.5vh, 1.3rem);
-    font-weight: bold;
+    gap: min(1.5vw, 12px);
+    margin-bottom: min(2vh, 16px);
+    padding: min(1.8vh, 14px) min(2.5vw, 20px);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    border-radius: min(2vw, 14px);
+    font-size: clamp(13px, 2vh, 17px);
+    font-weight: 700;
+    animation: slideDown 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    flex-shrink: 0;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.header span:first-child {
+    display: inline-flex;
+    align-items: center;
+    padding: min(1vh, 7px) min(2vw, 15px);
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    border-radius: min(1.5vw, 10px);
+    font-size: clamp(11px, 1.8vh, 14px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    white-space: nowrap;
 }
 
-/* ------------------------------
-   CONTENT WRAPPER
------------------------------- */
+.header span:not(:first-child) {
+    color: #1f2937;
+}
+
+/* ===================================
+   コンテンツラッパー
+=================================== */
 .content-wrapper {
     flex: 1;
-    overflow-y: auto;
-    max-height: calc(100vh - 200px);
-    padding-bottom: 1rem;
     display: flex;
     flex-direction: column;
-    justify-content: space-evenly;
-    min-height: 0;
+    justify-content: space-between;
+    animation: fadeIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
 }
 
-/* スクロールバーのスタイリング */
-.content-wrapper::-webkit-scrollbar {
-    width: 8px;
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
-.content-wrapper::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-}
-
-.content-wrapper::-webkit-scrollbar-thumb {
-    background: #667eea;
-    border-radius: 10px;
-}
-
-.content-wrapper::-webkit-scrollbar-thumb:hover {
-    background: #764ba2;
-}
-
-/* ------------------------------
-   MATCH SECTIONS
------------------------------- */
+/* ===================================
+   試合セクション
+=================================== */
 .match-section {
     display: flex;
     flex-direction: column;
-    gap: clamp(0.4rem, 0.8vh, 0.8rem);
+    gap: min(0.8vh, 6px);
     flex-shrink: 0;
-    padding: clamp(1rem, 2vh, 1.5rem);
-    background: #f8fafc;
-    border-radius: 12px;
-    border: 2px solid #e2e8f0;
-    transition: all 0.3s ease;
-}
-
-.match-section:hover {
-    border-color: #667eea;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.15);
-}
-
-.upper-section {
-    margin-bottom: clamp(2rem, 3.5vh, 3.5rem);
-    border-color: #fee2e2;
-    background: linear-gradient(135deg, #fff5f5 0%, #fef2f2 100%);
-}
-
-.upper-section:hover {
-    border-color: #ef4444;
-}
-
-.lower-section {
-    border-color: #dbeafe;
-    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-}
-
-.lower-section:hover {
-    border-color: #3b82f6;
 }
 
 .row {
     display: flex;
     align-items: center;
-    font-size: clamp(0.95rem, 2vh, 1.25rem);
-    gap: clamp(0.5rem, 1vw, 1rem);
+    font-size: clamp(14px, 2vh, 18px);
+    gap: min(2vw, 16px);
     flex-wrap: wrap;
-    padding: clamp(0.3rem, 0.8vh, 0.5rem) 0;
+    margin-bottom: min(0.8vh, 6px);
 }
 
 .label {
-    min-width: clamp(80px, 12vw, 110px);
+    min-width: clamp(60px, 9vw, 85px);
     font-weight: 600;
-    color: #475569;
+    color: #94a3b8;
+    font-size: clamp(12px, 1.6vh, 15px);
 }
 
 .value {
-    min-width: clamp(120px, 18vw, 180px);
+    flex: 0 1 auto;
+    min-width: clamp(120px, 18vw, 200px);
+    max-width: fit-content;
+    font-weight: 700;
+    font-size: clamp(18px, 2.8vh, 24px);
     word-break: break-all;
-    font-weight: 500;
-    color: #1e293b;
+    padding: min(0.8vh, 6px) min(2vw, 14px);
+    border-radius: min(1vw, 10px);
+    transition: all 0.3s ease;
 }
 
-/* ------------------------------
-   SCORE DISPLAY
------------------------------- */
+/* 上段の選手情報 - 赤文字に薄い赤背景 */
+.upper-section .value {
+    color: #dc2626;
+    background: rgba(254, 226, 226, 0.8);
+}
+
+/* 下段の選手情報 - 白文字に濃い背景 */
+.lower-section .value {
+    color: #ffffff;
+    background: rgba(91, 33, 182, 0.85);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* ===================================
+   スコア表示
+=================================== */
 .score-display {
     display: flex;
     justify-content: center;
     align-items: center;
     width: 100%;
-    margin: clamp(1rem, 2vh, 1.5rem) 0;
-    padding: clamp(0.8rem, 1.5vh, 1.2rem);
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    padding: min(1.5vh, 12px) 0;
+    margin: min(1vh, 8px) 0;
 }
 
 .score-group {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: clamp(0.4rem, 1vh, 0.8rem);
+    gap: min(1vh, 8px);
 }
 
 .score-numbers {
     display: flex;
-    gap: clamp(1.5rem, 4vw, 3rem);
-    font-size: clamp(1.1rem, 2.8vh, 1.6rem);
-    font-weight: bold;
-    color: #334155;
+    gap: min(3.5vw, 32px);
+    font-size: clamp(15px, 2.2vh, 18px);
+    font-weight: 800;
+    color: #667eea;
 }
 
 .score-numbers span {
-    width: clamp(40px, 7vw, 55px);
-    height: clamp(40px, 7vw, 55px);
+    width: clamp(38px, 5.5vh, 50px);
+    height: clamp(38px, 5.5vh, 50px);
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #f1f5f9;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
     border-radius: 50%;
-    border: 2px solid #e2e8f0;
 }
 
-/* ------------------------------
-   RADIO CIRCLES
------------------------------- */
+/* ===================================
+   ラジオサークル
+=================================== */
 .radio-circles {
     display: flex;
-    gap: clamp(1.5rem, 4vw, 3rem);
-}
-
-.radio-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.3rem;
+    gap: min(3.5vw, 32px);
 }
 
 .radio-circle {
-    width: clamp(40px, 7vw, 55px);
-    height: clamp(40px, 7vw, 55px);
+    width: clamp(38px, 5.5vh, 50px);
+    height: clamp(38px, 5.5vh, 50px);
     border-radius: 50%;
-    background: white;
-    border: 3px solid #cbd5e1;
+    background: #e5e7eb;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
     position: relative;
 }
 
-.radio-circle:hover {
-    transform: scale(1.05);
-    border-color: #94a3b8;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+.radio-circle::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.4s, height 0.4s;
+}
+
+.radio-circle:hover::before {
+    width: 100%;
+    height: 100%;
 }
 
 .radio-circle.selected {
     background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    border-color: #dc2626;
     transform: scale(1.15);
-    box-shadow: 0 0 0 4px rgba(239,68,68,0.2), 0 4px 12px rgba(239,68,68,0.3);
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2), 0 8px 20px rgba(239, 68, 68, 0.3);
 }
 
-.radio-circle.selected::after {
-    content: '✓';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: white;
-    font-size: clamp(1rem, 2.5vh, 1.4rem);
-    font-weight: bold;
+.radio-circle:hover {
+    transform: scale(1.05);
 }
 
-.radio-label {
-    font-size: clamp(0.7rem, 1.5vh, 0.9rem);
-    color: #64748b;
-    text-align: center;
-    max-width: clamp(50px, 8vw, 70px);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+.radio-circle.selected:hover {
+    transform: scale(1.15);
 }
 
-/* ------------------------------
-   DECISION BUTTONS
------------------------------- */
+/* ===================================
+   判定ボタン
+=================================== */
 .decision-button {
-    padding: clamp(0.6rem, 1.2vh, 0.8rem) clamp(1.5rem, 3vw, 2rem);
-    font-size: clamp(0.9rem, 2vh, 1.15rem);
+    padding: min(1vh, 8px) min(3.5vw, 28px);
+    font-size: clamp(13px, 1.8vh, 16px);
     background: white;
-    border: 2px solid #334155;
-    border-radius: 30px;
-    font-weight: 600;
+    border: 3px solid #667eea;
+    border-radius: 50px;
+    font-weight: 700;
     cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     white-space: nowrap;
-    transition: all 0.3s ease;
-    color: #334155;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.decision-button:hover {
-    background: #f8fafc;
-    border-color: #667eea;
-    transform: translateY(-2px);
+    color: #667eea;
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
 }
 
+.decision-button:hover {
+    background: rgba(102, 126, 234, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+}
+
 .decision-button.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-color: #667eea;
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    border-color: #f59e0b;
     color: white;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.2), 0 8px 20px rgba(251, 191, 36, 0.4);
 }
 
 .decision-row {
     display: none;
     justify-content: center;
-    margin-top: clamp(0.8rem, 1.5vh, 1.2rem);
+    margin-top: min(1.2vh, 10px);
 }
 
 .decision-row.show {
     display: flex;
+    animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* ------------------------------
-   MIDDLE CONTROLS
------------------------------- */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===================================
+   区切り線セクション
+=================================== */
 .divider-section {
     position: relative;
-    margin: clamp(2.5rem, 4vh, 4rem) 0;
+    margin: min(2.5vh, 20px) 0;
+    text-align: center;
     flex-shrink: 0;
-    min-height: clamp(80px, 12vh, 100px);
+    min-height: min(13vh, 90px);
 }
 
+.divider {
+    border: none;
+    border-top: 3px dashed rgba(102, 126, 234, 0.4);
+}
+
+/* ===================================
+   中央コントロール
+=================================== */
 .middle-controls {
     position: absolute;
     top: 50%;
@@ -307,109 +327,116 @@ body {
     display: flex;
     align-items: center;
     background: white;
-    padding: clamp(1rem, 2vh, 1.8rem) clamp(1rem, 2.5vw, 2rem);
-    border-radius: 16px;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-    border: 2px solid #e2e8f0;
+    padding: min(1.8vh, 14px) min(3.5vw, 28px);
+    border-radius: min(2vw, 14px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+    z-index: 10;
 }
 
 .score-dropdowns {
     display: flex;
-    gap: clamp(1.5rem, 4vw, 3rem);
+    gap: min(3.5vw, 32px);
 }
 
+/* ===================================
+   ドロップダウン
+=================================== */
 .dropdown-container {
     position: relative;
-    width: clamp(45px, 7vw, 60px);
-    height: clamp(45px, 7vw, 60px);
+    width: clamp(38px, 5.5vh, 50px);
+    height: clamp(38px, 5.5vh, 50px);
+    flex-shrink: 0;
 }
 
 .score-dropdown {
     width: 100%;
     height: 100%;
-    font-size: clamp(1.1rem, 2.8vh, 1.6rem);
-    font-weight: bold;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    border: 2px solid #cbd5e1;
-    border-radius: 10px;
+    font-size: clamp(15px, 2.2vh, 20px);
+    font-weight: 800;
+    background: linear-gradient(135deg, #fff 0%, #f9fafb 100%);
+    border: 3px solid #667eea;
+    border-radius: min(1.5vw, 10px);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s ease;
-    color: #334155;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    color: #667eea;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
 }
 
 .score-dropdown:hover {
-    background: white;
-    border-color: #667eea;
+    background: rgba(102, 126, 234, 0.1);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.25);
 }
 
-/* ------------------------------
-   DROPDOWN MENU
------------------------------- */
-.dropdown-menu {
+.dropdown-menu,
+.draw-dropdown-menu {
     display: none;
     position: absolute;
-    top: calc(100% + 8px);
-    left: 50%;
-    transform: translateX(-50%);
     background: white;
-    border: 2px solid #e2e8f0;
-    border-radius: 10px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    border: 3px solid #667eea;
+    border-radius: min(1.5vw, 10px);
+    min-width: 75px;
+    max-height: min(35vh, 260px);
+    overflow-y: auto;
+    box-shadow: 0 12px 32px rgba(102, 126, 234, 0.3);
     z-index: 1000;
-    min-width: 80px;
-    overflow: hidden;
+    padding: 6px 0;
+    animation: dropdownSlide 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.dropdown-menu.show {
-    display: block;
-    animation: dropdownFadeIn 0.2s ease;
-}
-
-@keyframes dropdownFadeIn {
+@keyframes dropdownSlide {
     from {
         opacity: 0;
-        transform: translateX(-50%) translateY(-10px);
+        transform: translateY(-10px);
     }
     to {
         opacity: 1;
-        transform: translateX(-50%) translateY(0);
+        transform: translateY(0);
     }
 }
 
+.dropdown-menu.show,
+.draw-dropdown-menu.show {
+    display: block;
+}
+
 .dropdown-item {
-    padding: clamp(0.5rem, 1vh, 0.7rem) clamp(0.8rem, 1.5vw, 1rem);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: clamp(0.9rem, 2vh, 1.1rem);
-    font-weight: 500;
-    color: #334155;
+    padding: min(1.3vh, 10px) min(2.5vw, 18px);
+    font-size: clamp(13px, 1.8vh, 16px);
+    font-weight: 700;
     text-align: center;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s;
+    color: #1f2937;
 }
 
 .dropdown-item:hover {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    color: #667eea;
+}
+
+.dropdown-item:active {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
 }
 
-.dropdown-item:not(:last-child) {
-    border-bottom: 1px solid #f1f5f9;
-}
-
-/* ------------------------------
-   DRAW MENU
------------------------------- */
+/* ===================================
+   引分けボタン
+=================================== */
 .draw-container-wrapper {
     position: absolute;
     top: 50%;
-    left: calc(50% + clamp(10rem, 18vw, 15rem));
+    right: min(4vw, 32px);
     transform: translateY(-50%);
-    background: transparent;
-    padding: 0;
+    background: white;
+    padding: min(1.8vh, 14px) min(2vw, 14px);
+    border-radius: min(2vw, 14px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+    z-index: 5;
 }
 
 .draw-container {
@@ -417,149 +444,382 @@ body {
 }
 
 .draw-button {
-    padding: clamp(0.6rem, 1.2vh, 0.8rem) clamp(1.2rem, 2.5vw, 1.8rem);
-    font-size: clamp(0.9rem, 2vh, 1.15rem);
+    padding: min(1vh, 8px) min(2.5vw, 20px);
+    font-size: clamp(13px, 1.8vh, 16px);
     background: white;
-    border: 2px solid #cbd5e1;
-    border-radius: 10px;
-    font-weight: 600;
+    border: 3px solid #667eea;
+    border-radius: min(1.5vw, 10px);
+    font-weight: 700;
     cursor: pointer;
-    transition: all 0.3s ease;
-    color: #334155;
-    min-width: clamp(80px, 12vw, 100px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    white-space: nowrap;
+    color: #667eea;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
 }
 
 .draw-button:hover {
-    background: #f8fafc;
-    border-color: #667eea;
+    background: rgba(102, 126, 234, 0.1);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.25);
 }
 
 .draw-dropdown-menu {
-    display: none;
-    position: absolute;
-    top: calc(100% + 8px);
-    left: 0;
-    background: white;
-    border: 2px solid #e2e8f0;
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    top: calc(100% + 6px);
+}
+
+/* ===================================
+   スクロールバー
+=================================== */
+.dropdown-menu::-webkit-scrollbar,
+.draw-dropdown-menu::-webkit-scrollbar {
+    width: 6px;
+}
+
+.dropdown-menu::-webkit-scrollbar-track,
+.draw-dropdown-menu::-webkit-scrollbar-track {
+    background: rgba(102, 126, 234, 0.1);
     border-radius: 10px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    z-index: 1000;
-    min-width: 100%;
-    overflow: hidden;
 }
 
-.draw-dropdown-menu.show {
-    display: block;
-    animation: dropdownFadeIn 0.2s ease;
+.dropdown-menu::-webkit-scrollbar-thumb,
+.draw-dropdown-menu::-webkit-scrollbar-thumb {
+    background: rgba(102, 126, 234, 0.5);
+    border-radius: 10px;
 }
 
-/* ------------------------------
-   BOTTOM AREA
------------------------------- */
+.dropdown-menu::-webkit-scrollbar-thumb:hover,
+.draw-dropdown-menu::-webkit-scrollbar-thumb:hover {
+    background: rgba(102, 126, 234, 0.7);
+}
+
+/* ===================================
+   下部エリア
+=================================== */
 .bottom-area {
-    position: sticky;
-    bottom: 0;
-    background: white;
-    padding: clamp(1rem, 2vh, 1.5rem) 0;
-    border-top: 2px solid #e2e8f0;
-    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: min(1.8vh, 14px);
+    margin-top: min(1.8vh, 14px);
     flex-shrink: 0;
-    margin-top: clamp(1rem, 2vh, 1.5rem);
 }
 
+.bottom-right-button {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.cancel-button {
+    padding: min(1vh, 8px) min(3.5vw, 28px);
+    font-size: clamp(12px, 1.8vh, 15px);
+    background: white;
+    border: 2px solid rgba(239, 68, 68, 0.5);
+    border-radius: 50px;
+    font-weight: 700;
+    cursor: pointer;
+    color: #ef4444;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.cancel-button:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: #ef4444;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.2);
+}
+
+/* ===================================
+   下部ボタン
+=================================== */
 .bottom-buttons {
     display: flex;
     justify-content: center;
-    gap: clamp(1rem, 2.5vw, 2rem);
-    flex-wrap: wrap;
+    gap: min(2.5vw, 20px);
 }
 
 .bottom-button {
-    padding: clamp(0.7rem, 1.4vh, 0.9rem) clamp(2rem, 5vw, 3rem);
-    font-size: clamp(1rem, 2.2vh, 1.3rem);
-    border-radius: 30px;
-    font-weight: 600;
+    flex: 1;
+    max-width: 180px;
+    padding: min(1.3vh, 10px) min(4vw, 32px);
+    font-size: clamp(15px, 2vh, 18px);
+    border-radius: 50px;
+    font-weight: 700;
     cursor: pointer;
     white-space: nowrap;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.bottom-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-}
-
-.bottom-button:active {
-    transform: translateY(0);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: none;
 }
 
 .back-button {
     background: white;
-    border: 2px solid #64748b;
-    color: #334155;
+    color: #667eea;
+    border: 3px solid rgba(102, 126, 234, 0.3);
 }
 
 .back-button:hover {
-    border-color: #475569;
-    background: #f8fafc;
+    background: rgba(102, 126, 234, 0.05);
+    border-color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.2);
 }
 
 .submit-button {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    border: 2px solid #3b82f6;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
 .submit-button:hover {
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-    border-color: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
 }
 
-.submit-button:disabled {
-    background: #94a3b8;
-    border-color: #94a3b8;
-    cursor: not-allowed;
-    opacity: 0.6;
-}
-
-/* キャンセルボタン（左側配置用） */
-#cancelButton {
-    background: white;
-    border: 2px solid #ef4444;
-    color: #ef4444;
-}
-
-#cancelButton:hover {
-    background: #fef2f2;
-    border-color: #dc2626;
-    color: #dc2626;
-}
-
-/* ------------------------------
-   RESPONSIVE
------------------------------- */
+/* ===================================
+   タブレット対応 (768px以下)
+=================================== */
 @media (max-width: 768px) {
-    .draw-container-wrapper {
-        position: static;
-        transform: none;
-        margin-top: 1rem;
-        display: flex;
+    .container {
+        padding: 6px;
+        min-height: 100vh;
+        max-height: 100vh;
+        overflow: hidden;
+    }
+
+    .header {
+        margin-bottom: 6px;
+        padding: 6px 10px;
         justify-content: center;
     }
     
+    .content-wrapper {
+        justify-content: space-between;
+        gap: 4px;
+        flex: 1;
+        min-height: 0;
+    }
+    
+    .match-section {
+        gap: 3px;
+        padding-bottom: 0;
+    }
+    
+    .row {
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 3px;
+    }
+
+    .label {
+        width: auto;
+        min-width: 55px;
+    }
+    
+    .value {
+        width: auto;
+        flex: 1;
+        font-size: clamp(16px, 4vw, 20px);
+        padding: 4px 10px;
+    }
+
+    .score-display {
+        padding: 6px 0;
+        margin: 4px 0;
+    }
+    
+    .score-numbers,
+    .radio-circles,
+    .score-dropdowns {
+        gap: min(6vw, 24px);
+    }
+    
+    .score-numbers span,
+    .radio-circle,
+    .dropdown-container {
+        width: clamp(32px, 10vw, 42px);
+        height: clamp(32px, 10vw, 42px);
+    }
+
+    .divider-section {
+        min-height: auto;
+        margin: 6px 0;
+        padding: 0;
+        position: relative;
+        height: 80px;
+    }
+
     .middle-controls {
-        position: static;
-        transform: none;
-        flex-direction: column;
-        gap: 1rem;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        padding: 6px 12px;
+        margin: 0;
+    }
+
+    .draw-container-wrapper {
+        position: absolute;
+        top: 50%;
+        right: 8px;
+        transform: translateY(-50%);
+        padding: 6px 8px;
+        margin: 0;
+    }
+    
+    .decision-row {
+        margin-top: 4px;
+    }
+    
+    .decision-row.show {
+        margin-bottom: 4px;
+    }
+    
+    .decision-button {
+        padding: 4px 12px;
+        font-size: clamp(11px, 3vw, 14px);
+    }
+    
+    .bottom-area {
+        margin-top: 6px;
+        padding-top: 0;
+        gap: 6px;
+    }
+
+    .bottom-right-button {
+        justify-content: flex-end;
+        margin-bottom: 4px;
+    }
+    
+    .cancel-button {
+        padding: 4px 12px;
+        font-size: clamp(11px, 3vw, 13px);
+    }
+
+    .bottom-buttons {
+        flex-direction: row;
+        gap: 8px;
+    }
+
+    .bottom-button {
+        flex: 1;
+        max-width: none;
+        padding: 6px 16px;
+        font-size: clamp(13px, 3.5vw, 16px);
+    }
+}
+
+/* ===================================
+   スマートフォン対応 (480px以下)
+=================================== */
+@media (max-width: 480px) {
+    .container {
+        padding: 6px;
+    }
+
+    .header {
+        gap: 6px;
+        padding: 6px 10px;
+        margin-bottom: 6px;
+    }
+
+    .score-numbers,
+    .radio-circles,
+    .score-dropdowns {
+        gap: 18px;
+    }
+    
+    .match-section {
+        gap: 4px;
+    }
+    
+    .score-display {
+        padding: 6px 0;
+        margin: 4px 0;
     }
     
     .divider-section {
-        margin: 1.5rem 0;
-        min-height: auto;
+        margin: 8px 0;
+        padding: 50px 0;
+    }
+    
+    .middle-controls {
+        padding: 6px;
+        gap: 6px;
+    }
+    
+    .bottom-area {
+        margin-top: 10px;
+        padding-top: 6px;
+        gap: 6px;
+    }
+}
+
+/* ===================================
+   縦に短い画面対応（デスクトップのみ）
+=================================== */
+@media (max-height: 700px) and (min-width: 769px) {
+    .container {
+        padding: 1vh 1.5vw;
+    }
+
+    .header {
+        margin-bottom: 0.8vh;
+        padding: 0.8vh 1.5vw;
+    }
+
+    .score-display {
+        padding: 0.8vh 0;
+        margin: 0.6vh 0;
+    }
+
+    .divider-section {
+        margin: 1.2vh 0;
+        min-height: 9vh;
+    }
+
+    .middle-controls {
+        padding: 0.8vh 1.5vw;
+    }
+
+    .bottom-area {
+        gap: 0.8vh;
+        margin-top: 0.8vh;
+    }
+}
+
+/* ===================================
+   極端に縦に短い画面（デスクトップのみ）
+=================================== */
+@media (max-height: 600px) and (min-width: 769px) {
+    .content-wrapper {
+        justify-content: flex-start;
+        gap: 0.8vh;
+    }
+
+    .score-numbers span,
+    .radio-circle,
+    .dropdown-container {
+        width: 32px;
+        height: 32px;
+    }
+
+    .score-dropdown {
+        font-size: 13px;
+    }
+
+    .decision-row {
+        margin-top: 0.4vh;
+    }
+}
+
+/* ===================================
+   ランドスケープモード（デスクトップのみ）
+=================================== */
+@media (max-height: 600px) and (orientation: landscape) and (min-width: 769px) {
+    .divider-section {
+        margin: 0.8vh 0;
+        min-height: 7vh;
     }
 }

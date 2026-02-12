@@ -154,7 +154,338 @@ $cardCount = is_array($displayCards) ? count($displayCards) : 0;
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title><?= esc($tournament['title']) ?> - <?= esc($department['name']) ?>（団体）</title>
-<link rel="stylesheet" href="./css/team.css">
+<style>
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+    background: #f5f5f5;
+}
+h1 {
+    color: #333;
+    border-bottom: 3px solid #007bff;
+    padding-bottom: 10px;
+}
+.summary {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid #007bff;
+}
+.match-card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 15px 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
+}
+.team-vs {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+.team-name {
+    flex: 1;
+    text-align: center;
+}
+.team-name-text {
+    font-size: 1.3em;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+.team-number {
+    color: #666;
+    font-size: 0.9em;
+}
+.vs-divider {
+    font-weight: bold;
+    color: #999;
+    padding: 0 20px;
+    font-size: 1.2em;
+}
+.score-display {
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 5px;
+    margin: 15px 0;
+}
+.score-row {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin-bottom: 15px;
+}
+.score-team {
+    text-align: center;
+    flex: 1;
+}
+.score-label {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 5px;
+}
+.score-value {
+    font-size: 2.5em;
+    font-weight: bold;
+}
+.win-count-row {
+    text-align: center;
+    padding-top: 15px;
+    border-top: 1px solid #e0e0e0;
+}
+.toggle-details-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 25px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+.toggle-details-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+.toggle-details-btn:active {
+    transform: translateY(0);
+}
+.collapsible-content {
+    overflow: hidden;
+    transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+}
+input[type="search"] {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    width: 100%;
+    max-width: 400px;
+}
+
+/* スコアシート用のスタイル（テーブル版） */
+.scoresheet-container {
+    margin-top: 25px;
+    overflow-x: auto;
+    padding: 10px 0;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+.scoresheet {
+  border: 3px solid #111;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin: 0 auto;
+  width: fit-content;
+}
+
+.col-team   { width: 80px; }
+.col-pos    { width: 140px; }
+.col-stat   { width: 80px; }
+.col-rep    { width: 80px; }
+
+.scoresheet thead th {
+  border: 2px solid #111;
+  padding: 10px 4px;
+  font-weight: 700;
+  font-size: 15px;
+  text-align: center;
+  background: #fafafa;
+}
+
+.scoresheet tbody.team-block {
+  border-top: 3px solid #111;
+}
+
+.scoresheet td {
+  border: 2px solid #111;
+  vertical-align: top;
+  padding: 0;
+}
+
+.team-name-cell {
+  text-align: center;
+  vertical-align: middle !important;
+  font-weight: bold;
+  font-size: 1em;
+  padding: 8px 4px !important;
+}
+
+.team-red {
+  background: #ffe6e6;
+  color: #d9534f;
+}
+
+.team-white {
+  background: #e6f2ff;
+  color: #0275d8;
+}
+
+.pos-inner {
+  display: flex;
+  flex-direction: column;
+  min-height: 160px;
+}
+
+.pos-top,
+.pos-bottom {
+  flex: 1;
+  display: flex;
+  min-height: 76px;
+}
+
+.pos-top {
+  border-bottom: 2px dashed #111;
+}
+
+.sub-left {
+  width: 30px;
+  min-width: 30px;
+  border-right: 1px solid #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sub-right {
+  flex: 1;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.tech-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 4px;
+}
+
+.tech-badge {
+  background: #007bff;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.8em;
+  font-weight: bold;
+  line-height: 1.4;
+}
+
+.tech-badge-empty {
+  opacity: 0;
+  padding: 2px 6px;
+  font-size: 0.8em;
+}
+
+.winner-mark {
+  color: #28a745;
+  font-weight: bold;
+  font-size: 1.1em;
+  margin-top: 4px;
+}
+
+.player-name {
+  font-weight: bold;
+  font-size: 0.85em;
+  word-break: keep-all;
+}
+
+.stat-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 160px;
+}
+
+.stat-top,
+.stat-bottom {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4em;
+  font-weight: bold;
+}
+
+.stat-divider {
+  border-top: 2px dashed #999;
+  margin: 0 8px;
+}
+
+.rep-inner {
+  display: flex;
+  flex-direction: column;
+  min-height: 160px;
+}
+
+.rep-top,
+.rep-bottom {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  font-size: 0.85em;
+}
+
+.rep-top {
+  border-bottom: 2px dashed #111;
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    h1 {
+        font-size: 1.5em;
+    }
+    .match-card {
+        padding: 12px;
+    }
+    .team-name-text {
+        font-size: 1em;
+    }
+    .score-value {
+        font-size: 1.8em;
+    }
+    .team-vs {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .vs-divider {
+        padding: 10px 0;
+    }
+    .toggle-details-btn {
+        padding: 10px 20px;
+        font-size: 0.9em;
+    }
+    input[type="search"] {
+        max-width: 100%;
+    }
+    .col-team { width: 50px; }
+    .col-pos  { width: 100px; }
+    .col-stat { width: 60px; }
+    .col-rep  { width: 60px; }
+    .sub-left { width: 22px; min-width: 22px; }
+}
+</style>
 </head>
 <body>
   <div style="margin-bottom: 15px;">
@@ -209,6 +540,15 @@ $cardCount = is_array($displayCards) ? count($displayCards) : 0;
       $redScore = 0;
       $whiteScore = 0;
       
+      // 代表決定戦のデータを取得
+      $playoffMatch = null;
+      foreach ($card['matches'] as $m) {
+          if (isset($m['order_id']) && (int)$m['order_id'] === 6) {
+              $playoffMatch = $m;
+              break;
+          }
+      }
+      
       foreach ($matchesByPos as $m) {
           // 勝者をカウント
           $finalWinner = $m['final_winner'] ?? '';
@@ -243,6 +583,32 @@ $cardCount = is_array($displayCards) ? count($displayCards) : 0;
               } elseif ($thirdWinnerLower === 'white' || $thirdWinnerLower === 'shiro' || $thirdWinnerLower === 'b' || $thirdWinnerLower === 'player_b') {
                   $whiteScore++;
               }
+          }
+      }
+      
+      // 代表決定戦の技と勝者を処理
+      $playoffRedTechnique = null;
+      $playoffWhiteTechnique = null;
+      $playoffRedWinner = false;
+      $playoffWhiteWinner = false;
+      
+      if ($playoffMatch) {
+          // 代表戦は1本勝負なので、first_techniqueのみを見る
+          if (!empty($playoffMatch['first_technique'])) {
+              $firstWinnerLower = strtolower((string)($playoffMatch['first_winner'] ?? ''));
+              if ($firstWinnerLower === 'red' || $firstWinnerLower === 'aka' || $firstWinnerLower === 'a' || $firstWinnerLower === 'player_a') {
+                  $playoffRedTechnique = $playoffMatch['first_technique'];
+              } elseif ($firstWinnerLower === 'white' || $firstWinnerLower === 'shiro' || $firstWinnerLower === 'b' || $firstWinnerLower === 'player_b') {
+                  $playoffWhiteTechnique = $playoffMatch['first_technique'];
+              }
+          }
+          
+          $finalWinner = $playoffMatch['final_winner'] ?? '';
+          $winnerLower = strtolower((string)$finalWinner);
+          if ($finalWinner == $playoffMatch['player_a_id'] || $finalWinner === 'player_a' || $winnerLower === 'a' || $winnerLower === 'red' || $winnerLower === 'aka') {
+              $playoffRedWinner = true;
+          } elseif ($finalWinner == $playoffMatch['player_b_id'] || $finalWinner === 'player_b' || $winnerLower === 'b' || $winnerLower === 'white' || $winnerLower === 'shiro') {
+              $playoffWhiteWinner = true;
           }
       }
       ?>
@@ -442,9 +808,44 @@ $cardCount = is_array($displayCards) ? count($displayCards) : 0;
 
                 <!-- 代表戦列 -->
                 <td>
-                  <div class="rep-inner">
-                    <div class="rep-top"></div>
-                    <div class="rep-bottom"></div>
+                  <div class="pos-inner">
+                    <!-- 上半分: 赤チーム選手 -->
+                    <div class="pos-top">
+                      <div class="sub-left">
+                        <?php if ($playoffRedWinner): ?>
+                          <div class="winner-mark">✓</div>
+                        <?php endif; ?>
+                      </div>
+                      <div class="sub-right">
+                        <?php if ($playoffMatch && !empty($playoffMatch['a_name'])): ?>
+                          <div class="player-name"><?= esc($playoffMatch['a_name']) ?></div>
+                          <?php if ($playoffRedTechnique !== null): ?>
+                            <div class="tech-display">
+                              <span class="tech-badge"><?= esc($playoffRedTechnique) ?></span>
+                            </div>
+                          <?php endif; ?>
+                        <?php endif; ?>
+                      </div>
+                    </div>
+                    
+                    <!-- 下半分: 白チーム選手 -->
+                    <div class="pos-bottom">
+                      <div class="sub-left">
+                        <?php if ($playoffWhiteWinner): ?>
+                          <div class="winner-mark">✓</div>
+                        <?php endif; ?>
+                      </div>
+                      <div class="sub-right">
+                        <?php if ($playoffMatch && !empty($playoffMatch['b_name'])): ?>
+                          <div class="player-name"><?= esc($playoffMatch['b_name']) ?></div>
+                          <?php if ($playoffWhiteTechnique !== null): ?>
+                            <div class="tech-display">
+                              <span class="tech-badge"><?= esc($playoffWhiteTechnique) ?></span>
+                            </div>
+                          <?php endif; ?>
+                        <?php endif; ?>
+                      </div>
+                    </div>
                   </div>
                 </td>
               </tr>
