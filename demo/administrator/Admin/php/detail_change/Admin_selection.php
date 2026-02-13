@@ -27,7 +27,7 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <body>
 
     <div class="breadcrumb">
-        <a href="Admin_top.php" class="breadcrumb-link">メニュー ></a>
+        <a href="../Admin_top.php" class="breadcrumb-link">メニュー ></a>
         <a href="#" class="breadcrumb-link">大会詳細変更 ></a>
     </div>
 
