@@ -82,7 +82,7 @@ $tmMap = [];
 if (!empty($tmIds)) {
     try {
         $placeholders = implode(',', array_fill(0, count($tmIds), '?'));
-        $stmt2 = $pdo->prepare("SELECT id, team_red_id, team_white_id, red_score, white_score, red_win_count, white_win_count, winner, wo_flg FROM team_match_results WHERE id IN ($placeholders)");
+        $stmt2 = $pdo->prepare("SELECT id, team_red_id, team_white_id, red_score, white_score, red_win_count, white_win_count, winner, wo_flg, match_field, match_number FROM team_match_results WHERE id IN ($placeholders)");
         $stmt2->execute(array_values($tmIds));
         foreach ($stmt2->fetchAll(PDO::FETCH_ASSOC) as $r) $tmMap[(int)$r['id']] = $r;
     } catch (PDOException $e) {
@@ -130,6 +130,8 @@ foreach ($cards as $tmid => $matches) {
         'white_number' => $teamMap[$whiteId]['team_number'] ?? null,
         'red_withdraw' => $teamMap[$redId]['withdraw_flg'] ?? 0,
         'white_withdraw' => $teamMap[$whiteId]['withdraw_flg'] ?? 0,
+        'match_field' => $meta['match_field'] ?? null,
+        'match_number' => $meta['match_number'] ?? null,
         'meta' => $meta,
         'matches' => $matches,
     ];
@@ -154,7 +156,349 @@ $cardCount = is_array($displayCards) ? count($displayCards) : 0;
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title><?= esc($tournament['title']) ?> - <?= esc($department['name']) ?>（団体）</title>
-<link rel="stylesheet" href="./css/team.css">
+<style>
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+    background: #f5f5f5;
+}
+h1 {
+    color: #333;
+    border-bottom: 3px solid #007bff;
+    padding-bottom: 10px;
+}
+.summary {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid #007bff;
+}
+.match-card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 15px 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
+}
+.team-vs {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+.team-name {
+    flex: 1;
+    text-align: center;
+}
+.team-name-text {
+    font-size: 1.3em;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+.team-number {
+    color: #666;
+    font-size: 0.9em;
+}
+.vs-divider {
+    font-weight: bold;
+    color: #999;
+    padding: 0 20px;
+    font-size: 1.2em;
+}
+.score-display {
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 5px;
+    margin: 15px 0;
+}
+.score-row {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin-bottom: 15px;
+}
+.score-team {
+    text-align: center;
+    flex: 1;
+}
+.score-label {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 5px;
+}
+.score-value {
+    font-size: 2.5em;
+    font-weight: bold;
+}
+.win-count-row {
+    text-align: center;
+    padding-top: 15px;
+    border-top: 1px solid #e0e0e0;
+}
+.toggle-details-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 25px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+.toggle-details-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+.toggle-details-btn:active {
+    transform: translateY(0);
+}
+.collapsible-content {
+    overflow: hidden;
+    transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+}
+input[type="search"] {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    width: 100%;
+    max-width: 400px;
+}
+
+/* スコアシート用のスタイル（テーブル版） */
+.scoresheet-container {
+    margin-top: 25px;
+    overflow-x: auto;
+    padding: 10px 0;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+.scoresheet {
+  border: 3px solid #111;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin: 0 auto;
+  width: fit-content;
+}
+
+.col-team   { width: 120px; }
+.col-pos    { width: 140px; }
+.col-stat   { width: 80px; }
+.col-rep    { width: 80px; }
+
+.scoresheet thead th {
+  border: 2px solid #111;
+  padding: 10px 4px;
+  font-weight: 700;
+  font-size: 15px;
+  text-align: center;
+  background: #fafafa;
+}
+
+.scoresheet tbody.team-block {
+  border-top: 3px solid #111;
+}
+
+.scoresheet td {
+  border: 2px solid #111;
+  vertical-align: top;
+  padding: 0;
+}
+
+.team-name-cell {
+  text-align: center;
+  vertical-align: middle !important;
+  font-weight: bold;
+  font-size: 1em;
+  padding: 8px 4px !important;
+}
+
+.team-red {
+  background: #ffe6e6;
+  color: #d9534f;
+}
+
+.team-white {
+  background: #e6f2ff;
+  color: #0275d8;
+}
+
+.pos-inner {
+  display: flex;
+  flex-direction: column;
+  min-height: 160px;
+}
+
+.pos-top,
+.pos-bottom {
+  flex: 1;
+  display: flex;
+  min-height: 76px;
+}
+
+.pos-top {
+  border-bottom: 2px dashed #111;
+}
+
+.sub-left {
+  width: 30px;
+  min-width: 30px;
+  border-right: 1px solid #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sub-right {
+  flex: 1;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.tech-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 4px;
+}
+
+.tech-badge {
+  background: #007bff;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.8em;
+  font-weight: bold;
+  line-height: 1.4;
+}
+
+.tech-badge-first {
+  background: #0056b3;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.8em;
+  font-weight: bold;
+  line-height: 1.4;
+  border: 2px solid #003d82;
+}
+
+.tech-badge-empty {
+  opacity: 0;
+  padding: 2px 6px;
+  font-size: 0.8em;
+}
+
+.winner-mark {
+  color: #28a745;
+  font-weight: bold;
+  font-size: 1.1em;
+  margin-top: 4px;
+}
+
+.player-name {
+  font-weight: bold;
+  font-size: 0.85em;
+  word-break: keep-all;
+}
+
+.stat-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 160px;
+}
+
+.stat-top,
+.stat-bottom {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4em;
+  font-weight: bold;
+}
+
+.stat-divider {
+  border-top: 2px dashed #999;
+  margin: 0 8px;
+}
+
+.rep-inner {
+  display: flex;
+  flex-direction: column;
+  min-height: 160px;
+}
+
+.rep-top,
+.rep-bottom {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  font-size: 0.85em;
+}
+
+.rep-top {
+  border-bottom: 2px dashed #111;
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    h1 {
+        font-size: 1.5em;
+    }
+    .match-card {
+        padding: 12px;
+    }
+    .team-name-text {
+        font-size: 1em;
+    }
+    .score-value {
+        font-size: 1.8em;
+    }
+    .team-vs {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .vs-divider {
+        padding: 10px 0;
+    }
+    .toggle-details-btn {
+        padding: 10px 20px;
+        font-size: 0.9em;
+    }
+    input[type="search"] {
+        max-width: 100%;
+    }
+    .col-team { width: 50px; }
+    .col-pos  { width: 100px; }
+    .col-stat { width: 60px; }
+    .col-rep  { width: 60px; }
+    .sub-left { width: 22px; min-width: 22px; }
+}
+</style>
 </head>
 <body>
   <div style="margin-bottom: 15px;">
@@ -203,13 +547,28 @@ $cardCount = is_array($displayCards) ? count($displayCards) : 0;
           }
       }
       
-      // 勝者数と得本数を動的に計算
+      // 勝者数と取得本数を動的に計算
       $redWinCount = 0;
       $whiteWinCount = 0;
       $redScore = 0;
       $whiteScore = 0;
       
-      foreach ($matchesByPos as $m) {
+      // デバッグ用
+      $debugInfo = [];
+      
+      // 代表決定戦のデータを取得
+      $playoffMatch = null;
+      foreach ($card['matches'] as $m) {
+          if (isset($m['order_id']) && (int)$m['order_id'] === 6) {
+              $playoffMatch = $m;
+              break;
+          }
+      }
+      
+      // 有効な技のリスト
+      $validTechniques = ['メ', 'コ', 'ド', 'ツ', '判', '×'];
+      
+      foreach ($matchesByPos as $posNum => $m) {
           // 勝者をカウント
           $finalWinner = $m['final_winner'] ?? '';
           $winnerLower = strtolower((string)$finalWinner);
@@ -219,61 +578,125 @@ $cardCount = is_array($displayCards) ? count($displayCards) : 0;
               $whiteWinCount++;
           }
           
-          // 得本数をカウント
-          if (!empty($m['first_technique'])) {
-              $firstWinnerLower = strtolower((string)($m['first_winner'] ?? ''));
+          $posDebug = ['pos' => $posNum, 'red' => [], 'white' => [], 'raw' => []];
+          
+          // 各技について1回だけチェック
+          $techniques = [
+              ['tech' => $m['first_technique'] ?? '', 'winner' => $m['first_winner'] ?? ''],
+              ['tech' => $m['second_technique'] ?? '', 'winner' => $m['second_winner'] ?? ''],
+              ['tech' => $m['third_technique'] ?? '', 'winner' => $m['third_winner'] ?? '']
+          ];
+          
+          foreach ($techniques as $t) {
+              if (!empty($t['tech']) && in_array($t['tech'], $validTechniques)) {
+                  $winnerLowerTech = strtolower((string)$t['winner']);
+                  $posDebug['raw'][] = "技:{$t['tech']}, 勝者:{$t['winner']}";
+                  
+                  if ($winnerLowerTech === 'red' || $winnerLowerTech === 'aka' || $winnerLowerTech === 'a' || $winnerLowerTech === 'player_a') {
+                      $redScore++;
+                      $posDebug['red'][] = $t['tech'];
+                  } elseif ($winnerLowerTech === 'white' || $winnerLowerTech === 'shiro' || $winnerLowerTech === 'b' || $winnerLowerTech === 'player_b') {
+                      $whiteScore++;
+                      $posDebug['white'][] = $t['tech'];
+                  }
+              }
+          }
+          
+          $debugInfo[] = $posDebug;
+      }
+      
+      // 代表決定戦の技と勝者を処理
+      $playoffRedTechnique = null;
+      $playoffWhiteTechnique = null;
+      $playoffRedWinner = false;
+      $playoffWhiteWinner = false;
+      
+      if ($playoffMatch) {
+          // 代表戦は1本勝負なので、first_techniqueのみを見る
+          if (!empty($playoffMatch['first_technique'])) {
+              $firstWinnerLower = strtolower((string)($playoffMatch['first_winner'] ?? ''));
               if ($firstWinnerLower === 'red' || $firstWinnerLower === 'aka' || $firstWinnerLower === 'a' || $firstWinnerLower === 'player_a') {
-                  $redScore++;
+                  $playoffRedTechnique = $playoffMatch['first_technique'];
               } elseif ($firstWinnerLower === 'white' || $firstWinnerLower === 'shiro' || $firstWinnerLower === 'b' || $firstWinnerLower === 'player_b') {
-                  $whiteScore++;
+                  $playoffWhiteTechnique = $playoffMatch['first_technique'];
               }
           }
-          if (!empty($m['second_technique'])) {
-              $secondWinnerLower = strtolower((string)($m['second_winner'] ?? ''));
-              if ($secondWinnerLower === 'red' || $secondWinnerLower === 'aka' || $secondWinnerLower === 'a' || $secondWinnerLower === 'player_a') {
-                  $redScore++;
-              } elseif ($secondWinnerLower === 'white' || $secondWinnerLower === 'shiro' || $secondWinnerLower === 'b' || $secondWinnerLower === 'player_b') {
-                  $whiteScore++;
-              }
-          }
-          if (!empty($m['third_technique'])) {
-              $thirdWinnerLower = strtolower((string)($m['third_winner'] ?? ''));
-              if ($thirdWinnerLower === 'red' || $thirdWinnerLower === 'aka' || $thirdWinnerLower === 'a' || $thirdWinnerLower === 'player_a') {
-                  $redScore++;
-              } elseif ($thirdWinnerLower === 'white' || $thirdWinnerLower === 'shiro' || $thirdWinnerLower === 'b' || $thirdWinnerLower === 'player_b') {
-                  $whiteScore++;
-              }
+          
+          $finalWinner = $playoffMatch['final_winner'] ?? '';
+          $winnerLower = strtolower((string)$finalWinner);
+          if ($finalWinner == $playoffMatch['player_a_id'] || $finalWinner === 'player_a' || $winnerLower === 'a' || $winnerLower === 'red' || $winnerLower === 'aka') {
+              $playoffRedWinner = true;
+          } elseif ($finalWinner == $playoffMatch['player_b_id'] || $finalWinner === 'player_b' || $winnerLower === 'b' || $winnerLower === 'white' || $winnerLower === 'shiro') {
+              $playoffWhiteWinner = true;
           }
       }
       ?>
       <div class="match-card">
         <div class="card-header">
           <div style="color: #666; font-size: 0.9em;">
-            <strong>カード ID:</strong> <?= esc($card['team_match_id']) ?>
+            <?php if (!empty($card['match_field'])): ?>
+              <strong>試合会場:</strong> <?= esc($card['match_field']) ?>
+            <?php endif; ?>
+            <?php if (!empty($card['match_number'])): ?>
+              <?php if (!empty($card['match_field'])): ?> | <?php endif; ?>
+              <strong>試合番号:</strong> <?= esc($card['match_number']) ?>
+            <?php endif; ?>
+            <?php if (empty($card['match_field']) && empty($card['match_number'])): ?>
+              <strong>試合情報:</strong> 未設定
+            <?php endif; ?>
           </div>
         </div>
 
-        <!-- チーム名表示 -->
-        <div class="team-vs">
-          <div class="team-name">
-            <div class="team-name-text" style="color: #d9534f;">
-              <?= esc($card['red_name']) ?>
-              <?php if ($card['red_withdraw']): ?>
-                <span style="font-size: 0.7em; color: #999;">（棄権）</span>
-              <?php endif; ?>
-            </div>
-            <div class="team-number">No. <?= esc($card['red_number'] ?? '-') ?></div>
-          </div>
-          <div class="vs-divider">VS</div>
-          <div class="team-name">
-            <div class="team-name-text" style="color: #0275d8;">
-              <?= esc($card['white_name']) ?>
-              <?php if ($card['white_withdraw']): ?>
-                <span style="font-size: 0.7em; color: #999;">（棄権）</span>
-              <?php endif; ?>
-            </div>
-            <div class="team-number">No. <?= esc($card['white_number'] ?? '-') ?></div>
-          </div>
+        <!-- デバッグ情報 -->
+        <div style="background: #f0f0f0; padding: 10px; margin-bottom: 10px; font-size: 0.9em; display: none;" id="debug-<?= esc($card['team_match_id']) ?>">
+          <strong>取得本数デバッグ情報:</strong><br>
+          赤: <?= $redScore ?>本, 白: <?= $whiteScore ?>本<br>
+          <?php foreach ($debugInfo as $info): ?>
+            <?= esc($info['pos']) ?>: 赤[<?= implode(', ', $info['red']) ?>] 白[<?= implode(', ', $info['white']) ?>]<br>
+            　生データ: <?= implode(' | ', $info['raw']) ?><br>
+          <?php endforeach; ?>
+        </div>
+
+        <!-- チーム名表示（結果付き） -->
+        <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 20px; font-size: 1.2em;">
+          <?php
+          // 勝敗を判定
+          $redResult = '';
+          $whiteResult = '';
+          $displayRedScore = $redWinCount;
+          $displayWhiteScore = $whiteWinCount;
+          
+          if ($redWinCount > $whiteWinCount) {
+              $redResult = '勝';
+              $whiteResult = '負';
+          } elseif ($whiteWinCount > $redWinCount) {
+              $redResult = '負';
+              $whiteResult = '勝';
+          } elseif ($redWinCount === $whiteWinCount) {
+              if ($playoffRedWinner) {
+                  $redResult = '勝';
+                  $whiteResult = '負';
+                  $displayRedScore .= '代表';
+              } elseif ($playoffWhiteWinner) {
+                  $redResult = '負';
+                  $whiteResult = '勝';
+                  $displayWhiteScore .= '代表';
+              } else {
+                  $redResult = '引分';
+                  $whiteResult = '引分';
+              }
+          }
+          ?>
+          
+          <span style="font-weight: bold; color: #d9534f; font-size: 1.3em;"><?= esc($redResult) ?></span>
+          <span style="font-weight: bold; color: #333;"><?= esc($card['red_name']) ?></span>
+          
+          <span style="font-size: 2em; font-weight: bold; color: #999; margin: 0 10px;">
+            <?= $displayRedScore ?> <span style="font-size: 0.6em;">vs</span> <?= $displayWhiteScore ?>
+          </span>
+          
+          <span style="font-weight: bold; color: #333;"><?= esc($card['white_name']) ?></span>
+          <span style="font-weight: bold; color: #0275d8; font-size: 1.3em;"><?= esc($whiteResult) ?></span>
         </div>
 
         <!-- 詳細を見るボタン -->
@@ -307,7 +730,7 @@ $cardCount = is_array($displayCards) ? count($displayCards) : 0;
                 <th>副将</th>
                 <th>大将</th>
                 <th>勝者数</th>
-                <th>得本数</th>
+                <th>取得本数</th>
                 <th>代表戦</th>
               </tr>
             </thead>
@@ -316,12 +739,24 @@ $cardCount = is_array($displayCards) ? count($displayCards) : 0;
               <tr>
                 <!-- チーム名列（赤チームと白チーム） -->
                 <td class="team-name-cell" rowspan="1" style="padding: 0 !important;">
-                  <div style="display: flex; flex-direction: column; height: 100%; min-height: 160px;">
-                    <div class="team-red" style="flex: 1; display: flex; align-items: center; justify-content: center; border-bottom: 2px dashed #111; font-weight: bold; padding: 8px 4px;">
-                      <?= esc($card['red_abbr'] ?: mb_substr($card['red_name'], 0, 4)) ?>
+                  <div style="display: flex; height: 100%; min-height: 160px;">
+                    <!-- 勝敗表記列 -->
+                    <div style="width: 40px; min-width: 40px; display: flex; flex-direction: column; border-right: 2px solid #111;">
+                      <div style="flex: 1; display: flex; align-items: center; justify-content: center; background: #ffe6e6; color: #d9534f; font-weight: bold; border-bottom: 2px dashed #111; writing-mode: vertical-rl; text-orientation: upright; font-size: 1.2em;">
+                        <?= esc($redResult) ?>
+                      </div>
+                      <div style="flex: 1; display: flex; align-items: center; justify-content: center; background: #e6f2ff; color: #0275d8; font-weight: bold; writing-mode: vertical-rl; text-orientation: upright; font-size: 1.2em;">
+                        <?= esc($whiteResult) ?>
+                      </div>
                     </div>
-                    <div class="team-white" style="flex: 1; display: flex; align-items: center; justify-content: center; font-weight: bold; padding: 8px 4px;">
-                      <?= esc($card['white_abbr'] ?: mb_substr($card['white_name'], 0, 4)) ?>
+                    <!-- チーム名列 -->
+                    <div style="flex: 1; display: flex; flex-direction: column;">
+                      <div class="team-red" style="flex: 1; display: flex; align-items: center; justify-content: center; border-bottom: 2px dashed #111; font-weight: bold; padding: 8px 4px;">
+                        <?= esc($card['red_abbr'] ?: mb_substr($card['red_name'], 0, 4)) ?>
+                      </div>
+                      <div class="team-white" style="flex: 1; display: flex; align-items: center; justify-content: center; font-weight: bold; padding: 8px 4px;">
+                        <?= esc($card['white_abbr'] ?: mb_substr($card['white_name'], 0, 4)) ?>
+                      </div>
                     </div>
                   </div>
                 </td>
@@ -377,16 +812,20 @@ $cardCount = is_array($displayCards) ? count($displayCards) : 0;
                       <div class="pos-top">
                         <div class="sub-left">
                           <?php if ($redWinner): ?>
-                            <div class="winner-mark">✓</div>
+                            <div class="winner-mark">勝</div>
+                          <?php elseif ($m && (!$redWinner && !$whiteWinner)): ?>
+                            <div style="color: #666; font-weight: bold; font-size: 0.9em;">引</div>
+                          <?php else: ?>
+                            <div style="color: #999; font-weight: bold; font-size: 0.9em;">負</div>
                           <?php endif; ?>
                         </div>
                         <div class="sub-right">
                           <?php if ($m && !empty($m['a_name'])): ?>
                             <div class="player-name"><?= esc($m['a_name']) ?></div>
                             <div class="tech-display">
-                              <?php foreach ($redTechniques as $tech): ?>
+                              <?php foreach ($redTechniques as $idx => $tech): ?>
                                 <?php if ($tech !== null): ?>
-                                  <span class="tech-badge"><?= esc($tech) ?></span>
+                                  <span class="<?= $idx === 0 ? 'tech-badge-first' : 'tech-badge' ?>"><?= esc($tech) ?></span>
                                 <?php else: ?>
                                   <span class="tech-badge-empty">　</span>
                                 <?php endif; ?>
@@ -400,21 +839,25 @@ $cardCount = is_array($displayCards) ? count($displayCards) : 0;
                       <div class="pos-bottom">
                         <div class="sub-left">
                           <?php if ($whiteWinner): ?>
-                            <div class="winner-mark">✓</div>
+                            <div class="winner-mark">勝</div>
+                          <?php elseif ($m && (!$redWinner && !$whiteWinner)): ?>
+                            <div style="color: #666; font-weight: bold; font-size: 0.9em;">引</div>
+                          <?php else: ?>
+                            <div style="color: #999; font-weight: bold; font-size: 0.9em;">負</div>
                           <?php endif; ?>
                         </div>
                         <div class="sub-right">
                           <?php if ($m && !empty($m['b_name'])): ?>
-                            <div class="player-name"><?= esc($m['b_name']) ?></div>
-                            <div class="tech-display">
-                              <?php foreach ($whiteTechniques as $tech): ?>
+                            <div class="tech-display" style="margin-bottom: 4px;">
+                              <?php foreach ($whiteTechniques as $idx => $tech): ?>
                                 <?php if ($tech !== null): ?>
-                                  <span class="tech-badge"><?= esc($tech) ?></span>
+                                  <span class="<?= $idx === 0 ? 'tech-badge-first' : 'tech-badge' ?>"><?= esc($tech) ?></span>
                                 <?php else: ?>
                                   <span class="tech-badge-empty">　</span>
                                 <?php endif; ?>
                               <?php endforeach; ?>
                             </div>
+                            <div class="player-name"><?= esc($m['b_name']) ?></div>
                           <?php endif; ?>
                         </div>
                       </div>
@@ -442,9 +885,48 @@ $cardCount = is_array($displayCards) ? count($displayCards) : 0;
 
                 <!-- 代表戦列 -->
                 <td>
-                  <div class="rep-inner">
-                    <div class="rep-top"></div>
-                    <div class="rep-bottom"></div>
+                  <div class="pos-inner">
+                    <!-- 上半分: 赤チーム選手 -->
+                    <div class="pos-top">
+                      <div class="sub-left">
+                        <?php if ($playoffRedWinner): ?>
+                          <div class="winner-mark">勝</div>
+                        <?php elseif ($playoffMatch): ?>
+                          <div style="color: #999; font-weight: bold; font-size: 0.9em;">負</div>
+                        <?php endif; ?>
+                      </div>
+                      <div class="sub-right">
+                        <?php if ($playoffMatch && !empty($playoffMatch['a_name'])): ?>
+                          <div class="player-name"><?= esc($playoffMatch['a_name']) ?></div>
+                          <?php if ($playoffRedTechnique !== null): ?>
+                            <div class="tech-display">
+                              <span class="tech-badge-first"><?= esc($playoffRedTechnique) ?></span>
+                            </div>
+                          <?php endif; ?>
+                        <?php endif; ?>
+                      </div>
+                    </div>
+                    
+                    <!-- 下半分: 白チーム選手 -->
+                    <div class="pos-bottom">
+                      <div class="sub-left">
+                        <?php if ($playoffWhiteWinner): ?>
+                          <div class="winner-mark">勝</div>
+                        <?php elseif ($playoffMatch): ?>
+                          <div style="color: #999; font-weight: bold; font-size: 0.9em;">負</div>
+                        <?php endif; ?>
+                      </div>
+                      <div class="sub-right">
+                        <?php if ($playoffMatch && !empty($playoffMatch['b_name'])): ?>
+                          <?php if ($playoffWhiteTechnique !== null): ?>
+                            <div class="tech-display" style="margin-bottom: 4px;">
+                              <span class="tech-badge-first"><?= esc($playoffWhiteTechnique) ?></span>
+                            </div>
+                          <?php endif; ?>
+                          <div class="player-name"><?= esc($playoffMatch['b_name']) ?></div>
+                        <?php endif; ?>
+                      </div>
+                    </div>
                   </div>
                 </td>
               </tr>
