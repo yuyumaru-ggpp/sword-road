@@ -17,57 +17,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $new = $_POST['new_password'] ?? '';
     $new2 = $_POST['new_password_confirm'] ?? '';
 
-    // パスワード一致チェック
-    if ($new !== $new2) {
-        $err = '新しいパスワードが一致しません';
-    } elseif ($current === '') {
-        $err = '現在のパスワードを入力してください';
-    } else {
-        // 現在のパスワード確認（display_name を参照しない）
-        $stmt = $pdo->prepare("SELECT id, user_id, password_hash FROM managers WHERE user_id = :uid LIMIT 1");
-        $stmt->execute([':uid' => $uid]);
-        $r = $stmt->fetch(PDO::FETCH_ASSOC);
+    // // パスワード一致チェック
+    // if ($new !== $new2) {
+    //     $err = '新しいパスワードが一致しません';
+    // } elseif ($current === '') {
+    //     $err = '現在のパスワードを入力してください';
+    // } else {
+    //     // 現在のパスワード確認（display_name を参照しない）
+    //     $stmt = $pdo->prepare("SELECT id, user_id, password_hash FROM managers WHERE user_id = :uid LIMIT 1");
+    //     $stmt->execute([':uid' => $uid]);
+    //     $r = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$r || !password_verify($current, $r['password_hash'])) {
-            $err = '現在のパスワードが違います';
-        } else {
-            // 変更処理開始
-            try {
-                $pdo->beginTransaction();
+    //     if (!$r || !password_verify($current, $r['password_hash'])) {
+    //         $err = '現在のパスワードが違います';
+    //     } else {
+    //         // 変更処理開始
+    //         try {
+    //             $pdo->beginTransaction();
 
-                // 1) ID変更が要求されている場合は重複チェックして更新
-                if ($new_id !== '' && $new_id !== $uid) {
-                    $chk = $pdo->prepare("SELECT id FROM managers WHERE user_id = :newid LIMIT 1");
-                    $chk->execute([':newid' => $new_id]);
-                    if ($chk->fetch()) {
-                        $pdo->rollBack();
-                        $err = '指定したIDは既に使用されています。別のIDを選んでください。';
-                    } else {
-                        $updId = $pdo->prepare("UPDATE managers SET user_id = :newid WHERE id = :id");
-                        $updId->execute([':newid' => $new_id, ':id' => (int)$r['id']]);
-                        // セッションの user_id を更新
-                        $_SESSION['admin_user']['user_id'] = $new_id;
-                    }
-                }
+    //             // 1) ID変更が要求されている場合は重複チェックして更新
+    //             if ($new_id !== '' && $new_id !== $uid) {
+    //                 $chk = $pdo->prepare("SELECT id FROM managers WHERE user_id = :newid LIMIT 1");
+    //                 $chk->execute([':newid' => $new_id]);
+    //                 if ($chk->fetch()) {
+    //                     $pdo->rollBack();
+    //                     $err = '指定したIDは既に使用されています。別のIDを選んでください。';
+    //                 } else {
+    //                     $updId = $pdo->prepare("UPDATE managers SET user_id = :newid WHERE id = :id");
+    //                     $updId->execute([':newid' => $new_id, ':id' => (int)$r['id']]);
+    //                     // セッションの user_id を更新
+    //                     $_SESSION['admin_user']['user_id'] = $new_id;
+    //                 }
+    //             }
 
-                // 2) パスワード変更（空でなければ更新）
-                if ($new !== '') {
-                    $hash = password_hash($new, PASSWORD_DEFAULT);
-                    $updPw = $pdo->prepare("UPDATE managers SET password_hash = :ph WHERE id = :id");
-                    $updPw->execute([':ph' => $hash, ':id' => (int)$r['id']]);
-                }
+    //             // 2) パスワード変更（空でなければ更新）
+    //             if ($new !== '') {
+    //                 $hash = password_hash($new, PASSWORD_DEFAULT);
+    //                 $updPw = $pdo->prepare("UPDATE managers SET password_hash = :ph WHERE id = :id");
+    //                 $updPw->execute([':ph' => $hash, ':id' => (int)$r['id']]);
+    //             }
 
-                if ($err === '') {
-                    $pdo->commit();
-                    $msg = 'アカウント情報を更新しました。';
-                }
-            } catch (Exception $e) {
-                $pdo->rollBack();
-                error_log("admin account update error: " . $e->getMessage());
-                $err = '更新中にエラーが発生しました。サーバログを確認してください。';
-            }
-        }
-    }
+    //             if ($err === '') {
+    //                 $pdo->commit();
+    //                 $msg = 'アカウント情報を更新しました。';
+    //             }
+    //         } catch (Exception $e) {
+    //             $pdo->rollBack();
+    //             error_log("admin account update error: " . $e->getMessage());
+    //             $err = '更新中にエラーが発生しました。サーバログを確認してください。';
+    //         }
+    //     }
+    // }
 }
 ?>
 <!doctype html>

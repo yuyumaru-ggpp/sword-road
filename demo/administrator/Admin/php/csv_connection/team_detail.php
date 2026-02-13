@@ -125,7 +125,7 @@ $roles = [
 
         <div style="margin-top: 1rem; display: flex; gap: 1rem;">
             <button class="btn-destructive"
-                onclick="if(confirm('このチームを削除しますか？')) location.href='delete_team.php?team=<?= $team_id ?>&id=<?= $tournament_id ?>&dept=<?= $department_id ?>'">
+                onclick="#">
                 チームを削除
             </button>
 

@@ -25,18 +25,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "パスワードが一致しません";
     } else {
         // 更新処理
-        $sql = "UPDATE tournaments 
-                SET password = :password,
-                    updated_at = NOW()
-                WHERE id = :id";
+        // $sql = "UPDATE tournaments 
+        //         SET password = :password,
+        //             updated_at = NOW()
+        //         WHERE id = :id";
 
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindValue(':password', $new_pass, PDO::PARAM_STR);
-        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-        $stmt->execute();
+        // $stmt = $pdo->prepare($sql);
+        // $stmt->bindValue(':password', $new_pass, PDO::PARAM_STR);
+        // $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        // $stmt->execute();
 
-        header("Location: tournament-detail.php?id=" . $id);
-        exit;
+        // header("Location: tournament-detail.php?id=" . $id);
+        // exit;
     }
 }
 
