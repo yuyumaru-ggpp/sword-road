@@ -111,26 +111,10 @@ body {
     position: relative;
 }
 
-.position-header {
-    position: absolute;
-    top: max(0px, env(safe-area-inset-top));
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 24px;
-    font-weight: bold;
-    color: white;
-    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-    padding: 12px 40px;
-    text-align: center;
-    z-index: 200;
-    border-radius: 0 0 16px 16px;
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
-}
-
 .header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 60px 20px 15px;
+    padding: 20px 20px 15px;
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
@@ -304,6 +288,23 @@ body {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+.position-label {
+    position: absolute;
+    top: 50%;
+    left: 20px;
+    transform: translateY(-50%);
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    z-index: 150;
+    white-space: nowrap;
+}
+
 .dropdown-container {
     position: relative;
     width: 40px;
@@ -451,18 +452,19 @@ body {
         border-radius: 16px;
     }
 
-    .position-header {
-        font-size: 20px;
-        padding: 10px 32px;
-    }
-
     .header {
-        padding: 50px 15px 12px;
+        padding: 15px 15px 12px;
     }
 
     .header-badge {
         font-size: 12px;
         padding: 5px 12px;
+    }
+
+    .position-label {
+        font-size: 14px;
+        padding: 6px 16px;
+        left: 15px;
     }
 
     .main-content {
@@ -534,19 +536,19 @@ body {
         border-radius: 12px;
     }
 
-    .position-header {
-        font-size: 18px;
-        padding: 8px 24px;
-        border-radius: 0 0 12px 12px;
-    }
-
     .header {
-        padding: 46px 12px 10px;
+        padding: 12px 12px 10px;
     }
 
     .header-badge {
         font-size: 11px;
         padding: 4px 10px;
+    }
+
+    .position-label {
+        font-size: 13px;
+        padding: 5px 14px;
+        left: 12px;
     }
 
     .main-content {
@@ -642,18 +644,19 @@ body {
         border-radius: 10px;
     }
 
-    .position-header {
-        font-size: 16px;
-        padding: 6px 20px;
-    }
-
     .header {
-        padding: 40px 10px 8px;
+        padding: 10px 10px 8px;
     }
 
     .header-badge {
         font-size: 10px;
         padding: 3px 8px;
+    }
+
+    .position-label {
+        font-size: 12px;
+        padding: 4px 12px;
+        left: 10px;
     }
 
     .main-content {
@@ -741,8 +744,6 @@ body {
 </head>
 <body>
 <div class="container">
-    <div class="position-header">代表決定戦</div>
-    
     <div class="header">
         <div class="header-badge">団体戦</div>
         <div class="header-badge"><?= htmlspecialchars($info['tournament_name']) ?></div>
@@ -780,6 +781,7 @@ body {
             </div>
 
             <div class="divider-section">
+                <div class="position-label">代表決定戦</div>
                 <hr class="divider">
                 <div class="middle-controls">
                     <div class="dropdown-container">
@@ -809,6 +811,10 @@ body {
                 </div>
                 <div class="player-info" style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);">
                     <div class="info-row">
+                        <div class="info-label">チーム名</div>
+                        <div class="info-value"><?= htmlspecialchars($team_white_name) ?></div>
+                    </div>
+                    <div class="info-row">
                         <div class="info-label">選手選択</div>
                         <select class="player-select" id="whitePlayerSelect">
                             <option value="">選手を選択</option>
@@ -816,10 +822,6 @@ body {
                                 <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['name']) ?> (<?= htmlspecialchars($p['position']) ?>)</option>
                             <?php endforeach; ?>
                         </select>
-                    </div>
-                    <div class="info-row">
-                        <div class="info-label">チーム名</div>
-                        <div class="info-value"><?= htmlspecialchars($team_white_name) ?></div>
                     </div>
                 </div>
             </div>

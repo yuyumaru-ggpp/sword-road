@@ -460,8 +460,11 @@ body {
     }
 
     .vs-text {
-        transform: rotate(90deg);
+        transform: none;   /* ← 回転やめる */
+        font-size: 20px;   /* ← 小さくする */
     }
+}
+
 
     .team-section {
         width: 100%;
