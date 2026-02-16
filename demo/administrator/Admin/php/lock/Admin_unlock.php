@@ -201,21 +201,21 @@ $tournaments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 }, 3500);
             }
 
-            // list.addEventListener('change', async (e) => {
-            //     const input = e.target;
-            //     if (!input.classList.contains('toggle-input')) return;
+            list.addEventListener('change', async (e) => {
+                const input = e.target;
+                if (!input.classList.contains('toggle-input')) return;
 
-            //     const item = input.closest('.list-item');
-            //     const id = item?.dataset?.id;
-            //     if (!id) return;
+                const item = input.closest('.list-item');
+                const id = item?.dataset?.id;
+                if (!id) return;
 
-            //     const newUnlocked = input.checked; // checked === unlocked
-            //     const set_locked = newUnlocked ? 0 : 1;
-            //     const action = newUnlocked ? '解除' : 'ロック';
-            //     if (!confirm(`大会ID ${id} を ${action} しますか？`)) {
-            //         input.checked = !newUnlocked;
-            //         return;
-            //     }
+                const newUnlocked = input.checked; // checked === unlocked
+                const set_locked = newUnlocked ? 0 : 1;
+                const action = newUnlocked ? '解除' : 'ロック';
+                if (!confirm(`大会ID ${id} を ${action} しますか？`)) {
+                    input.checked = !newUnlocked;
+                    return;
+                }
 
                 input.disabled = true;
 

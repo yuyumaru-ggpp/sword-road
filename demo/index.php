@@ -352,6 +352,11 @@ function highlightKeyword($text, $keyword) {
                         </div>
 
                         <div class="search-field">
+                            <label for="dateTo">📅 開催日（終了）</label>
+                            <input type="date" id="dateTo" name="date_to" value="<?= htmlspecialchars($dateTo, ENT_QUOTES, 'UTF-8') ?>">
+                        </div>
+
+                        <div class="search-field">
                             <label for="venueFilter">📍 会場</label>
                             <select id="venueFilter" name="venue">
                                 <option value="">すべて</option>
@@ -435,7 +440,7 @@ function highlightKeyword($text, $keyword) {
                         }
                     }
                 ?>
-                    <a class="tournament-item" href="<?= $url ?>" target="_blank" rel="noopener noreferrer">
+                    <a class="tournament-item" href="<?= $url ?>">
                         <h3><?= highlightKeyword($title, $keyword) ?> <?= $badge ?></h3>
                         <p>📅 <?= $date ?: '未定' ?></p>
                         <?php if ($venueText): ?>
@@ -466,9 +471,8 @@ function highlightKeyword($text, $keyword) {
             <a href="?<?= http_build_query(array_merge($baseQuery, ['p' => $nextP])) ?>" class="pagination-btn">次へ →</a>
         </div>
 
-        <footer class="school-name">
-            <div>企画：盛岡剣道協会</div>
-            <div>制作：情報ビジネス＆デザイン専門学校</div>
+        <footer>
+            <div class="school-name">MCL盛岡情報ビジネス＆デザイン専門学校</div>
         </footer>
     </div>
 

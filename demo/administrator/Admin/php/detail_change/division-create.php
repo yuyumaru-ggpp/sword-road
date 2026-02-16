@@ -19,38 +19,38 @@ $error = '';
 $success = '';
 
 // POST処理（作成）
-// if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-//     $name = trim($_POST['name'] ?? '');
-//     $distinction = isset($_POST['distinction']) ? (int)$_POST['distinction'] : null;
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $name = trim($_POST['name'] ?? '');
+    $distinction = isset($_POST['distinction']) ? (int)$_POST['distinction'] : null;
 
-//     if ($name === '' || ($distinction !== 0 && $distinction !== 1)) {
-//         $error = "部門名と種別を選択してください";
-//     } else {
-//         // 同名チェック（大会内で同じ名前が存在しないか。大文字小文字を区別しない）
-//         $sqlCheck = "SELECT COUNT(*) FROM departments WHERE tournament_id = :tournament_id AND LOWER(name) = LOWER(:name) AND del_flg = 0";
-//         $stmtCheck = $pdo->prepare($sqlCheck);
-//         $stmtCheck->bindValue(':tournament_id', $tournament_id, PDO::PARAM_INT);
-//         $stmtCheck->bindValue(':name', $name, PDO::PARAM_STR);
-//         $stmtCheck->execute();
-//         $count = (int)$stmtCheck->fetchColumn();
+    if ($name === '' || ($distinction !== 0 && $distinction !== 1)) {
+        $error = "部門名と種別を選択してください";
+    } else {
+        // 同名チェック（大会内で同じ名前が存在しないか。大文字小文字を区別しない）
+        $sqlCheck = "SELECT COUNT(*) FROM departments WHERE tournament_id = :tournament_id AND LOWER(name) = LOWER(:name) AND del_flg = 0";
+        $stmtCheck = $pdo->prepare($sqlCheck);
+        $stmtCheck->bindValue(':tournament_id', $tournament_id, PDO::PARAM_INT);
+        $stmtCheck->bindValue(':name', $name, PDO::PARAM_STR);
+        $stmtCheck->execute();
+        $count = (int)$stmtCheck->fetchColumn();
 
-//         if ($count > 0) {
-//             $error = "同じ名前の部門が既に登録されています";
-//         } else {
-//             $sql = "INSERT INTO departments (tournament_id, name, distinction, created_at, update_at, del_flg)
-//                     VALUES (:tournament_id, :name, :distinction, NOW(), NOW(), 0)";
-//             $stmt = $pdo->prepare($sql);
-//             $stmt->bindValue(':tournament_id', $tournament_id, PDO::PARAM_INT);
-//             $stmt->bindValue(':name', $name, PDO::PARAM_STR);
-//             $stmt->bindValue(':distinction', $distinction, PDO::PARAM_INT);
-//             $stmt->execute();
+        if ($count > 0) {
+            $error = "同じ名前の部門が既に登録されています";
+        } else {
+            $sql = "INSERT INTO departments (tournament_id, name, distinction, created_at, update_at, del_flg)
+                    VALUES (:tournament_id, :name, :distinction, NOW(), NOW(), 0)";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindValue(':tournament_id', $tournament_id, PDO::PARAM_INT);
+            $stmt->bindValue(':name', $name, PDO::PARAM_STR);
+            $stmt->bindValue(':distinction', $distinction, PDO::PARAM_INT);
+            $stmt->execute();
 
-//             $success = "部門を作成しました";
-//             // フォームの再表示時に入力をクリアする
-//             $_POST = [];
-//         }
-//     }
-// }
+            $success = "部門を作成しました";
+            // フォームの再表示時に入力をクリアする
+            $_POST = [];
+        }
+    }
+}
 
 // 登録済み部門を取得（プレビュー用）
 $sqlList = "SELECT id, name, distinction, created_at FROM departments WHERE tournament_id = :tournament_id AND del_flg = 0 ORDER BY created_at DESC";

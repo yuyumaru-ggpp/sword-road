@@ -36,69 +36,69 @@ try {
 // --- ここまで追加 ---
 
 // POST処理（登録） - 安全版
-// if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-//   if (!empty($_POST['divisions']) && is_array($_POST['divisions'])) {
+  if (!empty($_POST['divisions']) && is_array($_POST['divisions'])) {
 
-//     $inserted = 0;
-//     $pdo->beginTransaction();
-//     try {
-//       // $sql = "INSERT INTO departments (tournament_id, name, distinction, created_at, update_at)
-//       //   VALUES (:tournament_id, :name, :distinction, NOW(), NOW())";
-//       // $stmt = $pdo->prepare($sql);
+    $inserted = 0;
+    $pdo->beginTransaction();
+    try {
+      $sql = "INSERT INTO departments (tournament_id, name, distinction, created_at, update_at)
+        VALUES (:tournament_id, :name, :distinction, NOW(), NOW())";
+      $stmt = $pdo->prepare($sql);
 
-//       foreach ($_POST['divisions'] as $value) {
-//       //   // skip empty values
-//       //   if (!is_string($value) || trim($value) === '') continue;
+      foreach ($_POST['divisions'] as $value) {
+        // skip empty values
+        if (!is_string($value) || trim($value) === '') continue;
 
-//       //   // explode with limit 2 and validate
-//       //   $parts = explode('|', $value, 2);
-//         if (count($parts) < 2) {
-//       //     // malformed value: skip or collect error
-//       //     continue;
-//         }
-//       //   $name = trim($parts[0]);
-//       //   $distinction = (int)trim($parts[1]); // cast to int for safety
+        // explode with limit 2 and validate
+        $parts = explode('|', $value, 2);
+        if (count($parts) < 2) {
+          // malformed value: skip or collect error
+          continue;
+        }
+        $name = trim($parts[0]);
+        $distinction = (int)trim($parts[1]); // cast to int for safety
 
-//       //   if ($name === '') continue; // skip empty name
+        if ($name === '') continue; // skip empty name
 
-//       //   // **重複登録防止（サーバ側）**
-//       //   $checkKey = $name . '|' . (string)$distinction;
-//         if (isset($existingMap[$checkKey])) {
-//             // 既に存在するならスキップ（またはエラー扱いにする）
-//             continue;
-//         }
+      //   // **重複登録防止（サーバ側）**
+        $checkKey = $name . '|' . (string)$distinction;
+        if (isset($existingMap[$checkKey])) {
+            // 既に存在するならスキップ（またはエラー扱いにする）
+            continue;
+        }
 
-//         // bind and execute
-//         $stmt->bindValue(':tournament_id', (int)$tournament_id, PDO::PARAM_INT);
-//         $stmt->bindValue(':name', $name, PDO::PARAM_STR);
-//         $stmt->bindValue(':distinction', $distinction, PDO::PARAM_INT);
-//         $stmt->execute();
-//         $inserted++;
+        // bind and execute
+        $stmt->bindValue(':tournament_id', (int)$tournament_id, PDO::PARAM_INT);
+        $stmt->bindValue(':name', $name, PDO::PARAM_STR);
+        $stmt->bindValue(':distinction', $distinction, PDO::PARAM_INT);
+        $stmt->execute();
+        $inserted++;
 
-//         // 追加したものを既存マップに追加して二重登録を防ぐ（同一リクエスト内）
-//         $existingMap[$checkKey] = true;
-//       }
+        // 追加したものを既存マップに追加して二重登録を防ぐ（同一リクエスト内）
+        $existingMap[$checkKey] = true;
+      }
 
-//       $pdo->commit();
+      $pdo->commit();
 
-//       if ($inserted > 0) {
-//         header("Location: tournament-detail.php?id=" . $tournament_id);
-//         exit;
-//       } else {
-//         $error = "有効な部門が選択されていません。";
-//       }
-//     } catch (PDOException $e) {
-//       $pdo->rollBack();
-//       // 開発用：詳細をログに残す
-//       error_log("departments insert failed: " . $e->getMessage());
-//       // 本番では詳細を出さないほうが安全
-//       $error = "登録中にエラーが発生しました。";
-//     }
-//   } else {
-//     $error = "部門が選択されていません";
-//   }
-// }
+      if ($inserted > 0) {
+        header("Location: tournament-detail.php?id=" . $tournament_id);
+        exit;
+      } else {
+        $error = "有効な部門が選択されていません。";
+      }
+    } catch (PDOException $e) {
+      $pdo->rollBack();
+      // 開発用：詳細をログに残す
+      error_log("departments insert failed: " . $e->getMessage());
+      // 本番では詳細を出さないほうが安全
+      $error = "登録中にエラーが発生しました。";
+    }
+  } else {
+    $error = "部門が選択されていません";
+  }
+}
 ?>
 <!DOCTYPE html>
 <html lang="ja">

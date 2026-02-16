@@ -32,17 +32,17 @@ if (!$dept) {
 $error = '';
 
 // POSTで削除実行（ソフトデリート）
-// if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-//     $sqlDel = "UPDATE departments SET del_flg = 1, update_at = NOW() WHERE id = :id AND tournament_id = :tournament_id";
-//     $stmtDel = $pdo->prepare($sqlDel);
-//     $stmtDel->bindValue(':id', $id, PDO::PARAM_INT);
-//     $stmtDel->bindValue(':tournament_id', $tournament_id, PDO::PARAM_INT);
-//     $stmtDel->execute();
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $sqlDel = "UPDATE departments SET del_flg = 1, update_at = NOW() WHERE id = :id AND tournament_id = :tournament_id";
+    $stmtDel = $pdo->prepare($sqlDel);
+    $stmtDel->bindValue(':id', $id, PDO::PARAM_INT);
+    $stmtDel->bindValue(':tournament_id', $tournament_id, PDO::PARAM_INT);
+    $stmtDel->execute();
 
-//     // 削除後は大会詳細へ戻る
-//     header("Location: tournament-detail.php?id=" . $tournament_id);
-//     exit;
-// }
+    // 削除後は大会詳細へ戻る
+    header("Location: tournament-detail.php?id=" . $tournament_id);
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="ja">
