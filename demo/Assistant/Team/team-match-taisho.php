@@ -125,26 +125,10 @@ body {
     position: relative;
 }
 
-.position-header {
-    position: absolute;
-    top: max(0px, env(safe-area-inset-top));
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 24px;
-    font-weight: bold;
-    color: white;
-    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-    padding: 12px 40px;
-    text-align: center;
-    z-index: 200;
-    border-radius: 0 0 16px 16px;
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
-}
-
 .header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 60px 20px 15px;
+    padding: 20px 20px 15px;
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
@@ -366,6 +350,23 @@ body {
     color: white;
 }
 
+.position-label {
+    position: absolute;
+    top: 50%;
+    left: 20px;
+    transform: translateY(-50%);
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    z-index: 150;
+    white-space: nowrap;
+}
+
 .draw-container-wrapper {
     position: absolute;
     top: 50%;
@@ -394,6 +395,18 @@ body {
 .draw-button:hover {
     border-color: #667eea;
     background: #f7fafc;
+}
+
+.draw-button.required-empty {
+    border-color: #ef4444;
+    background: #fef2f2;
+    animation: shake 0.5s;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
 }
 
 .draw-dropdown-menu {
@@ -463,16 +476,6 @@ body {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.next-button {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-}
-
-.next-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-}
-
 .submit-button {
     background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
     color: white;
@@ -483,9 +486,8 @@ body {
     box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4);
 }
 
-.next-button:active,
-.back-button:active,
-.submit-button:active {
+.submit-button:active,
+.back-button:active {
     transform: translateY(0);
 }
 
@@ -519,18 +521,19 @@ body {
         border-radius: 16px;
     }
 
-    .position-header {
-        font-size: 20px;
-        padding: 10px 32px;
-    }
-
     .header {
-        padding: 50px 15px 12px;
+        padding: 15px 15px 12px;
     }
 
     .header-badge {
         font-size: 12px;
         padding: 5px 12px;
+    }
+
+    .position-label {
+        font-size: 14px;
+        padding: 6px 16px;
+        left: 15px;
     }
 
     .main-content {
@@ -616,19 +619,19 @@ body {
         border-radius: 12px;
     }
 
-    .position-header {
-        font-size: 18px;
-        padding: 8px 24px;
-        border-radius: 0 0 12px 12px;
-    }
-
     .header {
-        padding: 46px 12px 10px;
+        padding: 12px 12px 10px;
     }
 
     .header-badge {
         font-size: 11px;
         padding: 4px 10px;
+    }
+
+    .position-label {
+        font-size: 13px;
+        padding: 5px 14px;
+        left: 12px;
     }
 
     .main-content {
@@ -744,18 +747,19 @@ body {
         border-radius: 10px;
     }
 
-    .position-header {
-        font-size: 16px;
-        padding: 6px 20px;
-    }
-
     .header {
-        padding: 40px 10px 8px;
+        padding: 10px 10px 8px;
     }
 
     .header-badge {
         font-size: 10px;
         padding: 3px 8px;
+    }
+
+    .position-label {
+        font-size: 12px;
+        padding: 4px 12px;
+        left: 10px;
     }
 
     .main-content {
@@ -863,8 +867,6 @@ body {
 </head>
 <body>
 <div class="container">
-    <div class="position-header">大将</div>
-    
     <div class="header">
         <div class="header-badge">団体戦</div>
         <div class="header-badge"><?= htmlspecialchars($info['tournament_name']) ?></div>
@@ -899,6 +901,7 @@ body {
             </div>
 
             <div class="divider-section">
+                <div class="position-label">大将</div>
                 <hr class="divider">
                 <div class="middle-controls">
                     <div class="score-dropdowns">
@@ -973,12 +976,12 @@ body {
                 </div>
                 <div class="player-info" style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);">
                     <div class="info-row">
-                        <div class="info-label">名前</div>
-                        <div class="info-value"><?= htmlspecialchars($white_player_name ?: '───') ?></div>
-                    </div>
-                    <div class="info-row">
                         <div class="info-label">チーム名</div>
                         <div class="info-value"><?= htmlspecialchars($team_white_name) ?></div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">名前</div>
+                        <div class="info-value"><?= htmlspecialchars($white_player_name ?: '───') ?></div>
                     </div>
                 </div>
             </div>
@@ -1023,12 +1026,16 @@ function load() {
         c.classList.toggle('selected', (data.white.selected || []).includes(i));
     });
     const drawButton = document.getElementById('drawButton');
-    if (data.special === 'ippon') {
+    if (data.special === 'nihon') {
+        drawButton.textContent = '二本勝';
+    } else if (data.special === 'ippon') {
         drawButton.textContent = '一本勝';
     } else if (data.special === 'extend') {
-        drawButton.textContent = '延長';
+        drawButton.textContent = '延長戦';
+    } else if (data.special === 'hantei') {
+        drawButton.textContent = '判定';
     } else if (data.special === 'draw') {
-        drawButton.textContent = '引分け';
+        drawButton.textContent = '引き分け';
     } else {
         drawButton.textContent = '-';
     }
@@ -1042,6 +1049,23 @@ function saveLocal() {
         .map(el => parseInt(el.dataset.index));
     const dt = document.getElementById('drawButton').textContent;
     data.special = dt==='二本勝'?'nihon':dt==='一本勝'?'ippon':dt==='延長戦'?'extend':dt==='判定'?'hantei':dt==='引き分け'?'draw':'none';
+}
+
+function validateInput() {
+    const drawButton = document.getElementById('drawButton');
+    const drawText = drawButton.textContent;
+    
+    // 勝敗が選択されていない場合（「-」のまま）
+    if (drawText === '-') {
+        drawButton.classList.add('required-empty');
+        setTimeout(() => {
+            drawButton.classList.remove('required-empty');
+        }, 500);
+        alert('試合結果を選択してください（二本勝、一本勝、延長戦、判定、引き分けのいずれか）');
+        return false;
+    }
+    
+    return true;
 }
 
 for (let i = 0; i < 3; i++) {
@@ -1146,6 +1170,11 @@ function calculateProgress() {
 }
 
 document.getElementById('nextButton').onclick=async()=>{
+    // バリデーションチェック
+    if (!validateInput()) {
+        return;
+    }
+    
     saveLocal();
     try{
         const r=await fetch(location.href,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
