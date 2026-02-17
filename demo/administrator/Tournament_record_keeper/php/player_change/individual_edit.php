@@ -40,54 +40,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message = "選手情報を修正しました。";
     }
 
-    // 棄権（チームにフラグを立てる）
+    // 棄権（選手個人にフラグを立てる）
     if (isset($_POST['withdraw'])) {
-        // 選手情報（名前と所属チーム）を取得
-        $sql = "SELECT name, team_id FROM players WHERE id = :id";
+        // 選手の substitute_flg を 1 にする（棄権扱い）
+        $sql = "UPDATE players SET substitute_flg = 1 WHERE id = :id";
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindValue(':id', $player_id, PDO::PARAM_INT);
+        $stmt->execute();
+
+        // 選手名を取得
+        $sql = "SELECT name FROM players WHERE id = :id";
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':id', $player_id, PDO::PARAM_INT);
         $stmt->execute();
         $playerRow = $stmt->fetch(PDO::FETCH_ASSOC);
+        $playerName = $playerRow['name'] ?? '';
 
-        if ($playerRow && !empty($playerRow['team_id'])) {
-            $sql = "UPDATE teams SET withdraw_flg = 1 WHERE id = :tid";
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindValue(':tid', $playerRow['team_id'], PDO::PARAM_INT);
-            $stmt->execute();
-
-            $playerName = $playerRow['name'] ?? '';
-            $message = htmlspecialchars($playerName, ENT_QUOTES, 'UTF-8') . " 選手の所属チームを棄権にしました。";
-        } else {
-            $message = "所属チームが見つかりませんでした。";
-        }
+        $message = htmlspecialchars($playerName, ENT_QUOTES, 'UTF-8') . " 選手を棄権にしました。";
     }
 
-    // 棄権解除（チームのフラグを戻す）
+    // 棄権解除（選手個人のフラグを戻す）
     if (isset($_POST['unwithdraw'])) {
-        // 選手情報（名前と所属チーム）を取得
-        $sql = "SELECT name, team_id FROM players WHERE id = :id";
+        // 選手の substitute_flg を 0 に戻す
+        $sql = "UPDATE players SET substitute_flg = 0 WHERE id = :id";
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindValue(':id', $player_id, PDO::PARAM_INT);
+        $stmt->execute();
+
+        // 選手名を取得
+        $sql = "SELECT name FROM players WHERE id = :id";
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':id', $player_id, PDO::PARAM_INT);
         $stmt->execute();
         $playerRow = $stmt->fetch(PDO::FETCH_ASSOC);
+        $playerName = $playerRow['name'] ?? '';
 
-        if ($playerRow && !empty($playerRow['team_id'])) {
-            $sql = "UPDATE teams SET withdraw_flg = 0 WHERE id = :tid";
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindValue(':tid', $playerRow['team_id'], PDO::PARAM_INT);
-            $stmt->execute();
-
-            $playerName = $playerRow['name'] ?? '';
-            $message = htmlspecialchars($playerName, ENT_QUOTES, 'UTF-8') . " 選手の所属チームの棄権を解除しました。";
-        } else {
-            $message = "所属チームが見つかりませんでした。";
-        }
+        $message = htmlspecialchars($playerName, ENT_QUOTES, 'UTF-8') . " 選手の棄権を解除しました。";
     }
 }
 
 // 選手情報取得（表示用）
 $sql = "
-    SELECT p.id, p.name, p.furigana, p.player_number, p.team_id, t.name AS team_name, t.withdraw_flg AS team_withdraw
+    SELECT p.id, p.name, p.furigana, p.player_number, p.team_id, p.substitute_flg, 
+           t.name AS team_name, t.withdraw_flg AS team_withdraw
     FROM players p
     LEFT JOIN teams t ON p.team_id = t.id
     WHERE p.id = :pid
@@ -114,7 +109,8 @@ if (!$player) {
 
 <body>
     <div class="breadcrumb">
-        <a href="../tournament_editor_menu.php?id=<?= htmlspecialchars($tournament_id, ENT_QUOTES, 'UTF-8') ?>" class="breadcrumb-link">メニュー ></a> <a href="player-category-select.php?id=<?= $tournament_id ?>" class="breadcrumb-link">選手変更></a>
+        <a href="../tournament_editor_menu.php?id=<?= htmlspecialchars($tournament_id, ENT_QUOTES, 'UTF-8') ?>" class="breadcrumb-link">メニュー ></a> 
+        <a href="category_select.php?id=<?= $tournament_id ?>" class="breadcrumb-link">選手変更></a>
         <a href="individual.php?id=<?= $tournament_id ?>&dept=<?= $department_id ?>" class="breadcrumb-link">個人戦></a>
         <a href="#" class="breadcrumb-link">選手編集</a>
     </div>
@@ -127,10 +123,15 @@ if (!$player) {
         <?php endif; ?>
 
         <div class="player-meta">
-            <p><strong>選手番号</strong> <?= htmlspecialchars($player['player_number']) ?></p>
+            <p><strong>選手番号</strong> <?= htmlspecialchars($player['player_number']) ?> <?php if (!empty($player['substitute_flg']) && $player['substitute_flg'] == 1): ?>
+                    <span style="color:red; font-weight:bold;">棄権</span>
+                <?php else: ?>
+                    <span style="color:green;">出場</span>
+                <?php endif; ?>
+            </p>
             <p><strong>所属チーム</strong> <?= htmlspecialchars($player['team_name'] ?? 'なし') ?>
                 <?php if (!empty($player['team_withdraw']) && $player['team_withdraw'] == 1): ?>
-                    <span style="color:red;">（棄権）</span>
+                    <span style="color:red;">（チーム棄権）</span>
                 <?php endif; ?>
             </p>
         </div>
@@ -149,14 +150,14 @@ if (!$player) {
             </div>
 
             <div class="button-container">
-                <?php if (!empty($player['team_withdraw']) && $player['team_withdraw'] == 1): ?>
+                <?php if (!empty($player['substitute_flg']) && $player['substitute_flg'] == 1): ?>
                     <!-- 棄権フラグが立っている → 棄権解除ボタン -->
                     <button type="submit" name="unwithdraw" class="action-button"
-                        onclick="return confirm('この選手の所属チームの棄権を解除します。よろしいですか？')">棄権解除</button>
+                        onclick="return confirm('この選手の棄権を解除します。よろしいですか？')">棄権解除</button>
                 <?php else: ?>
                     <!-- 棄権フラグが立っていない → 棄権ボタン -->
                     <button type="submit" name="withdraw" class="action-button"
-                        onclick="return confirm('この選手の所属チームを棄権扱いにします。よろしいですか？')">棄権</button>
+                        onclick="return confirm('この選手を棄権扱いにします。よろしいですか？')">棄権</button>
                 <?php endif; ?>
 
                 <button type="submit" name="update" class="action-button">修正</button>

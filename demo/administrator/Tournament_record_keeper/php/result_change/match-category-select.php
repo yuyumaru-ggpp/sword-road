@@ -62,9 +62,16 @@ $back_link = ($user_role === 'recorder') ? '../../recorder_top.php' : '../../Adm
                 <?php foreach ($departments as $dept):
                     $dept_id = (int)$dept['id'];
                     $name = htmlspecialchars($dept['name'], ENT_QUOTES, 'UTF-8');
-                    $dist = (int)$dept['distinction']; // 例: 1=団体, 2=個人（既存の定義に合わせてください）
-                    // 遷移先：試合一覧（個人戦/団体戦で同じ match-list.php を使うなら dept と一緒に種別は不要）
-                    $link = "match-list.php?id={$tournament_id}&dept={$dept_id}";
+                    $dist = (int)$dept['distinction']; // 1=団体, 2=個人
+                    
+                    // 遷移先を区別に応じて振り分け
+                    if ($dist === 1) {
+                        // 団体戦
+                        $link = "match-list-team.php?id={$tournament_id}&dept={$dept_id}";
+                    } else {
+                        // 個人戦
+                        $link = "match-list-individual.php?id={$tournament_id}&dept={$dept_id}";
+                    }
                 ?>
                     <button class="category-button" onclick="location.href='<?= $link ?>'">
                         <?= $name ?>（<?= $dist === 1 ? "団体戦" : "個人戦" ?>）

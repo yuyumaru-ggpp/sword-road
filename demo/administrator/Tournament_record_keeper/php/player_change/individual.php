@@ -30,6 +30,7 @@ if ($keyword !== "") {
             p.name,
             p.furigana,
             p.player_number,
+            p.substitute_flg,
             t.withdraw_flg AS team_withdraw
         FROM players p
         LEFT JOIN teams t ON p.team_id = t.id
@@ -57,6 +58,7 @@ $sql = "
         p.name,
         p.furigana,
         p.player_number,
+        p.substitute_flg,
         t.withdraw_flg AS team_withdraw
     FROM players p
     LEFT JOIN teams t ON p.team_id = t.id
@@ -128,6 +130,12 @@ $player_list = $stmt->fetchAll(PDO::FETCH_ASSOC);
             margin-left: 0.5rem;
         }
 
+        .team-withdraw {
+            color: orange;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+
         .breadcrumb {
             margin-bottom: 1rem;
         }
@@ -142,7 +150,8 @@ $player_list = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <body>
     <div class="breadcrumb">
-        <a href="../tournament_editor_menu.php?id=<?= htmlspecialchars($tournament_id, ENT_QUOTES, 'UTF-8') ?>" class="breadcrumb-link">メニュー ></a> <a href="player-category-select.php?id=<?= htmlspecialchars($tournament_id) ?>" class="breadcrumb-link">選手変更</a>
+        <a href="../tournament_editor_menu.php?id=<?= htmlspecialchars($tournament_id, ENT_QUOTES, 'UTF-8') ?>" class="breadcrumb-link">メニュー ></a> 
+        <a href="category_select.php?id=<?= htmlspecialchars($tournament_id) ?>" class="breadcrumb-link">選手変更</a>
         <span class="breadcrumb-link">個人戦</span>
     </div>
 
@@ -158,7 +167,7 @@ $player_list = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <input type="hidden" name="id" value="<?= htmlspecialchars($tournament_id) ?>">
             <input type="hidden" name="dept" value="<?= htmlspecialchars($department_id) ?>">
             <div class="search-container">
-                <input type="text" name="keyword" class="search-input" placeholder="選手名またはIDを入力してください"
+                <input type="text" name="keyword" class="search-input" placeholder="選手名または選手番号を入力してください"
                     value="<?= htmlspecialchars($keyword) ?>">
                 <button type="submit" class="search-button">検索</button>
             </div>
@@ -171,8 +180,10 @@ $player_list = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <div style="padding:0.75rem; border:1px solid #ddd; margin-bottom:1rem;">
                     <div><strong>選手番号：</strong><?= htmlspecialchars($player['player_number']) ?></div>
                     <div><strong>選手名：</strong><?= htmlspecialchars($player['name']) ?>
-                        <?php if (!empty($player['team_withdraw']) && $player['team_withdraw'] == 1): ?>
+                        <?php if (!empty($player['substitute_flg']) && $player['substitute_flg'] == 1): ?>
                             <span class="withdraw">（棄権）</span>
+                        <?php elseif (!empty($player['team_withdraw']) && $player['team_withdraw'] == 1): ?>
+                            <span class="team-withdraw">（チーム棄権）</span>
                         <?php endif; ?>
                     </div>
                     <div style="margin-top:0.5rem;">
@@ -198,8 +209,10 @@ $player_list = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <span><?= htmlspecialchars($p['name']) ?></span>
                         </div>
                         <div>
-                            <?php if (!empty($p['team_withdraw']) && $p['team_withdraw'] == 1): ?>
+                            <?php if (!empty($p['substitute_flg']) && $p['substitute_flg'] == 1): ?>
                                 <span class="withdraw">（棄権）</span>
+                            <?php elseif (!empty($p['team_withdraw']) && $p['team_withdraw'] == 1): ?>
+                                <span class="team-withdraw">（チーム棄権）</span>
                             <?php endif; ?>
                         </div>
                     </div>
