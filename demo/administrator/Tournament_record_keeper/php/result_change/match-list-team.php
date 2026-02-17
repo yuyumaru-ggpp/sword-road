@@ -62,7 +62,9 @@ foreach ($teamMatches as $tm) {
         SELECT 
             im.match_id,
             im.individual_match_num,
-            im.first_technique, im.second_technique, im.third_technique,
+            im.first_technique, im.first_winner,
+            im.second_technique, im.second_winner,
+            im.third_technique, im.third_winner,
             im.judgement, im.final_winner,
             pa.name AS player_a_name,
             pb.name AS player_b_name
@@ -89,30 +91,52 @@ foreach ($teamMatches as $tm) {
     // 結果表示用に整形
     $formattedMatches = [];
     foreach ($individualMatches as $im) {
-        // 技を収集（メ、コ、×など）
-        $techs = [];
-        if (!empty($im['first_technique'])) $techs[] = $im['first_technique'];
-        if (!empty($im['second_technique'])) $techs[] = $im['second_technique'];
-        if (!empty($im['third_technique'])) $techs[] = $im['third_technique'];
+        // 技と勝者を配列で保持
+        $techniques = [];
+        if (!empty($im['first_technique'])) {
+            $techniques[] = [
+                'tech' => $im['first_technique'],
+                'winner' => strtolower($im['first_winner'] ?? '')
+            ];
+        }
+        if (!empty($im['second_technique'])) {
+            $techniques[] = [
+                'tech' => $im['second_technique'],
+                'winner' => strtolower($im['second_winner'] ?? '')
+            ];
+        }
+        if (!empty($im['third_technique'])) {
+            $techniques[] = [
+                'tech' => $im['third_technique'],
+                'winner' => strtolower($im['third_winner'] ?? '')
+            ];
+        }
 
         $judgement = $im['judgement'] ?? '';
         $winner = strtolower($im['final_winner'] ?? '');
 
-        // メーココ形式で結果を生成
-        $resultText = '';
-        if (!empty($techs)) {
-            // すべての技を連結
-            $allTechs = implode('', $techs);
-
-            // 判定がある場合は追加
-            if (!empty($judgement)) {
-                $resultText = $allTechs . 'ー' . $judgement;
-            } else {
-                $resultText = $allTechs;
+        // 赤と白の技を分離（それぞれの勝者情報も保持）
+        $redTechs = [];
+        $whiteTechs = [];
+        
+        foreach ($techniques as $t) {
+            $techWinner = $t['winner'];
+            if ($techWinner === 'red' || $techWinner === 'a') {
+                $redTechs[] = $t['tech'];
+            } else if ($techWinner === 'white' || $techWinner === 'b') {
+                $whiteTechs[] = $t['tech'];
             }
-        } else if (!empty($judgement)) {
-            // 技がなくて判定だけある場合
-            $resultText = 'ー' . $judgement;
+        }
+
+        // 「赤の技ー白の技ー決まり手」形式で結果を生成
+        $resultText = '';
+        $redPart = implode('', $redTechs);
+        $whitePart = implode('', $whiteTechs);
+        
+        if (!empty($redPart) || !empty($whitePart) || !empty($judgement)) {
+            $resultText = $redPart . 'ー' . $whitePart . 'ー' . $judgement;
+            // 末尾の余分なーを削除
+            $resultText = rtrim($resultText, 'ー');
         }
 
         $formattedMatches[] = [
@@ -587,20 +611,54 @@ $matchesJson = json_encode($matchesData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_
                         playerBHTML = `<span class="player-winner-white">${im.playerB}</span>`;
                     }
 
-                    // 結果表示を整形（文字ごとに色分け）
+                    // 結果表示を「赤ー白ー決まり手」形式で色分け
                     let resultHTML = '';
                     if (im.result) {
-                        let coloredResult = '';
-                        for (let char of im.result) {
-                            if (char === 'メ' || char === 'め') {
-                                coloredResult += `<span style="color: #dc2626; font-weight: 600;">${char}</span>`;
-                            } else if (char === 'コ' || char === 'こ') {
-                                coloredResult += `<span style="color: #2563eb; font-weight: 600;">${char}</span>`;
+                        const parts = im.result.split('ー');
+                        let coloredParts = [];
+                        
+                        // 勝者に応じて色を決定
+                        const isRedWinner = (im.winner === 'red' || im.winner === 'a');
+                        const isWhiteWinner = (im.winner === 'white' || im.winner === 'b');
+                        
+                        // 赤の技（最初の部分）
+                        if (parts[0]) {
+                            let redPart = '';
+                            if (isRedWinner) {
+                                // 赤が勝者なら赤色
+                                for (let char of parts[0]) {
+                                    redPart += `<span style="color: #dc2626; font-weight: 600;">${char}</span>`;
+                                }
                             } else {
-                                coloredResult += char;
+                                redPart = parts[0];
                             }
+                            coloredParts.push(redPart);
+                        } else {
+                            coloredParts.push('');
                         }
-                        resultHTML = coloredResult;
+                        
+                        // 白の技（2番目の部分）
+                        if (parts.length > 1 && parts[1]) {
+                            let whitePart = '';
+                            if (isWhiteWinner) {
+                                // 白が勝者なら青色
+                                for (let char of parts[1]) {
+                                    whitePart += `<span style="color: #2563eb; font-weight: 600;">${char}</span>`;
+                                }
+                            } else {
+                                whitePart = parts[1];
+                            }
+                            coloredParts.push(whitePart);
+                        } else if (parts.length > 1) {
+                            coloredParts.push('');
+                        }
+                        
+                        // 決まり手（3番目の部分）
+                        if (parts.length > 2) {
+                            coloredParts.push(parts[2]);
+                        }
+                        
+                        resultHTML = coloredParts.join('ー');
                     } else {
                         resultHTML = '<span style="color: #6b7280;">-</span>';
                     }
