@@ -792,7 +792,7 @@ body {
                             <div class="dropdown-item" data-val="コ">コ</div>
                             <div class="dropdown-item" data-val="ド">ド</div>
                             <div class="dropdown-item" data-val="ツ">ツ</div>
-                            <div class="dropdown-item" data-val="×">×</div>
+                            <div class="dropdown-item" data-val="不">不</div>
                         </div>
                     </div>
                 </div>

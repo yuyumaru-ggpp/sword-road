@@ -226,12 +226,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </tr>
             </thead>
             <tbody>
-                <!-- 上段 -->
                 <tr>
-                    <td class="side-label">上</td>
+                    <td class="side-label">赤</td>
                     <td class="player-info">
-                        <div class="player-name"><?= htmlspecialchars($data['upper_name']) ?></div>
                         <div class="player-number">選手番号: <?= htmlspecialchars($data['upper_number']) ?></div>
+                        <div class="player-name"><?= htmlspecialchars($data['upper_name']) ?></div>
+                        <div class="player-number">(<?= htmlspecialchars($data['upper_team']) ?>)</div>
                     </td>
                     <td class="result-cell">
                         <?php if ($data['winner'] === 'A'): ?>
@@ -243,12 +243,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <td class="total-cell"><?= $data['upper_score'] ?></td>
                 </tr>
 
-                <!-- 下段 -->
                 <tr>
-                    <td class="side-label">下</td>
+                    <td class="side-label">白</td>
                     <td class="player-info">
-                        <div class="player-name"><?= htmlspecialchars($data['lower_name']) ?></div>
                         <div class="player-number">選手番号: <?= htmlspecialchars($data['lower_number']) ?></div>
+                        <div class="player-name"><?= htmlspecialchars($data['lower_name']) ?></div>
+                        <div class="player-number">(<?= htmlspecialchars($data['lower_team']) ?>)</div>
                     </td>
                     <td class="result-cell">
                         <?php if ($data['winner'] === 'B'): ?>

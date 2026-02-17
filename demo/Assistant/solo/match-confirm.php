@@ -7,10 +7,10 @@ require_once 'solo_db.php';
 =============================== */
 if (
     !isset(
-        $_SESSION['tournament_id'],
-        $_SESSION['division_id'],
-        $_SESSION['match_number']
-    )
+    $_SESSION['tournament_id'],
+    $_SESSION['division_id'],
+    $_SESSION['match_number']
+)
 ) {
     header('Location: match_input.php');
     exit;
@@ -56,6 +56,30 @@ if ($isIppon) {
         $upperPoints = 0;
         $lowerPoints = 1;
     }
+}
+/* ===============================
+   引分判定
+=============================== */
+$isDraw = false;
+
+/* ===============================
+   勝者判定
+=============================== */
+$winner = null;
+
+if ($upperPoints > $lowerPoints) {
+    $winner = 'upper';
+} elseif ($lowerPoints > $upperPoints) {
+    $winner = 'lower';
+}
+
+if ($upperPoints === $lowerPoints) {
+    $isDraw = true;
+}
+$resultText = '';
+
+if ($upperPoints === 1 && $lowerPoints === 1) {
+    $resultText = '引分';
 }
 ?>
 <!DOCTYPE html>
@@ -185,7 +209,7 @@ if ($isIppon) {
             position: relative;
             padding-left: 1.8rem;
         }
-        
+
         .first-point::before {
             content: '○';
             position: absolute;
@@ -195,6 +219,12 @@ if ($isIppon) {
             color: #ef4444;
             font-size: 1.3rem;
             font-weight: bold;
+        }
+
+        .draw-label {
+            margin-left: 10px;
+            font-weight: bold;
+            color: #2563eb;
         }
     </style>
 </head>
@@ -225,12 +255,12 @@ if ($isIppon) {
                             if (!is_array($upperSelected)) {
                                 $upperSelected = [];
                             }
-                            
+
                             $scores = $data['scores'] ?? ($data['upper']['scores'] ?? []);
-                            
+
                             // 選択された技のみを表示
                             foreach ($scores as $i => $s) {
-                                if ($s !== '▼' && $s !== '▲' && $s !== '×' && $s !== '' && in_array($i, $upperSelected)) {
+                                if ($s !== '▼' && $s !== '▲' && $s !== '不' && $s !== '' && in_array($i, $upperSelected)) {
                                     $class = 'winner';
                                     // インデックス0（1番目の枠）に入力された技に〇マーク
                                     if ($upperPoints > 0 && $i === 0 && in_array(0, $upperSelected)) {
@@ -240,22 +270,25 @@ if ($isIppon) {
                                 }
                             }
 
-                            // 二本勝ちは勝者のみ表示（優先表示）
+                            // 二本勝ちは勝者のみ表示
                             if ($data['special'] === 'nihon' && $upperPoints >= 2) {
-                                echo ' <span class="winner">二本勝</span>';
+                                echo ' <span class="winner">(二本勝)</span>';
                             }
                             // 一本勝ちは勝者のみ表示
                             else if ($data['special'] === 'ippon' && $upperPoints > 0) {
-                                echo ' <span class="winner">一本勝</span>';
+                                echo ' <span class="winner">(一本勝)</span>';
                             }
                             // 判定勝
                             else if ($data['upper']['decision']) {
                                 echo ' <span class="winner">判定勝</span>';
                             }
-                            
+
                             // 延長は両者に表示
-                            if ($data['special'] === 'extend') {
-                                echo ' 延長';
+                            if ($data['special'] === 'extend' && $winner === 'upper') {
+                                echo ' <span class="winner">(延長勝)</span>';
+                            }
+                            if ($isDraw) {
+                                echo ' <span class="draw-label">引分</span>';
                             }
                             ?>
                         </div>
@@ -277,12 +310,12 @@ if ($isIppon) {
                             if (!is_array($lowerSelected)) {
                                 $lowerSelected = [];
                             }
-                            
+
                             $scores = $data['scores'] ?? ($data['lower']['scores'] ?? []);
-                            
+
                             // 選択された技のみを表示
                             foreach ($scores as $i => $s) {
-                                if ($s !== '▼' && $s !== '▲' && $s !== '×' && $s !== '' && in_array($i, $lowerSelected)) {
+                                if ($s !== '▼' && $s !== '▲' && $s !== '不' && $s !== '' && in_array($i, $lowerSelected)) {
                                     $class = 'winner';
                                     // インデックス0（1番目の枠）に入力された技に〇マーク
                                     if ($lowerPoints > 0 && $i === 0 && in_array(0, $lowerSelected)) {
@@ -292,22 +325,25 @@ if ($isIppon) {
                                 }
                             }
 
-                            // 二本勝ちは勝者のみ表示（優先表示）
+                            // 二本勝ちは勝者のみ表示
                             if ($data['special'] === 'nihon' && $lowerPoints >= 2) {
-                                echo ' <span class="winner">二本勝</span>';
+                                echo ' <span class="winner">(二本勝)</span>';
                             }
                             // 一本勝ちは勝者のみ表示
                             else if ($data['special'] === 'ippon' && $lowerPoints > 0) {
-                                echo ' <span class="winner">一本勝</span>';
+                                echo ' <span class="winner">(一本勝)</span>';
                             }
                             // 判定勝
                             else if ($data['lower']['decision']) {
-                                echo ' <span class="winner">判定勝</span>';
+                                echo ' <span class="winner">(判定勝)</span>';
                             }
-                            
+
                             // 延長は両者に表示
-                            if ($data['special'] === 'extend') {
-                                echo ' 延長';
+                            if ($data['special'] === 'extend' && $winner === 'lower') {
+                                echo ' <span class="winner">(延長勝)</span>';
+                            }
+                            if ($isDraw) {
+                                echo ' <span class="draw-label">(引分)</span>';
                             }
                             ?>
                         </div>

@@ -51,6 +51,89 @@ $team_red_name = $_SESSION['team_red_name'] ?? '';
 $team_white_name = $_SESSION['team_white_name'] ?? '';
 
 /* ===============================
+   選手名を取得
+=============================== */
+$positions = ['先鋒', '次鋒', '中堅', '副将', '大将'];
+$positionNumbers = [
+    '先鋒' => 1,
+    '次鋒' => 2,
+    '中堅' => 3,
+    '副将' => 4,
+    '大将' => 5
+];
+
+// オーダー情報から選手を取得
+$red_order = $_SESSION['team_red_order'] ?? [];
+$white_order = $_SESSION['team_white_order'] ?? [];
+
+// 赤チームの選手名を取得
+$redPlayers = [];
+foreach ($positions as $pos) {
+    $player_id = $red_order[$pos] ?? null;
+    
+    if ($player_id) {
+        $sql = "SELECT name FROM players WHERE id = :id";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([':id' => $player_id]);
+        $redPlayers[$pos] = $stmt->fetchColumn() ?: '';
+    } else {
+        $redPlayers[$pos] = '';
+    }
+}
+
+// 白チームの選手名を取得
+$whitePlayers = [];
+foreach ($positions as $pos) {
+    $player_id = $white_order[$pos] ?? null;
+    
+    if ($player_id) {
+        $sql = "SELECT name FROM players WHERE id = :id";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([':id' => $player_id]);
+        $whitePlayers[$pos] = $stmt->fetchColumn() ?: '';
+    } else {
+        $whitePlayers[$pos] = '';
+    }
+}
+
+// 代表戦の選手名を取得
+$matchResults = $_SESSION['match_results'] ?? [];
+$redRepPlayer = '';
+$whiteRepPlayer = '';
+
+// デバッグ: 代表戦の全データを確認
+// echo '<pre>'; print_r($matchResults['代表決定戦'] ?? []); echo '</pre>';
+
+if (isset($matchResults['代表決定戦'])) {
+    $daihyoData = $matchResults['代表決定戦'];
+    
+    // 複数のキー名パターンを試す
+    $redRepPlayerId = $daihyoData['red_player_id'] 
+                   ?? $daihyoData['red']['player_id'] 
+                   ?? $daihyoData['red_id'] 
+                   ?? null;
+    
+    $whiteRepPlayerId = $daihyoData['white_player_id'] 
+                     ?? $daihyoData['white']['player_id'] 
+                     ?? $daihyoData['white_id'] 
+                     ?? null;
+    
+    if ($redRepPlayerId) {
+        $sql = "SELECT name FROM players WHERE id = :id";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([':id' => $redRepPlayerId]);
+        $redRepPlayer = $stmt->fetchColumn() ?: '';
+    }
+    
+    if ($whiteRepPlayerId) {
+        $sql = "SELECT name FROM players WHERE id = :id";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([':id' => $whiteRepPlayerId]);
+        $whiteRepPlayer = $stmt->fetchColumn() ?: '';
+    }
+}
+
+/* ===============================
    勝敗計算
 =============================== */
 function calcMatchResult($posData)
@@ -76,7 +159,7 @@ function calcMatchResult($posData)
     
     // スコアから得点を計算
     foreach ($scores as $i => $score) {
-        if ($score !== '▼' && $score !== '▲' && $score !== '×' && $score !== '') {
+        if ($score !== '▼' && $score !== '▲' && $score !== '不' && $score !== '') {
             if (in_array($i, $redSelected)) {
                 $redPoint++;
             }
@@ -107,14 +190,12 @@ function calcMatchResult($posData)
     }
 }
 
-$positions = ['先鋒', '次鋒', '中堅', '副将', '大将'];
 $redWins = 0;
 $whiteWins = 0;
 $redTotalPoints = 0;
 $whiteTotalPoints = 0;
 
 $posResults = [];
-$matchResults = $_SESSION['match_results'] ?? [];
 
 foreach ($positions as $pos) {
     if (isset($matchResults[$pos])) {
@@ -201,10 +282,19 @@ if (isset($matchResults['代表決定戦'])) {
             font-size: 1rem;
             font-weight: normal;
             background-color: white;
+            vertical-align: middle;
         }
 
         .result-table thead th {
-            height: 50px;
+            min-height: 70px;
+            line-height: 1.4;
+        }
+
+        .player-name-label {
+            color: #ef4444;
+            font-size: 0.9rem;
+            display: block;
+            margin-top: 0.25rem;
         }
 
         .team-label {
@@ -223,26 +313,33 @@ if (isset($matchResults['代表決定戦'])) {
         }
 
         .cell-content {
-            height: 60px;
+            min-height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.125rem;
-            flex-wrap: wrap;
+            flex-direction: column;
             gap: 0.25rem;
             padding: 0.5rem;
+            border-bottom: 2px solid #000;
+        }
+        
+        .scores-line {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
-        .cell-divider {
-            height: 2px;
-            background-color: #000;
-            background-image: repeating-linear-gradient(
-                to right,
-                #000 0,
-                #000 8px,
-                transparent 8px,
-                transparent 16px
-            );
+        .player-name-cell {
+            min-height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            color: #ef4444;
+            padding: 0.25rem;
         }
 
         .total-cell {
@@ -254,6 +351,12 @@ if (isset($matchResults['代表決定戦'])) {
         .score-item {
             display: inline-block;
             margin: 0 2px;
+        }
+
+        .cell-content small {
+            display: block;
+            white-space: nowrap;
+            font-size: 0.85rem;
         }
 
         .winner {
@@ -358,7 +461,7 @@ if (isset($matchResults['代表決定戦'])) {
                                 
                                 // 各技について、赤が選択した技のみ表示
                                 foreach ($scores as $i => $score) {
-                                    if ($score !== '▼' && $score !== '▲' && $score !== '×' && $score !== '' && 
+                                    if ($score !== '▼' && $score !== '▲' && $score !== '不' && $score !== '' && 
                                         in_array($i, $redSelected)) {
                                         // インデックス0（1番目の枠）の技に〇マーク
                                         $class = ($redPosPoints > 0 && $i === 0 && in_array(0, $redSelected)) ? 'score-item winner first-point' : 'score-item winner';
@@ -369,21 +472,33 @@ if (isset($matchResults['代表決定戦'])) {
                                 $special = $p['special'] ?? 'none';
                                 $posResult = calcMatchResult($p);
                                 
-                                // 一本勝は勝った方にのみ表示
-                                if ($special === 'ippon' && $posResult['winner'] === 'red') {
-                                    $redScores .= ' <small>一本勝</small>';
-                                }
-                                // 延長・引分けは両方に表示
-                                if ($special === 'extend') {
-                                    $redScores .= ' <small>延長</small>';
+                                // 特別な状態を別変数に格納
+                                $redSpecial = '';
+                                if ($special === 'nihon' && $posResult['winner'] === 'red') {
+                                    $redSpecial = '<small>二本勝</small>';
+                                } else if ($special === 'ippon' && $posResult['winner'] === 'red') {
+                                    $redSpecial = '<small>一本勝</small>';
+                                } else if ($special === 'extend') {
+                                    $redSpecial = '<small>延長</small>';
                                 } else if ($special === 'draw') {
-                                    $redScores .= ' <small>引分け</small>';
+                                    $redSpecial = '<small>引分け</small>';
+                                } else if ($special === 'hantei') {
+                                    $redSpecial = '<small>判定</small>';
                                 }
                             }
                         ?>
                         <td class="result-cell">
-                            <div class="cell-content"><?= $redScores ?: '-' ?></div>
-                            
+                            <div class="cell-content">
+                                <?php if ($redScores || isset($matchResults[$pos])): ?>
+                                    <div class="scores-line"><?= $redScores ?: '-' ?></div>
+                                    <?php if (!empty($redSpecial)): ?>
+                                        <?= $redSpecial ?>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    -
+                                <?php endif; ?>
+                            </div>
+                            <div class="player-name-cell"><?= htmlspecialchars($redPlayers[$pos] ?? '') ?></div>
                         </td>
                     <?php endforeach; ?>
                     <td class="total-cell"><?= $redWins ?></td>
@@ -403,13 +518,13 @@ if (isset($matchResults['代表決定戦'])) {
                                     // 赤チームの得点計算
                                     $redRepPoints = 0;
                                     foreach ($redSelected as $idx) {
-                                        if (isset($scores[$idx]) && $scores[$idx] !== '▼' && $scores[$idx] !== '▲' && $scores[$idx] !== '×' && $scores[$idx] !== '') {
+                                        if (isset($scores[$idx]) && $scores[$idx] !== '▼' && $scores[$idx] !== '▲' && $scores[$idx] !== '不' && $scores[$idx] !== '') {
                                             $redRepPoints++;
                                         }
                                     }
                                     
                                     foreach ($scores as $i => $score) {
-                                        if ($score !== '▼' && $score !== '▲' && $score !== '×' && $score !== '' && 
+                                        if ($score !== '▼' && $score !== '▲' && $score !== '不' && $score !== '' && 
                                             in_array($i, $redSelected)) {
                                             // インデックス0（1番目の枠）の技に〇マーク
                                             $class = ($redRepPoints > 0 && $i === 0 && in_array(0, $redSelected)) ? 'winner first-point' : 'winner';
@@ -426,7 +541,7 @@ if (isset($matchResults['代表決定戦'])) {
                                 }
                             ?>
                         </div>
-                        
+                        <div class="player-name-cell"><?= htmlspecialchars($redRepPlayer) ?></div>
                     </td>
                 </tr>
                 <!-- 白 -->
@@ -452,7 +567,7 @@ if (isset($matchResults['代表決定戦'])) {
                                 
                                 // 各技について、白が選択した技のみ表示
                                 foreach ($scores as $i => $score) {
-                                    if ($score !== '▼' && $score !== '▲' && $score !== '×' && $score !== '' && 
+                                    if ($score !== '▼' && $score !== '▲' && $score !== '不' && $score !== '' && 
                                         in_array($i, $whiteSelected)) {
                                         // インデックス0（1番目の枠）の技に〇マーク
                                         $class = ($whitePosPoints > 0 && $i === 0 && in_array(0, $whiteSelected)) ? 'score-item winner first-point' : 'score-item winner';
@@ -463,20 +578,33 @@ if (isset($matchResults['代表決定戦'])) {
                                 $special = $p['special'] ?? 'none';
                                 $posResult = calcMatchResult($p);
                                 
-                                // 一本勝は勝った方にのみ表示
-                                if ($special === 'ippon' && $posResult['winner'] === 'white') {
-                                    $whiteScores .= ' <small>一本勝</small>';
-                                }
-                                // 延長・引分けは両方に表示
-                                if ($special === 'extend') {
-                                    $whiteScores .= ' <small>延長</small>';
+                                // 特別な状態を別変数に格納
+                                $whiteSpecial = '';
+                                if ($special === 'nihon' && $posResult['winner'] === 'white') {
+                                    $whiteSpecial = '<small>二本勝</small>';
+                                } else if ($special === 'ippon' && $posResult['winner'] === 'white') {
+                                    $whiteSpecial = '<small>一本勝</small>';
+                                } else if ($special === 'extend') {
+                                    $whiteSpecial = '<small>延長</small>';
                                 } else if ($special === 'draw') {
-                                    $whiteScores .= ' <small>引分け</small>';
+                                    $whiteSpecial = '<small>引分け</small>';
+                                } else if ($special === 'hantei') {
+                                    $whiteSpecial = '<small>判定</small>';
                                 }
                             }
                         ?>
                         <td class="result-cell">
-                            <div class="cell-content"><?= $whiteScores ?: '-' ?></div>
+                            <div class="cell-content">
+                                <?php if ($whiteScores || isset($matchResults[$pos])): ?>
+                                    <div class="scores-line"><?= $whiteScores ?: '-' ?></div>
+                                    <?php if (!empty($whiteSpecial)): ?>
+                                        <?= $whiteSpecial ?>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    -
+                                <?php endif; ?>
+                            </div>
+                            <div class="player-name-cell"><?= htmlspecialchars($whitePlayers[$pos] ?? '') ?></div>
                         </td>
                     <?php endforeach; ?>
                     <td class="total-cell"><?= $whiteWins ?></td>
@@ -496,13 +624,13 @@ if (isset($matchResults['代表決定戦'])) {
                                     // 白チームの得点計算
                                     $whiteRepPoints = 0;
                                     foreach ($whiteSelected as $idx) {
-                                        if (isset($scores[$idx]) && $scores[$idx] !== '▼' && $scores[$idx] !== '▲' && $scores[$idx] !== '×' && $scores[$idx] !== '') {
+                                        if (isset($scores[$idx]) && $scores[$idx] !== '▼' && $scores[$idx] !== '▲' && $scores[$idx] !== '不' && $scores[$idx] !== '') {
                                             $whiteRepPoints++;
                                         }
                                     }
                                     
                                     foreach ($scores as $i => $score) {
-                                        if ($score !== '▼' && $score !== '▲' && $score !== '×' && $score !== '' && 
+                                        if ($score !== '▼' && $score !== '▲' && $score !== '不' && $score !== '' && 
                                             in_array($i, $whiteSelected)) {
                                             // インデックス0（1番目の枠）の技に〇マーク
                                             $class = ($whiteRepPoints > 0 && $i === 0 && in_array(0, $whiteSelected)) ? 'winner first-point' : 'winner';
@@ -519,6 +647,7 @@ if (isset($matchResults['代表決定戦'])) {
                                 }
                             ?>
                         </div>
+                        <div class="player-name-cell"><?= htmlspecialchars($whiteRepPlayer) ?></div>
                     </td>
                 </tr>
             </tbody>

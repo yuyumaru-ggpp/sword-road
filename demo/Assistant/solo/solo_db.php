@@ -83,7 +83,7 @@ function calcPoints($scores, $selected) {
     }
     
     foreach ($scores as $i => $s) {
-        if ($s !== '▼' && $s !== '▲' && $s !== '×' && $s !== '' && in_array($i, $selected)) {
+        if ($s !== '▼' && $s !== '▲' && $s !== '不' && $s !== '' && in_array($i, $selected)) {
             $point++;
         }
     }

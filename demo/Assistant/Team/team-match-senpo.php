@@ -909,7 +909,7 @@ body {
                                 <div class="dropdown-item" data-val="ツ">ツ</div>
                                 <div class="dropdown-item" data-val="反">反</div>
                                 <div class="dropdown-item" data-val="判">判</div>
-                                <div class="dropdown-item" data-val="×">×</div>
+                                <div class="dropdown-item" data-val="不">不</div>
                             </div>
                         </div>
                         <div class="dropdown-container">
@@ -922,7 +922,7 @@ body {
                                 <div class="dropdown-item" data-val="ツ">ツ</div>
                                 <div class="dropdown-item" data-val="反">反</div>
                                 <div class="dropdown-item" data-val="判">判</div>
-                                <div class="dropdown-item" data-val="×">×</div>
+                                <div class="dropdown-item" data-val="不">不</div>
                             </div>
                         </div>
                         <div class="dropdown-container">
@@ -935,7 +935,7 @@ body {
                                 <div class="dropdown-item" data-val="ツ">ツ</div>
                                 <div class="dropdown-item" data-val="反">反</div>
                                 <div class="dropdown-item" data-val="判">判</div>
-                                <div class="dropdown-item" data-val="×">×</div>
+                                <div class="dropdown-item" data-val="不">不</div>
                             </div>
                         </div>
                     </div>

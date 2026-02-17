@@ -120,7 +120,7 @@ function calcTeamPoints($scores, $selected) {
     }
     
     foreach ($scores as $i => $s) {
-        if ($s !== '▼' && $s !== '▲' && $s !== '×' && $s !== '' && in_array($i, $selected)) {
+        if ($s !== '▼' && $s !== '▲' && $s !== '不' && $s !== '' && in_array($i, $selected)) {
             $point++;
         }
     }
@@ -149,7 +149,7 @@ function calculateMatchProgress($match_results) {
             $whitePosPoints = 0;
             
             foreach ($scores as $i => $score) {
-                if ($score !== '▼' && $score !== '▲' && $score !== '×' && $score !== '') {
+                if ($score !== '▼' && $score !== '▲' && $score !== '不' && $score !== '') {
                     if (is_array($redSelected) && in_array($i, $redSelected)) {
                         $redPosPoints++;
                     }
