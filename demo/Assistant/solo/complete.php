@@ -32,7 +32,7 @@ $lowerSelected = $data['lower']['selected'] ?? [];
 
 $techniques = [];
 $winners = [];
-$invalidMarks = ['▼', '▲', '×'];
+$invalidMarks = ['▼', '▲', '不'];
 
 // 上段選手（red）の技を抽出
 foreach ($upperSelected as $index) {

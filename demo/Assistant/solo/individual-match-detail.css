@@ -110,6 +110,19 @@ body {
 /* ===================================
    試合セクション
 =================================== */
+.upper-team,
+.lower-team {
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.upper-section .upper-team {
+    color: #dc2626;
+}
+
+.lower-section .lower-team {
+    color: #4f46e5;
+}
 .match-section {
     display: flex;
     flex-direction: column;

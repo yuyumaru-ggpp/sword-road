@@ -325,7 +325,7 @@ body {
     <!-- 練習モード -->
     <div class="demo-section">
         <a href="./demo/demo.php" class="demo-link">
-            🎯 練習モード
+            🎯 使い方ガイド
         </a>
     </div>
 

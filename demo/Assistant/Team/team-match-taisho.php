@@ -912,7 +912,7 @@ body {
                                 <div class="dropdown-item" data-val="ツ">ツ</div>
                                 <div class="dropdown-item" data-val="反">反</div>
                                 <div class="dropdown-item" data-val="判">判</div>
-                                <div class="dropdown-item" data-val="×">×</div>
+                                <div class="dropdown-item" data-val="不">不</div>
                             </div>
                         </div>
                         <div class="dropdown-container">
@@ -925,7 +925,7 @@ body {
                                 <div class="dropdown-item" data-val="ツ">ツ</div>
                                 <div class="dropdown-item" data-val="反">反</div>
                                 <div class="dropdown-item" data-val="判">判</div>
-                                <div class="dropdown-item" data-val="×">×</div>
+                                <div class="dropdown-item" data-val="不">不</div>
                             </div>
                         </div>
                         <div class="dropdown-container">
@@ -938,7 +938,7 @@ body {
                                 <div class="dropdown-item" data-val="ツ">ツ</div>
                                 <div class="dropdown-item" data-val="反">反</div>
                                 <div class="dropdown-item" data-val="判">判</div>
-                                <div class="dropdown-item" data-val="×">×</div>
+                                <div class="dropdown-item" data-val="不">不</div>
                             </div>
                         </div>
                     </div>
@@ -1120,13 +1120,13 @@ function calculateProgress() {
         let whitePosPoints = 0;
         
         redSelected.forEach(idx => {
-            if (scores[idx] && scores[idx] !== '▼' && scores[idx] !== '▲' && scores[idx] !== '×' && scores[idx] !== '') {
+            if (scores[idx] && scores[idx] !== '▼' && scores[idx] !== '▲' && scores[idx] !== '不' && scores[idx] !== '') {
                 redPosPoints++;
             }
         });
         
         whiteSelected.forEach(idx => {
-            if (scores[idx] && scores[idx] !== '▼' && scores[idx] !== '▲' && scores[idx] !== '×' && scores[idx] !== '') {
+            if (scores[idx] && scores[idx] !== '▼' && scores[idx] !== '▲' && scores[idx] !== '不' && scores[idx] !== '') {
                 whitePosPoints++;
             }
         });

@@ -42,7 +42,7 @@ function calcMatchResult($posData)
     
     // スコアから得点を計算
     foreach ($scores as $i => $score) {
-        if ($score !== '▼' && $score !== '▲' && $score !== '×' && $score !== '') {
+        if ($score !== '▼' && $score !== '▲' && $score !== '不' && $score !== '') {
             if (in_array($i, $redSelected)) {
                 $redPoint++;
             }
@@ -250,9 +250,9 @@ try {
 
         // scoresから技名を取得
         $scores = $posData['scores'] ?? [];
-        $firstTech  = (isset($scores[0]) && $scores[0] !== '▼' && $scores[0] !== '▲' && $scores[0] !== '×' && $scores[0] !== '') ? $scores[0] : null;
-        $secondTech = (isset($scores[1]) && $scores[1] !== '▼' && $scores[1] !== '▲' && $scores[1] !== '×' && $scores[1] !== '') ? $scores[1] : null;
-        $thirdTech  = (isset($scores[2]) && $scores[2] !== '▼' && $scores[2] !== '▲' && $scores[2] !== '×' && $scores[2] !== '') ? $scores[2] : null;
+        $firstTech  = (isset($scores[0]) && $scores[0] !== '▼' && $scores[0] !== '▲' && $scores[0] !== '不' && $scores[0] !== '') ? $scores[0] : null;
+        $secondTech = (isset($scores[1]) && $scores[1] !== '▼' && $scores[1] !== '▲' && $scores[1] !== '不' && $scores[1] !== '') ? $scores[1] : null;
+        $thirdTech  = (isset($scores[2]) && $scores[2] !== '▼' && $scores[2] !== '▲' && $scores[2] !== '不' && $scores[2] !== '') ? $scores[2] : null;
 
         // selected配列から各枠の勝者を判定
         $redSelected   = $posData['red']['selected']   ?? [];
