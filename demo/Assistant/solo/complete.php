@@ -151,7 +151,7 @@ INSERT INTO individual_matches (
     final_winner
 ) VALUES (
     :department_id,
-    1,
+    :match_field,
     :individual_match_num,
     :player_a_id,
     :player_b_id,
@@ -171,6 +171,7 @@ try {
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
         ':department_id' => $_SESSION['division_id'] ?? null,
+        ':match_field' => $_SESSION['match_field'] ?? 1,
         ':individual_match_num' => $nextNum,
         ':player_a_id' => $_SESSION['player_a_id'] ?? null,
         ':player_b_id' => $_SESSION['player_b_id'] ?? null,

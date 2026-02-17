@@ -27,17 +27,41 @@ if (isset($_SESSION['match_input'])) {
 }
 
 /* ===============================
-   大会・部門名取得
+   選手情報取得（チーム名含む）
 =============================== */
+$upperPlayerInfo = null;
+$lowerPlayerInfo = null;
+
+// 選手番号から選手情報を取得するSQL
 $sql = "
-    SELECT t.title AS tournament_name, d.name AS division_name
-    FROM tournaments t
-    JOIN departments d ON d.tournament_id = t.id
+    SELECT p.id, p.name, p.player_number, t.name AS team_name
+    FROM players p
+    INNER JOIN teams t ON p.team_id = t.id
+    INNER JOIN departments d ON t.department_id = d.id
     WHERE d.id = :division_id
+      AND p.substitute_flg = 0
+      AND p.player_number = :player_number
 ";
-$stmt = $pdo->prepare($sql);
-$stmt->execute([':division_id' => $_SESSION['division_id']]);
-$info = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// 上側（赤）選手の情報を取得
+if (!empty($data['upper']['number'])) {
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([
+        ':division_id' => $_SESSION['division_id'],
+        ':player_number' => $data['upper']['number']
+    ]);
+    $upperPlayerInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+// 下側（白）選手の情報を取得
+if (!empty($data['lower']['number'])) {
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([
+        ':division_id' => $_SESSION['division_id'],
+        ':player_number' => $data['lower']['number']
+    ]);
+    $lowerPlayerInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+}
 
 /* ===============================
    勝敗計算（solo_db.phpのcalcPoints関数を使用）
@@ -155,6 +179,12 @@ if ($upperPoints === 1 && $lowerPoints === 1) {
             color: #6b7280;
         }
 
+        .team-name {
+            font-size: 0.875rem;
+            color: #4b5563;
+            margin-top: 0.25rem;
+        }
+
         .result-cell {
             width: 150px;
             padding: 0;
@@ -245,8 +275,11 @@ if ($upperPoints === 1 && $lowerPoints === 1) {
                 <tr>
                     <td class="side-label">赤</td>
                     <td class="player-info">
-                        <div class="player-name"><?= htmlspecialchars($data['upper']['name']) ?></div>
                         <div class="player-number">選手番号: <?= htmlspecialchars($data['upper']['number']) ?></div>
+                        <div class="player-name"><?= htmlspecialchars($data['upper']['name']) ?></div>
+                        <?php if ($upperPlayerInfo && !empty($upperPlayerInfo['team_name'])): ?>
+                        <div class="team-name">(<?= htmlspecialchars($upperPlayerInfo['team_name']) ?>)</div>
+                        <?php endif; ?>
                     </td>
                     <td class="result-cell">
                         <div class="cell-content">
@@ -300,8 +333,11 @@ if ($upperPoints === 1 && $lowerPoints === 1) {
                 <tr>
                     <td class="side-label">白</td>
                     <td class="player-info">
-                        <div class="player-name"><?= htmlspecialchars($data['lower']['name']) ?></div>
                         <div class="player-number">選手番号: <?= htmlspecialchars($data['lower']['number']) ?></div>
+                        <div class="player-name"><?= htmlspecialchars($data['lower']['name']) ?></div>
+                        <?php if ($lowerPlayerInfo && !empty($lowerPlayerInfo['team_name'])): ?>
+                        <div class="team-name">(<?= htmlspecialchars($lowerPlayerInfo['team_name']) ?>)</div>
+                        <?php endif; ?>
                     </td>
                     <td class="result-cell">
                         <div class="cell-content">

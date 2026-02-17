@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              player_a_id, player_b_id,
              started_at, ended_at, final_winner)
         VALUES
-            (:department_id, :individual_match_num, 1,
+            (:department_id, :individual_match_num, :match_field,
              :player_a, :player_b,
              NOW(), NOW(), :winner)
     ";
@@ -52,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->execute([
         ':department_id' => $_SESSION['division_id'],
         ':individual_match_num'    => $_SESSION['match_number'],
+        ':match_field' => $_SESSION['match_field'] ?? 1,
         ':player_a'      => $data['upper_id'],
         ':player_b'      => $data['lower_id'],
         ':winner'        => $data['winner']
