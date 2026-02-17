@@ -10,8 +10,7 @@ $offset = ($page - 1) * $perPage;
 
 // 検索パラメータ
 $keyword = isset($_GET['q']) ? trim((string)$_GET['q']) : '';
-$dateFrom = isset($_GET['date_from']) ? trim((string)$_GET['date_from']) : '';
-$dateTo = isset($_GET['date_to']) ? trim((string)$_GET['date_to']) : '';
+$eventDate = isset($_GET['event_date']) ? trim((string)$_GET['event_date']) : '';
 $venue = isset($_GET['venue']) ? trim((string)$_GET['venue']) : '';
 $sortBy = isset($_GET['sort']) ? (string)$_GET['sort'] : 'date_desc'; // date_desc, date_asc, created_desc
 
@@ -25,14 +24,10 @@ if ($keyword !== '') {
     $params[':kw'] = '%' . $keyword . '%';
 }
 
-// 開催日範囲
-if ($dateFrom !== '') {
-    $where .= " AND event_date >= :date_from";
-    $params[':date_from'] = $dateFrom;
-}
-if ($dateTo !== '') {
-    $where .= " AND event_date <= :date_to";
-    $params[':date_to'] = $dateTo;
+// 開催日検索（指定した日のみ）
+if ($eventDate !== '') {
+    $where .= " AND DATE(event_date) = :event_date";
+    $params[':event_date'] = $eventDate;
 }
 
 // 会場フィルター
@@ -347,13 +342,8 @@ function highlightKeyword($text, $keyword) {
                 <div id="advancedSearch" style="display:none;background:#f8f9fa;padding:15px;border-radius:8px;margin-top:10px;">
                     <div class="search-grid">
                         <div class="search-field">
-                            <label for="dateFrom">📅 開催日（開始）</label>
-                            <input type="date" id="dateFrom" name="date_from" value="<?= htmlspecialchars($dateFrom, ENT_QUOTES, 'UTF-8') ?>">
-                        </div>
-
-                        <div class="search-field">
-                            <label for="dateTo">📅 開催日（終了）</label>
-                            <input type="date" id="dateTo" name="date_to" value="<?= htmlspecialchars($dateTo, ENT_QUOTES, 'UTF-8') ?>">
+                            <label for="eventDate">📅 開催日</label>
+                            <input type="date" id="eventDate" name="event_date" value="<?= htmlspecialchars($eventDate, ENT_QUOTES, 'UTF-8') ?>">
                         </div>
 
                         <div class="search-field">
@@ -381,8 +371,7 @@ function highlightKeyword($text, $keyword) {
         <?php
         $activeFilters = [];
         if ($keyword !== '') $activeFilters[] = ['label' => "キーワード: {$keyword}", 'param' => 'q'];
-        if ($dateFrom !== '') $activeFilters[] = ['label' => "開始日: {$dateFrom}", 'param' => 'date_from'];
-        if ($dateTo !== '') $activeFilters[] = ['label' => "終了日: {$dateTo}", 'param' => 'date_to'];
+        if ($eventDate !== '') $activeFilters[] = ['label' => "開催日: {$eventDate}", 'param' => 'event_date'];
         if ($venue !== '') $activeFilters[] = ['label' => "会場: {$venue}", 'param' => 'venue'];
         ?>
 
@@ -424,16 +413,16 @@ function highlightKeyword($text, $keyword) {
                 foreach ($tournaments as $t):
                     $url = './User/tournament-department.php?id=' . urlencode($t['id']);
                     $title = $t['title'];
-                    $eventDate = $t['event_date'] ?? '';
-                    $date = substr($eventDate, 0, 10);
+                    $eventDateValue = $t['event_date'] ?? '';
+                    $date = substr($eventDateValue, 0, 10);
                     $venueText = $t['venue'] ?? '';
 
                     // バッジ判定
                     $badge = '';
-                    if ($eventDate) {
-                        if ($eventDate === $today) {
+                    if ($eventDateValue) {
+                        if ($eventDateValue === $today) {
                             $badge = '<span class="badge badge-today">本日開催</span>';
-                        } elseif ($eventDate > $today) {
+                        } elseif ($eventDateValue > $today) {
                             $badge = '<span class="badge badge-upcoming">開催予定</span>';
                         } else {
                             $badge = '<span class="badge badge-past">終了</span>';
@@ -458,8 +447,7 @@ function highlightKeyword($text, $keyword) {
             $nextP = min($totalPages, $page + 1);
             $baseQuery = array_filter([
                 'q' => $keyword,
-                'date_from' => $dateFrom,
-                'date_to' => $dateTo,
+                'event_date' => $eventDate,
                 'venue' => $venue,
                 'sort' => $sortBy !== 'date_desc' ? $sortBy : null,
             ]);
@@ -518,7 +506,7 @@ function highlightKeyword($text, $keyword) {
 
         // 詳細検索フィルターが設定されている場合は自動で開く
         window.addEventListener('DOMContentLoaded', function() {
-            const hasAdvancedFilters = <?= json_encode($dateFrom !== '' || $dateTo !== '' || $venue !== '') ?>;
+            const hasAdvancedFilters = <?= json_encode($eventDate !== '' || $venue !== '') ?>;
             if (hasAdvancedFilters) {
                 document.getElementById('advancedSearch').style.display = 'block';
             }
