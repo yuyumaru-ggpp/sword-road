@@ -37,7 +37,7 @@ if ($venue !== '') {
 }
 
 // ソート順
-$orderBy = match($sortBy) {
+$orderBy = match ($sortBy) {
     'date_asc' => 'ORDER BY event_date ASC, id ASC',
     'created_desc' => 'ORDER BY created_at DESC, id DESC',
     default => 'ORDER BY event_date DESC, id DESC',
@@ -76,7 +76,8 @@ try {
 $menuClass = (isset($_SESSION['admin_user']) && $_SESSION['admin_user'] === true) ? 'menu-links open' : 'menu-links';
 
 // ハイライト関数
-function highlightKeyword($text, $keyword) {
+function highlightKeyword($text, $keyword)
+{
     if ($keyword === '') return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
     $escaped = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
     $kwEscaped = htmlspecialchars($keyword, ENT_QUOTES, 'UTF-8');
@@ -408,7 +409,7 @@ function highlightKeyword($text, $keyword) {
                     検索条件に一致する大会が見つかりませんでした。
                 </div>
             <?php else: ?>
-                <?php 
+                <?php
                 $today = date('Y-m-d');
                 foreach ($tournaments as $t):
                     $url = './User/tournament-department.php?id=' . urlencode($t['id']);
@@ -460,7 +461,8 @@ function highlightKeyword($text, $keyword) {
         </div>
 
         <footer>
-            <div class="school-name">MCL盛岡情報ビジネス＆デザイン専門学校</div>
+            <div class="school-name">企画：盛岡剣道協会</div>
+            <div class="school-name">制作：MCL盛岡情報ビジネス＆デザイン専門学校</div>
         </footer>
     </div>
 
