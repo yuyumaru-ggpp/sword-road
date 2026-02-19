@@ -268,6 +268,43 @@ $matchesJson = json_encode($matchesData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_
             background: #f3f4f6;
         }
 
+        /* --- 全件一括保存ボタン --- */
+        .btn-save-all {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.5rem 1.25rem;
+            border: none;
+            border-radius: 0.375rem;
+            background: #2563eb;
+            color: #fff;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.15s, opacity 0.15s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        }
+
+        .btn-save-all:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-save-all:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-save-all svg {
+            width: 15px;
+            height: 15px;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 1rem;
+        }
+
         /* --- テーブル外枠 --- */
         .table-wrapper {
             border: 1px solid #e5e7eb;
@@ -360,8 +397,9 @@ $matchesJson = json_encode($matchesData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_
             color: #2563eb;
         }
 
-        .td-detail {
+        .td-actions {
             text-align: center;
+            white-space: nowrap;
         }
 
         /* --- 詳細ボタン --- */
@@ -393,6 +431,67 @@ $matchesJson = json_encode($matchesData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_
 
         .btn-detail.open svg {
             transform: rotate(180deg);
+        }
+
+        /* --- 再集計保存ボタン（行内） --- */
+        .btn-recalc {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.375rem 0.75rem;
+            border: 1px solid #2563eb;
+            border-radius: 0.375rem;
+            background: #fff;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #2563eb;
+            cursor: pointer;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: background-color 0.15s, color 0.15s;
+            margin-left: 0.375rem;
+        }
+
+        .btn-recalc:hover {
+            background: #eff6ff;
+        }
+
+        .btn-recalc:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-recalc svg {
+            width: 13px;
+            height: 13px;
+        }
+
+        /* 保存中スピナー */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .spin {
+            animation: spin 0.7s linear infinite;
+        }
+
+        /* 保存済みバッジ */
+        .saved-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+            font-size: 0.7rem;
+            color: #16a34a;
+            margin-left: 0.375rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .saved-badge.show {
+            opacity: 1;
+        }
+
+        .saved-badge svg {
+            width: 12px;
+            height: 12px;
         }
 
         /* --- 詳細展開行 --- */
@@ -503,6 +602,32 @@ $matchesJson = json_encode($matchesData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_
         .back-link:hover {
             color: #1a1a1a;
         }
+
+        /* --- トースト通知 --- */
+        #toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            padding: 0.625rem 1rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.25s, transform 0.25s;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        #toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #toast.success { background: #16a34a; }
+        #toast.error   { background: #dc2626; }
     </style>
 </head>
 
@@ -516,10 +641,21 @@ $matchesJson = json_encode($matchesData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_
         <h1 class="page-title"><?= htmlspecialchars($dept_name) ?></h1>
         <p class="page-subtitle"><?= htmlspecialchars($tournament_title) ?></p>
 
-        <!-- 検索 -->
+        <!-- 検索 & 一括保存ボタン -->
         <div class="search-bar">
             <input type="text" id="searchInput" class="search-input" placeholder="選手名・チーム名で検索" />
             <button class="btn-clear" onclick="clearSearch()">クリア</button>
+        </div>
+
+        <div class="top-bar">
+            <button class="btn-save-all" id="btnSaveAll" onclick="saveAllTeamMatches()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+                全件一括保存
+            </button>
         </div>
 
         <!-- テーブル -->
@@ -533,7 +669,7 @@ $matchesJson = json_encode($matchesData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_
                             <th class="red">赤</th>
                             <th class="center">結果</th>
                             <th class="blue">白</th>
-                            <th class="center">詳細</th>
+                            <th class="center">操作</th>
                         </tr>
                     </thead>
                     <tbody id="matchBody"></tbody>
@@ -544,11 +680,110 @@ $matchesJson = json_encode($matchesData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_
         <a class="back-link" href="match-category-select.php?id=<?= htmlspecialchars($tournament_id) ?>">&larr; 戻る</a>
     </div>
 
+    <!-- トースト -->
+    <div id="toast"></div>
+
     <script>
         // --- データ ---
         const teamMatches = <?= $matchesJson ?>;
         const tournamentId = <?= $tournament_id ?>;
         const deptId = <?= $dept_id ?>;
+
+        // --- team_match_results を再集計して保存 ---
+        async function saveTeamMatch(teamMatchId, btn, badge) {
+            btn.disabled = true;
+            const origSVG = btn.querySelector('svg').outerHTML;
+            btn.querySelector('svg').outerHTML; // 参照保持
+            btn.innerHTML = `
+                <svg class="spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                </svg>
+                保存中
+            `;
+
+            try {
+                const res = await fetch('recalc-team-match.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ team_match_id: teamMatchId })
+                });
+                const json = await res.json();
+
+                if (json.status === 'ok') {
+                    showToast('保存しました', 'success');
+                    badge.classList.add('show');
+                    setTimeout(() => badge.classList.remove('show'), 3000);
+                } else {
+                    showToast('保存に失敗しました: ' + (json.message ?? ''), 'error');
+                }
+            } catch (e) {
+                showToast('通信エラーが発生しました', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                        <polyline points="7 3 7 8 15 8"></polyline>
+                    </svg>
+                    保存
+                `;
+            }
+        }
+
+        // --- 全件一括保存 ---
+        async function saveAllTeamMatches() {
+            const btn = document.getElementById('btnSaveAll');
+            btn.disabled = true;
+            btn.textContent = '保存中...';
+
+            const ids = teamMatches.map(m => m.matchId);
+            let successCount = 0;
+            let failCount = 0;
+
+            for (const id of ids) {
+                try {
+                    const res = await fetch('recalc-team-match.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ team_match_id: id })
+                    });
+                    const json = await res.json();
+                    if (json.status === 'ok') successCount++;
+                    else failCount++;
+                } catch (e) {
+                    failCount++;
+                }
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+                全件一括保存
+            `;
+
+            if (failCount === 0) {
+                showToast(`全${successCount}件を保存しました`, 'success');
+            } else {
+                showToast(`${successCount}件成功、${failCount}件失敗`, 'error');
+            }
+        }
+
+        // --- トースト ---
+        let toastTimer = null;
+        function showToast(msg, type = 'success') {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.className = `show ${type}`;
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                el.className = '';
+            }, 3000);
+        }
 
         // --- 描画 ---
         function renderMatches(data) {
@@ -565,23 +800,43 @@ $matchesJson = json_encode($matchesData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_
                 const mainRow = document.createElement("tr");
                 mainRow.className = "match-row";
                 mainRow.innerHTML = `
-          <td class="td-field">${match.matchField}</td>
-          <td>${match.departmentMatchNum}</td>
-          <td class="team-red">${match.teamRedName}</td>
-          <td class="score">
-            <span class="score-red">${match.redWins}</span>
-            <span class="score-sep">-</span>
-            <span class="score-white">${match.whiteWins}</span>
-          </td>
-          <td class="team-white">${match.teamWhiteName}</td>
-          <td class="td-detail">
-            <button class="btn-detail" data-id="${match.matchId}">
-              詳細
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </button>
-          </td>
-        `;
+                    <td class="td-field">${match.matchField}</td>
+                    <td>${match.departmentMatchNum}</td>
+                    <td class="team-red">${match.teamRedName}</td>
+                    <td class="score">
+                        <span class="score-red">${match.redWins}</span>
+                        <span class="score-sep">-</span>
+                        <span class="score-white">${match.whiteWins}</span>
+                    </td>
+                    <td class="team-white">${match.teamWhiteName}</td>
+                    <td class="td-actions">
+                        <button class="btn-detail" data-id="${match.matchId}">
+                            詳細
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
+                        <button class="btn-recalc" data-match-id="${match.matchId}">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                <polyline points="7 3 7 8 15 8"></polyline>
+                            </svg>
+                            保存
+                        </button>
+                        <span class="saved-badge" data-badge="${match.matchId}">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            保存済み
+                        </span>
+                    </td>
+                `;
                 tbody.appendChild(mainRow);
+
+                // 再集計保存ボタンのイベント
+                const recalcBtn = mainRow.querySelector('.btn-recalc');
+                const badge = mainRow.querySelector(`.saved-badge[data-badge="${match.matchId}"]`);
+                recalcBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    saveTeamMatch(match.matchId, recalcBtn, badge);
+                });
 
                 // 詳細行
                 const detailRow = document.createElement("tr");
@@ -589,19 +844,18 @@ $matchesJson = json_encode($matchesData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_
                 detailRow.id = `detail-${match.matchId}`;
 
                 let detailHTML = `<td colspan="6" class="detail-cell">
-          <table class="detail-table">
-            <thead>
-              <tr>
-                <th>試合番号</th>
-                <th class="d-red">赤</th>
-                <th class="d-center">結果</th>
-                <th class="d-blue">白</th>
-              </tr>
-            </thead>
-            <tbody>`;
+                    <table class="detail-table">
+                        <thead>
+                            <tr>
+                                <th>試合番号</th>
+                                <th class="d-red">赤</th>
+                                <th class="d-center">結果</th>
+                                <th class="d-blue">白</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
 
                 match.individualMatches.forEach((im) => {
-                    // 選手名に勝者の色をつける
                     let playerAHTML = im.playerA;
                     let playerBHTML = im.playerB;
 
@@ -611,21 +865,16 @@ $matchesJson = json_encode($matchesData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_
                         playerBHTML = `<span class="player-winner-white">${im.playerB}</span>`;
                     }
 
-                    // 結果表示を「赤ー白ー決まり手」形式で色分け
                     let resultHTML = '';
                     if (im.result) {
                         const parts = im.result.split('ー');
                         let coloredParts = [];
-                        
-                        // 勝者に応じて色を決定
                         const isRedWinner = (im.winner === 'red' || im.winner === 'a');
                         const isWhiteWinner = (im.winner === 'white' || im.winner === 'b');
-                        
-                        // 赤の技（最初の部分）
+
                         if (parts[0]) {
                             let redPart = '';
                             if (isRedWinner) {
-                                // 赤が勝者なら赤色
                                 for (let char of parts[0]) {
                                     redPart += `<span style="color: #dc2626; font-weight: 600;">${char}</span>`;
                                 }
@@ -636,12 +885,10 @@ $matchesJson = json_encode($matchesData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_
                         } else {
                             coloredParts.push('');
                         }
-                        
-                        // 白の技（2番目の部分）
+
                         if (parts.length > 1 && parts[1]) {
                             let whitePart = '';
                             if (isWhiteWinner) {
-                                // 白が勝者なら青色
                                 for (let char of parts[1]) {
                                     whitePart += `<span style="color: #2563eb; font-weight: 600;">${char}</span>`;
                                 }
@@ -652,31 +899,30 @@ $matchesJson = json_encode($matchesData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_
                         } else if (parts.length > 1) {
                             coloredParts.push('');
                         }
-                        
-                        // 決まり手（3番目の部分）
+
                         if (parts.length > 2) {
                             coloredParts.push(parts[2]);
                         }
-                        
+
                         resultHTML = coloredParts.join('ー');
                     } else {
                         resultHTML = '<span style="color: #6b7280;">-</span>';
                     }
 
                     detailHTML += `
-              <tr class="detail-match-row" data-individual-match-id="${im.matchId}">
-                <td class="d-num">${im.individualMatchNum}</td>
-                <td class="d-player">${playerAHTML}</td>
-                <td class="d-result">${resultHTML}</td>
-                <td class="d-player">${playerBHTML}</td>
-              </tr>`;
+                        <tr class="detail-match-row" data-individual-match-id="${im.matchId}">
+                            <td class="d-num">${im.individualMatchNum}</td>
+                            <td class="d-player">${playerAHTML}</td>
+                            <td class="d-result">${resultHTML}</td>
+                            <td class="d-player">${playerBHTML}</td>
+                        </tr>`;
                 });
 
                 detailHTML += `</tbody></table></td>`;
                 detailRow.innerHTML = detailHTML;
                 tbody.appendChild(detailRow);
 
-                // ボタンイベント
+                // 詳細ボタンイベント
                 const btn = mainRow.querySelector(".btn-detail");
                 btn.addEventListener("click", (e) => {
                     e.stopPropagation();
@@ -684,11 +930,11 @@ $matchesJson = json_encode($matchesData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_
                     btn.classList.toggle("open", isOpen);
                 });
 
-                // 詳細行の各試合をクリックしたときのイベント
+                // 詳細行の個別試合クリック
                 detailRow.querySelectorAll(".detail-match-row").forEach(row => {
                     row.addEventListener("click", () => {
-                        const matchId = row.dataset.individualMatchId;
-                        window.location.href = `match-detail.php?match_id=${matchId}&id=${tournamentId}&dept=${deptId}`;
+                        const individualMatchNum = row.querySelector('.d-num').textContent;
+                        window.location.href = `team-match-detail.php?match_id=${match.matchId}&id=${tournamentId}&dept=${deptId}&individual_match_num=${individualMatchNum}`;
                     });
                 });
             });
