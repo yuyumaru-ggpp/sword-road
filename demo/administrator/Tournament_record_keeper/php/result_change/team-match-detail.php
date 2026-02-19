@@ -317,27 +317,234 @@ foreach ($positions as $index => $posName) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>団体戦試合詳細 - <?= htmlspecialchars($teamMatch['dept_name']) ?></title>
-    <link rel="stylesheet" href="../../css/result_change/match-detail-style.css">
+    <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+        font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Meiryo', sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex; align-items: center; justify-content: center; padding: 8px;
+    }
+    .container {
+        width: 100%; max-width: 1000px;
+        height: calc(100vh - 16px); max-height: 900px;
+        background: #ffffff; border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        display: flex; flex-direction: column; overflow: hidden; position: relative;
+    }
+    .position-header {
+        position: absolute; top: max(0px, env(safe-area-inset-top));
+        left: 50%; transform: translateX(-50%);
+        font-size: 24px; font-weight: bold; color: white;
+        background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
+        padding: 12px 40px; text-align: center; z-index: 200;
+        border-radius: 0 0 16px 16px;
+        box-shadow: 0 4px 12px rgba(220,38,38,0.3);
+    }
+    .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white; padding: 60px 20px 15px;
+        display: flex; flex-wrap: wrap; gap: 10px;
+        align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .header-badge {
+        background: rgba(255,255,255,0.2); backdrop-filter: blur(10px);
+        padding: 6px 14px; border-radius: 50px; font-size: 13px; font-weight: 600;
+        border: 1px solid rgba(255,255,255,0.3);
+    }
+    /* ナビゲーションボタン（右上） */
+    .nav-buttons {
+        position: absolute; top: max(8px, env(safe-area-inset-top)); right: 12px;
+        display: flex; gap: 6px; z-index: 300;
+    }
+    .nav-button {
+        padding: 6px 14px; font-size: 13px; font-weight: 600; color: white;
+        background: rgba(255,255,255,0.25); border: 1px solid rgba(255,255,255,0.5);
+        border-radius: 20px; cursor: pointer; backdrop-filter: blur(6px);
+        transition: background 0.2s;
+    }
+    .nav-button:hover { background: rgba(255,255,255,0.4); }
+    .main-content {
+        flex: 1; padding: 20px; display: flex; flex-direction: column;
+        overflow-y: auto; min-height: 0;
+    }
+    .content-wrapper {
+        flex: 1; display: flex; flex-direction: column; justify-content: space-around;
+    }
+    .match-section { display: flex; flex-direction: column; gap: 8px; }
+    .player-info { background: #f7fafc; padding: 12px; border-radius: 10px; margin-bottom: 10px; }
+    .info-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 14px; }
+    .info-row:last-child { margin-bottom: 0; }
+    .info-label { min-width: 80px; font-weight: 600; color: #4a5568; }
+    .info-value { font-weight: 700; color: #2d3748; font-size: 16px; }
+    .score-display { display: flex; justify-content: center; align-items: center; padding: 15px 0; }
+    .score-group { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .score-numbers { display: flex; gap: 20px; font-size: 14px; font-weight: bold; color: #4a5568; }
+    .score-numbers span { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+    .radio-circles { display: flex; gap: 20px; }
+    .radio-circle {
+        width: 40px; height: 40px; border-radius: 50%;
+        background: #e2e8f0; cursor: pointer; transition: all 0.2s;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .red-circles .radio-circle.selected {
+        background: #ef4444; transform: scale(1.15);
+        box-shadow: 0 0 0 4px rgba(239,68,68,0.2);
+    }
+    .white-circles .radio-circle.selected {
+        background: #3b82f6; transform: scale(1.15);
+        box-shadow: 0 0 0 4px rgba(59,130,246,0.2);
+    }
+    .radio-circle:hover { opacity: 0.8; }
+    .divider-section { position: relative; margin: 20px 0; text-align: center; }
+    .divider { border: none; border-top: 2px dashed #cbd5e0; }
+    .middle-controls {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        display: flex; align-items: center; background: white; padding: 10px 15px;
+        border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .score-dropdowns { display: flex; gap: 20px; }
+    .dropdown-container { position: relative; width: 40px; height: 40px; }
+    .score-dropdown {
+        width: 100%; height: 100%; font-size: 16px; font-weight: bold;
+        background: white; border: 2px solid #cbd5e0; border-radius: 8px;
+        cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+    }
+    .score-dropdown:hover { border-color: #667eea; background: #f7fafc; }
+    .dropdown-menu, .draw-dropdown-menu {
+        display: none; position: absolute; background: white;
+        border: 2px solid #cbd5e0; border-radius: 8px;
+        min-width: 70px; max-height: 250px; overflow-y: auto;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15); z-index: 1000; padding: 6px 0;
+    }
+    .dropdown-menu.show, .draw-dropdown-menu.show { display: block; }
+    .dropdown-item {
+        padding: 10px 16px; font-size: 15px; font-weight: bold;
+        text-align: center; cursor: pointer; user-select: none; transition: all 0.15s;
+    }
+    .dropdown-item:hover { background: #eef2ff; color: #667eea; }
+    .dropdown-item:active { background: #667eea; color: white; }
+    .draw-container-wrapper {
+        position: absolute; top: 50%; right: 65px; transform: translateY(-50%);
+        background: white; padding: 10px 0;
+    }
+    .draw-container { position: relative; }
+    .draw-button {
+        padding: 8px 16px; font-size: 14px; background: white;
+        border: 2px solid #cbd5e0; border-radius: 8px; font-weight: bold;
+        cursor: pointer; white-space: nowrap; transition: all 0.2s;
+    }
+    .draw-button:hover { border-color: #667eea; background: #f7fafc; }
+    .draw-dropdown-menu { right: auto; left: 50%; transform: translateX(-50%); top: calc(100% + 4px); }
+    .bottom-area {
+        display: flex; flex-direction: column; gap: 12px; padding-top: 15px;
+        border-top: 1px solid #e2e8f0; flex-shrink: 0;
+    }
+    .bottom-right-button { display: flex; justify-content: flex-end; }
+    .cancel-button {
+        padding: 8px 20px; font-size: 13px; background: white;
+        border: 2px solid #e2e8f0; border-radius: 8px; font-weight: 600;
+        cursor: pointer; color: #4a5568; transition: all 0.2s;
+    }
+    .cancel-button:hover { background: #f7fafc; border-color: #cbd5e0; }
+    .bottom-buttons { display: flex; justify-content: center; gap: 15px; }
+    .bottom-button {
+        flex: 1; max-width: 200px; padding: 14px 20px; font-size: 16px;
+        font-weight: 600; border: none; border-radius: 12px; cursor: pointer; transition: all 0.3s ease;
+    }
+    .back-button { background-color: #e2e8f0; color: #4a5568; }
+    .back-button:hover { background-color: #cbd5e0; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .submit-button { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .submit-button:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102,126,234,0.4); }
+    .bottom-button:active { transform: translateY(0); }
+    .main-content::-webkit-scrollbar { width: 6px; }
+    .main-content::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+    .main-content::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 10px; }
+    .main-content::-webkit-scrollbar-thumb:hover { background: #a0aec0; }
+
+    @media (max-height: 750px) {
+        .position-header { font-size: 20px; padding: 10px 32px; }
+        .header { padding: 50px 15px 12px; }
+        .header-badge { font-size: 12px; padding: 5px 12px; }
+        .main-content { padding: 15px; }
+        .player-info { padding: 10px; margin-bottom: 8px; }
+        .info-row { font-size: 13px; gap: 8px; margin-bottom: 5px; }
+        .info-value { font-size: 14px; }
+        .score-display { padding: 12px 0; }
+        .score-numbers, .radio-circles { gap: 16px; }
+        .score-numbers span, .radio-circle { width: 36px; height: 36px; }
+        .dropdown-container { width: 36px; height: 36px; }
+        .score-dropdown { font-size: 14px; }
+        .divider-section { margin: 15px 0; }
+        .draw-container-wrapper { right: 58px; }
+        .draw-button { padding: 6px 14px; font-size: 13px; }
+        .bottom-area { gap: 10px; padding-top: 12px; }
+        .cancel-button { padding: 7px 18px; font-size: 12px; }
+        .bottom-button { padding: 12px 18px; font-size: 15px; }
+    }
+    @media (max-width: 600px) {
+        body { padding: 4px; }
+        .container { max-height: calc(100vh - 8px); border-radius: 12px; }
+        .position-header { font-size: 18px; padding: 8px 24px; border-radius: 0 0 12px 12px; }
+        .header { padding: 46px 12px 10px; }
+        .header-badge { font-size: 11px; padding: 4px 10px; }
+        .main-content { padding: 12px; }
+        .player-info { padding: 8px; margin-bottom: 6px; }
+        .info-row { font-size: 12px; gap: 6px; margin-bottom: 4px; }
+        .info-label { min-width: 70px; }
+        .info-value { font-size: 13px; }
+        .score-display { padding: 10px 0; }
+        .score-numbers { font-size: 12px; gap: 14px; }
+        .radio-circles { gap: 14px; }
+        .score-numbers span, .radio-circle { width: 32px; height: 32px; font-size: 12px; }
+        .divider-section { margin: 12px 0; }
+        .middle-controls { padding: 8px 12px; }
+        .score-dropdowns { gap: 14px; }
+        .dropdown-container { width: 32px; height: 32px; }
+        .score-dropdown { font-size: 13px; border-width: 1px; }
+        .draw-container-wrapper { right: 50px; }
+        .draw-button { padding: 5px 12px; font-size: 12px; border-width: 1px; }
+        .dropdown-item { padding: 8px 14px; font-size: 13px; }
+        .bottom-area { gap: 8px; padding-top: 10px; }
+        .cancel-button { padding: 6px 14px; font-size: 11px; border-width: 1px; }
+        .bottom-button { padding: 10px 16px; font-size: 14px; max-width: 180px; }
+        .bottom-buttons { gap: 12px; }
+    }
+    @media (max-width: 900px) and (max-height: 500px) {
+        body { padding: 3px; }
+        .container { max-height: calc(100vh - 6px); border-radius: 10px; }
+        .position-header { font-size: 16px; padding: 6px 20px; }
+        .header { padding: 40px 10px 8px; }
+        .header-badge { font-size: 10px; padding: 3px 8px; }
+        .main-content { padding: 10px; }
+        .score-numbers span, .radio-circle { width: 28px; height: 28px; font-size: 11px; }
+        .dropdown-container { width: 28px; height: 28px; }
+        .score-dropdown { font-size: 12px; border-width: 1px; }
+        .draw-container-wrapper { right: 43px; }
+        .draw-button { padding: 4px 10px; font-size: 11px; border-width: 1px; }
+        .bottom-button { padding: 8px 14px; font-size: 13px; max-width: 160px; }
+    }
+    </style>
 </head>
 
 <body>
-    <div class="container">
-        <div class="position-header" id="positionHeader">先鋒</div>
+<div class="container">
+    <div class="position-header" id="positionHeader">先鋒</div>
 
-        <div class="header">
-            <div class="header-badge">団体戦</div>
-            <div class="header-badge"><?= htmlspecialchars($teamMatch['tournament_title']) ?></div>
-            <div class="header-badge"><?= htmlspecialchars($teamMatch['dept_name']) ?></div>
-        </div>
+    <div class="header">
+        <div class="header-badge">団体戦</div>
+        <div class="header-badge"><?= htmlspecialchars($teamMatch['tournament_title']) ?></div>
+        <div class="header-badge"><?= htmlspecialchars($teamMatch['dept_name']) ?></div>
+    </div>
 
-        <div class="top-right-controls">
-            <div class="nav-buttons">
-                <button class="nav-button" id="nextButton">次へ</button>
-                <button class="nav-button" id="prevButton">戻る</button>
-                <button class="nav-button" id="repButton" style="display:none;">代表決定戦</button>
-            </div>
-        </div>
+    <!-- ナビゲーションボタン（右上に絶対配置） -->
+    <div class="nav-buttons">
+        <button class="nav-button" id="prevButton" style="display:none;">戻る</button>
+        <button class="nav-button" id="nextButton" style="display:none;">次へ</button>
+        <button class="nav-button" id="repButton"  style="display:none;">代表決定戦</button>
+    </div>
 
+    <div class="main-content">
         <div class="content-wrapper">
             <div class="match-section upper-section">
                 <div class="player-info" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);">
@@ -350,7 +557,6 @@ foreach ($positions as $index => $posName) {
                         <div class="info-value upper-name">───</div>
                     </div>
                 </div>
-
                 <div class="score-display">
                     <div class="score-group">
                         <div class="score-numbers upper-numbers">
@@ -366,25 +572,27 @@ foreach ($positions as $index => $posName) {
             </div>
 
             <div class="divider-section">
-                <hr class="divider-line">
+                <hr class="divider">
                 <div class="middle-controls">
                     <div class="score-dropdowns">
                         <?php for ($i = 0; $i < 3; $i++): ?>
-                            <div class="dropdown-container">
-                                <div class="score-dropdown">▼</div>
-                                <div class="dropdown-menu">
-                                    <div class="dropdown-item" data-val="▼">▼</div>
-                                    <div class="dropdown-item" data-val="メ">メ</div>
-                                    <div class="dropdown-item" data-val="コ">コ</div>
-                                    <div class="dropdown-item" data-val="ド">ド</div>
-                                    <div class="dropdown-item" data-val="ツ">ツ</div>
-                                    <div class="dropdown-item" data-val="反">反</div>
-                                    <div class="dropdown-item" data-val="判">判</div>
-                                    <div class="dropdown-item" data-val="不">不</div>
-                                </div>
+                        <div class="dropdown-container">
+                            <div class="score-dropdown">▼</div>
+                            <div class="dropdown-menu">
+                                <div class="dropdown-item" data-val="▼">▼</div>
+                                <div class="dropdown-item" data-val="メ">メ</div>
+                                <div class="dropdown-item" data-val="コ">コ</div>
+                                <div class="dropdown-item" data-val="ド">ド</div>
+                                <div class="dropdown-item" data-val="ツ">ツ</div>
+                                <div class="dropdown-item" data-val="反">反</div>
+                                <div class="dropdown-item" data-val="判">判</div>
+                                <div class="dropdown-item" data-val="不">不</div>
                             </div>
+                        </div>
                         <?php endfor; ?>
                     </div>
+                </div>
+                <div class="draw-container-wrapper">
                     <div class="draw-container">
                         <button type="button" class="draw-button" id="drawButton">-</button>
                         <div class="draw-dropdown-menu" id="drawMenu">
@@ -397,7 +605,6 @@ foreach ($positions as $index => $posName) {
                         </div>
                     </div>
                 </div>
-                <hr class="divider-line">
             </div>
 
             <div class="match-section lower-section">
@@ -413,7 +620,6 @@ foreach ($positions as $index => $posName) {
                         </div>
                     </div>
                 </div>
-
                 <div class="player-info" style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);">
                     <div class="info-row">
                         <div class="info-label">名前</div>
@@ -430,7 +636,6 @@ foreach ($positions as $index => $posName) {
                 <div class="bottom-right-button">
                     <button type="button" class="cancel-button" id="cancelButton">入力内容をリセット</button>
                 </div>
-
                 <div class="bottom-buttons">
                     <button type="button" class="bottom-button back-button" onclick="history.back()">戻る</button>
                     <button type="button" class="bottom-button submit-button" id="submitButton">変更</button>
@@ -438,6 +643,7 @@ foreach ($positions as $index => $posName) {
             </div>
         </div>
     </div>
+</div>
 
     <script>
     (function () {
@@ -621,8 +827,9 @@ foreach ($positions as $index => $posName) {
             if (confirm(positions[current] + ' をリセットしますか?')) {
                 const key = positions[current];
                 data.positions[key] = {
-                    upper:   { team: data.positions[key].upper.team, name: data.positions[key].upper.name, scores: ['▼','▼','▼'], selected: -1 },
-                    lower:   { team: data.positions[key].lower.team, name: data.positions[key].lower.name, scores: ['▼','▼','▼'], selected: -1 },
+                    upper:   { team: data.positions[key].upper.team, name: data.positions[key].upper.name, scores: ['▼','▼','▼'] },
+                    lower:   { team: data.positions[key].lower.team, name: data.positions[key].lower.name, scores: ['▼','▼','▼'] },
+                    winners: [null, null, null],
                     special: 'none',
                 };
                 load();
