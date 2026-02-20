@@ -253,6 +253,15 @@ body {
     box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2), 0 8px 20px rgba(239, 68, 68, 0.3);
 }
 
+.lower-circles .radio-circle.selected {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2), 0 8px 20px rgba(59, 130, 246, 0.3);
+}
+
+.lower-circles .radio-circle::before {
+    background: rgba(59, 130, 246, 0.3);
+}
+
 .radio-circle:hover {
     transform: scale(1.05);
 }

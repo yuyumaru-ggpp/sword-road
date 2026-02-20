@@ -119,7 +119,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <div class="divider-section">
-                <hr class="divider">
 
                 <div class="middle-controls">
                     <div class="score-dropdowns">

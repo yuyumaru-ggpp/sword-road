@@ -12,7 +12,7 @@ $match_number = $_SESSION['match_number'];
 // 大会・部門情報取得
 $info = getTournamentInfo($pdo, $division_id);
 
-// 選手一覧取得
+// 選手一覧取得（棄権選手含む）
 $players = getPlayers($pdo, $division_id);
 
 $error = '';
@@ -34,14 +34,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = '選手を選択してください';
     } else {
 
-        // 選手IDの存在チェック
+        // 選手IDの存在チェック（substitute_flg 問わず取得してチェック）
         $sql = "
-            SELECT p.id, p.name, p.player_number, t.name AS team_name
+            SELECT p.id, p.name, p.player_number, p.substitute_flg, t.name AS team_name
             FROM players p
             INNER JOIN teams t ON p.team_id = t.id
             INNER JOIN departments d ON t.department_id = d.id
             WHERE d.id = :division_id
-              AND p.substitute_flg = 0
               AND p.id IN (:upper_id, :lower_id)
         ";
 
@@ -58,53 +57,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = '選択された選手が見つかりません';
         } else {
 
-            // 選手情報を取得
-            $player_info = [];
+            // ★ 棄権選手チェック
+            $withdrawn_names = [];
             foreach ($found_players as $p) {
-                $player_info[$p['id']] = [
-                    'name' => $p['name'],
-                    'number' => $p['player_number'],
-                    'team' => $p['team_name']
-                ];
+                if ((int)$p['substitute_flg'] === 1) {
+                    $withdrawn_names[] = $p['name'];
+                }
             }
+            if (!empty($withdrawn_names)) {
+                $error = implode('、', $withdrawn_names) . ' は棄権中のため試合登録できません';
+            } else {
 
-            /* ===============================
-               不戦勝(ボタンを押した側が勝ち)
-            =============================== */
-            if ($forfeit === 'upper' || $forfeit === 'lower') {
+                // 選手情報を取得
+                $player_info = [];
+                foreach ($found_players as $p) {
+                    $player_info[$p['id']] = [
+                        'name' => $p['name'],
+                        'number' => $p['player_number'],
+                        'team' => $p['team_name']
+                    ];
+                }
 
-                $_SESSION['forfeit_data'] = [
-                    'upper_id' => $upper_id,
-                    'lower_id' => $lower_id,
-                    'upper_name' => $player_info[$upper_id]['name'],
-                    'lower_name' => $player_info[$lower_id]['name'],
-                    'upper_number' => $player_info[$upper_id]['number'],
-                    'lower_number' => $player_info[$lower_id]['number'],
-                    'upper_team' => $player_info[$upper_id]['team'],
-                    'lower_team' => $player_info[$lower_id]['team'],
-                    'winner' => ($forfeit === 'upper') ? 'A' : 'B',
-                    'upper_score' => ($forfeit === 'upper') ? 2 : 0,
-                    'lower_score' => ($forfeit === 'lower') ? 2 : 0
-                ];
+                /* ===============================
+                   不戦勝(ボタンを押した側が勝ち)
+                =============================== */
+                if ($forfeit === 'upper' || $forfeit === 'lower') {
 
-                header('Location: solo-forfeit-confirm.php');
+                    $_SESSION['forfeit_data'] = [
+                        'upper_id' => $upper_id,
+                        'lower_id' => $lower_id,
+                        'upper_name' => $player_info[$upper_id]['name'],
+                        'lower_name' => $player_info[$lower_id]['name'],
+                        'upper_number' => $player_info[$upper_id]['number'],
+                        'lower_number' => $player_info[$lower_id]['number'],
+                        'upper_team' => $player_info[$upper_id]['team'],
+                        'lower_team' => $player_info[$lower_id]['team'],
+                        'winner' => ($forfeit === 'upper') ? 'A' : 'B',
+                        'upper_score' => ($forfeit === 'upper') ? 2 : 0,
+                        'lower_score' => ($forfeit === 'lower') ? 2 : 0
+                    ];
+
+                    header('Location: solo-forfeit-confirm.php');
+                    exit;
+                }
+
+                /* ===============================
+                   通常試合 → 詳細入力へ
+                =============================== */
+                $_SESSION['player_a_id'] = $upper_id;
+                $_SESSION['player_b_id'] = $lower_id;
+                $_SESSION['player_a_name'] = $player_info[$upper_id]['name'];
+                $_SESSION['player_b_name'] = $player_info[$lower_id]['name'];
+                $_SESSION['player_a_number'] = $player_info[$upper_id]['number'];
+                $_SESSION['player_b_number'] = $player_info[$lower_id]['number'];
+                $_SESSION['player_a_team'] = $player_info[$upper_id]['team'];
+                $_SESSION['player_b_team'] = $player_info[$lower_id]['team'];
+
+                header('Location: individual-match-detail.php');
                 exit;
             }
-
-            /* ===============================
-               通常試合 → 詳細入力へ
-            =============================== */
-            $_SESSION['player_a_id'] = $upper_id;
-            $_SESSION['player_b_id'] = $lower_id;
-            $_SESSION['player_a_name'] = $player_info[$upper_id]['name'];
-            $_SESSION['player_b_name'] = $player_info[$lower_id]['name'];
-            $_SESSION['player_a_number'] = $player_info[$upper_id]['number'];
-            $_SESSION['player_b_number'] = $player_info[$lower_id]['number'];
-            $_SESSION['player_a_team'] = $player_info[$upper_id]['team'];
-            $_SESSION['player_b_team'] = $player_info[$lower_id]['team'];
-
-            header('Location: individual-match-detail.php');
-            exit;
         }
     }
 }
@@ -641,10 +652,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <select name="upper_player" class="player-select" id="upperPlayer">
                         <option value="">選手を選択してください</option>
                         <?php foreach ($players as $player): ?>
-                            <option value="<?= $player['id'] ?>" data-number="<?= (int) $player['player_number'] ?>"
-                                <?= (isset($_POST['upper_player']) && $_POST['upper_player'] == $player['id']) || 
+                            <option value="<?= $player['id'] ?>"
+                                data-number="<?= (int) $player['player_number'] ?>"
+                                data-withdrawn="<?= (int) $player['substitute_flg'] ?>"
+                                <?= ($player['substitute_flg'] == 1) ? 'disabled style="color:#ccc;"' : '' ?>
+                                <?= (isset($_POST['upper_player']) && $_POST['upper_player'] == $player['id']) ||
                                     (!isset($_POST['upper_player']) && $selected_upper_id == $player['id']) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($player['name']) ?> (<?= htmlspecialchars($player['team_name']) ?>)
+                                <?= htmlspecialchars($player['name']) ?>
+                                <?php if ($player['substitute_flg'] == 1): ?>
+                                    【棄権】(<?= htmlspecialchars($player['team_name']) ?>)
+                                <?php else: ?>
+                                    (<?= htmlspecialchars($player['team_name']) ?>)
+                                <?php endif; ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -665,10 +684,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <select name="lower_player" class="player-select" id="lowerPlayer">
                         <option value="">選手を選択してください</option>
                         <?php foreach ($players as $player): ?>
-                            <option value="<?= $player['id'] ?>" data-number="<?= (int) $player['player_number'] ?>"
-                                <?= (isset($_POST['lower_player']) && $_POST['lower_player'] == $player['id']) || 
+                            <option value="<?= $player['id'] ?>"
+                                data-number="<?= (int) $player['player_number'] ?>"
+                                data-withdrawn="<?= (int) $player['substitute_flg'] ?>"
+                                <?= ($player['substitute_flg'] == 1) ? 'disabled style="color:#ccc;"' : '' ?>
+                                <?= (isset($_POST['lower_player']) && $_POST['lower_player'] == $player['id']) ||
                                     (!isset($_POST['lower_player']) && $selected_lower_id == $player['id']) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($player['name']) ?> (<?= htmlspecialchars($player['team_name']) ?>)
+                                <?= htmlspecialchars($player['name']) ?>
+                                <?php if ($player['substitute_flg'] == 1): ?>
+                                    【棄権】(<?= htmlspecialchars($player['team_name']) ?>)
+                                <?php else: ?>
+                                    (<?= htmlspecialchars($player['team_name']) ?>)
+                                <?php endif; ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -711,9 +738,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         };
 
+        // ★ 棄権選手チェック共通関数
+        function isWithdrawn(selectEl) {
+            const opt = selectEl.options[selectEl.selectedIndex];
+            return opt && opt.dataset.withdrawn === '1';
+        }
+
         // フォーム送信時の処理
         document.querySelector('form').onsubmit = (e) => {
-            // 選手が選択されているかチェック
             const upperSelect = document.getElementById('upperPlayer');
             const lowerSelect = document.getElementById('lowerPlayer');
 
@@ -722,104 +754,87 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 alert('両方の選手を選択してください');
                 return false;
             }
+
+            // ★ クライアント側でも棄権チェック
+            const withdrawn = [];
+            if (isWithdrawn(upperSelect)) withdrawn.push(upperSelect.options[upperSelect.selectedIndex].text.replace(/\s*【棄権】.*/, '').trim());
+            if (isWithdrawn(lowerSelect)) withdrawn.push(lowerSelect.options[lowerSelect.selectedIndex].text.replace(/\s*【棄権】.*/, '').trim());
+            if (withdrawn.length > 0) {
+                e.preventDefault();
+                alert(withdrawn.join('、') + ' は棄権中のため試合登録できません');
+                return false;
+            }
         };
 
-        // 選手番号入力時の自動選択機能(赤側)
-        document.getElementById('upperPlayerNumber').addEventListener('input', function (e) {
-            const number = parseInt(e.target.value, 10);
-            const select = document.getElementById('upperPlayer');
+        // 選手番号入力時の自動選択機能（棄権選手は番号入力でも弾く）
+        function syncNumberToSelect(numberInput, selectEl) {
+            numberInput.addEventListener('input', function (e) {
+                const number = parseInt(e.target.value, 10);
 
-            if (isNaN(number) || e.target.value === '') {
-                select.value = '';
-                return;
-            }
-
-            let found = false;
-            for (let i = 0; i < select.options.length; i++) {
-                const option = select.options[i];
-                const optionNumber = parseInt(option.dataset.number, 10);
-
-                if (!isNaN(optionNumber) && optionNumber === number) {
-                    select.value = option.value;
-                    found = true;
-                    break;
+                if (isNaN(number) || e.target.value === '') {
+                    selectEl.value = '';
+                    return;
                 }
-            }
 
-            if (!found) {
-                select.value = '';
-            }
-        });
+                let found = false;
+                for (let i = 0; i < selectEl.options.length; i++) {
+                    const option = selectEl.options[i];
+                    const optionNumber = parseInt(option.dataset.number, 10);
 
-        // 選手番号入力時の自動選択機能(白側)
-        document.getElementById('lowerPlayerNumber').addEventListener('input', function (e) {
-            const number = parseInt(e.target.value, 10);
-            const select = document.getElementById('lowerPlayer');
-
-            if (isNaN(number) || e.target.value === '') {
-                select.value = '';
-                return;
-            }
-
-            let found = false;
-            for (let i = 0; i < select.options.length; i++) {
-                const option = select.options[i];
-                const optionNumber = parseInt(option.dataset.number, 10);
-
-                if (!isNaN(optionNumber) && optionNumber === number) {
-                    select.value = option.value;
-                    found = true;
-                    break;
+                    if (!isNaN(optionNumber) && optionNumber === number) {
+                        // ★ 棄権選手なら選択しない
+                        if (option.dataset.withdrawn === '1') {
+                            selectEl.value = '';
+                            const name = option.text.replace(/\s*【棄権】.*/, '').trim();
+                            alert(name + ' は棄権中のため選択できません');
+                            e.target.value = '';
+                        } else {
+                            selectEl.value = option.value;
+                        }
+                        found = true;
+                        break;
+                    }
                 }
-            }
 
-            if (!found) {
-                select.value = '';
-            }
-        });
+                if (!found) {
+                    selectEl.value = '';
+                }
+            });
+        }
 
-        // プルダウン選択時に選手番号欄に反映(赤側)
-        document.getElementById('upperPlayer').addEventListener('change', function (e) {
-            const selectedOption = e.target.options[e.target.selectedIndex];
-            const numberInput = document.getElementById('upperPlayerNumber');
-            if (selectedOption.value === '') {
-                numberInput.value = '';
-            } else {
-                const num = selectedOption.dataset.number;
-                numberInput.value = num ? num : '';
-            }
-        });
+        // プルダウン選択時に選手番号欄に反映
+        function syncSelectToNumber(selectEl, numberInput) {
+            selectEl.addEventListener('change', function (e) {
+                const selectedOption = e.target.options[e.target.selectedIndex];
+                if (selectedOption.value === '') {
+                    numberInput.value = '';
+                } else {
+                    const num = selectedOption.dataset.number;
+                    numberInput.value = num ? num : '';
+                }
+            });
+        }
 
-        // プルダウン選択時に選手番号欄に反映(白側)
-        document.getElementById('lowerPlayer').addEventListener('change', function (e) {
-            const selectedOption = e.target.options[e.target.selectedIndex];
-            const numberInput = document.getElementById('lowerPlayerNumber');
-            if (selectedOption.value === '') {
-                numberInput.value = '';
-            } else {
-                const num = selectedOption.dataset.number;
-                numberInput.value = num ? num : '';
-            }
-        });
+        // 初期化
+        const upperSelect = document.getElementById('upperPlayer');
+        const lowerSelect = document.getElementById('lowerPlayer');
+        const upperNumberInput = document.getElementById('upperPlayerNumber');
+        const lowerNumberInput = document.getElementById('lowerPlayerNumber');
+
+        syncNumberToSelect(upperNumberInput, upperSelect);
+        syncNumberToSelect(lowerNumberInput, lowerSelect);
+        syncSelectToNumber(upperSelect, upperNumberInput);
+        syncSelectToNumber(lowerSelect, lowerNumberInput);
 
         // ページ読み込み時に選手番号欄を初期化（セッションから復元された選手がいる場合）
-        document.addEventListener('DOMContentLoaded', function() {
-            // 赤側の初期化
-            const upperSelect = document.getElementById('upperPlayer');
-            const upperNumberInput = document.getElementById('upperPlayerNumber');
+        document.addEventListener('DOMContentLoaded', function () {
             if (upperSelect.value) {
-                const selectedOption = upperSelect.options[upperSelect.selectedIndex];
-                const num = selectedOption.dataset.number;
-                upperNumberInput.value = num ? num : '';
+                const opt = upperSelect.options[upperSelect.selectedIndex];
+                upperNumberInput.value = opt.dataset.number ? opt.dataset.number : '';
             }
-
-            // 白側の初期化
-            const lowerSelect = document.getElementById('lowerPlayer');
-            const lowerNumberInput = document.getElementById('lowerPlayerNumber');
             if (lowerSelect.value) {
-                const selectedOption = lowerSelect.options[lowerSelect.selectedIndex];
-                const num = selectedOption.dataset.number;
-                lowerNumberInput.value = num ? num : '';
+                const opt = lowerSelect.options[lowerSelect.selectedIndex];
+                lowerNumberInput.value = opt.dataset.number ? opt.dataset.number : '';
             }
         });
     </script>

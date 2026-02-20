@@ -23,7 +23,12 @@ function checkTeamSession() {
             $_SESSION['team_white_id']
         )
     ) {
-        header('Location: match_input.php');
+        $division_id = $_SESSION['division_id'] ?? '';
+        $redirect_url = 'match_input.php';
+        if ($division_id) {
+            $redirect_url .= '?division_id=' . $division_id;
+        }
+        header('Location: ' . $redirect_url);
         exit;
     }
 }
@@ -42,7 +47,12 @@ function checkTeamSessionWithResults() {
             $_SESSION['match_results']
         )
     ) {
-        header('Location: match_input.php');
+        $division_id = $_SESSION['division_id'] ?? '';
+        $redirect_url = 'match_input.php';
+        if ($division_id) {
+            $redirect_url .= '?division_id=' . $division_id;
+        }
+        header('Location: ' . $redirect_url);
         exit;
     }
 }
