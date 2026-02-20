@@ -107,26 +107,37 @@ if ($upperPoints > $lowerPoints) {
 }
 
 /* ===============================
-   individual_match_numを自動採番
+   individual_match_numを決定
+   セッションの試合番号を優先使用し、
+   ない場合は match_field 単位で自動採番
 =============================== */
-try {
-    $countSql = "
-        SELECT COALESCE(MAX(individual_match_num), 0) + 1 as next_num
-        FROM individual_matches
-        WHERE department_id = :department_id
-    ";
-    $countStmt = $pdo->prepare($countSql);
-    $divisionIdForCount = $_SESSION['division_id'] ?? null;
-    $countStmt->execute([':department_id' => $divisionIdForCount]);
-    $nextNum = $countStmt->fetchColumn();
-    if ($nextNum === false) {
-        $nextNum = 1;
+if (isset($_SESSION['match_number']) && $_SESSION['match_number'] !== '') {
+    // match_input.phpでユーザーが入力した試合番号をそのまま使用
+    $nextNum = $_SESSION['match_number'];
+} else {
+    // フォールバック：match_field単位でMAX+1を採番
+    try {
+        $countSql = "
+            SELECT COALESCE(MAX(individual_match_num), 0) + 1 as next_num
+            FROM individual_matches
+            WHERE department_id = :department_id
+            AND match_field = :match_field
+        ";
+        $countStmt = $pdo->prepare($countSql);
+        $countStmt->execute([
+            ':department_id' => $_SESSION['division_id'] ?? null,
+            ':match_field'   => $_SESSION['match_field'] ?? 1,
+        ]);
+        $nextNum = $countStmt->fetchColumn();
+        if ($nextNum === false) {
+            $nextNum = 1;
+        }
+    } catch (PDOException $e) {
+        error_log('Failed to get next individual_match_num: ' . $e->getMessage());
+        http_response_code(500);
+        echo '試合番号の取得に失敗しました。';
+        exit;
     }
-} catch (PDOException $e) {
-    error_log('Failed to get next individual_match_num: ' . $e->getMessage());
-    http_response_code(500);
-    echo '試合番号の取得に失敗しました。';
-    exit;
 }
 
 /* ===============================

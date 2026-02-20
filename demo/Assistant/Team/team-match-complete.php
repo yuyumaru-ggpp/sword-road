@@ -197,7 +197,7 @@ try {
     $redOrder = $_SESSION['team_red_order'] ?? [];
     $whiteOrder = $_SESSION['team_white_order'] ?? [];
 
-    $matchField = 1; // 試合場（固定値、必要に応じて変更）
+    $matchField = $_SESSION['match_field'] ?? 1; // セッションから試合場番号を取得
 
     // INSERT文のテンプレート
     $insertSql = "
@@ -242,8 +242,33 @@ try {
 
         // 選手IDがnullの場合はスキップ（外部キー制約エラー回避）
         if ($redPlayerId === null || $whitePlayerId === null) {
-            // デバッグログ（本番環境では削除推奨）
             error_log("警告: {$posName} の選手IDがnullのためスキップ (red={$redPlayerId}, white={$whitePlayerId})");
+            continue;
+        }
+
+        // ordersテーブルから実際のorder_idを取得（赤チームの該当ポジション）
+        $sqlOrder = "SELECT id FROM orders WHERE team_id = :team_id AND player_id = :player_id AND order_detail = :order_detail LIMIT 1";
+        $stmtOrder = $pdo->prepare($sqlOrder);
+        $stmtOrder->execute([
+            ':team_id'      => $_SESSION['team_red_id'],
+            ':player_id'    => $redPlayerId,
+            ':order_detail' => $orderNum  // 1〜5の数値（order_detailに格納されている値）
+        ]);
+        $orderId = $stmtOrder->fetchColumn();
+
+        if (!$orderId) {
+            // 白チームのordersからも試みる
+            $stmtOrder->execute([
+                ':team_id'      => $_SESSION['team_white_id'],
+                ':player_id'    => $whitePlayerId,
+                ':order_detail' => $orderNum
+            ]);
+            $orderId = $stmtOrder->fetchColumn();
+        }
+
+        if (!$orderId) {
+            error_log("警告: {$posName} のorder_idが見つかりません (red_team={$_SESSION['team_red_id']}, red_player={$redPlayerId}, order_detail={$orderNum})");
+            // order_idが取得できない場合はスキップ
             continue;
         }
 
@@ -292,7 +317,7 @@ try {
                 ':department_id' => $_SESSION['division_id'],
                 ':team_match_id' => $team_match_id,
                 ':match_field' => $matchField,
-                ':order_id' => $orderNum,
+                ':order_id' => $orderId,
                 ':individual_match_num' => $matchNumCounter,
                 ':player_a_id' => $redPlayerId,
                 ':player_b_id' => $whitePlayerId,
