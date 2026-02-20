@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              red_win_count, white_win_count,
              red_score, white_score, wo_flg)
         VALUES
-            (:department_id, :match_number, 1,
+            (:department_id, :match_number, :match_field,
              :team_red, :team_white,
              NOW(), NOW(), :winner,
              :red_wins, :white_wins,
@@ -53,9 +53,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $white_score = ($data['winner'] === 'white') ? 10 : 0;
 
     $stmt = $pdo->prepare($sql);
+    
+    // デバッグ用ログ
+    error_log('=== team-forfeit-confirm.php DEBUG ===');
+    error_log('division_id: ' . ($_SESSION['division_id'] ?? 'NOT SET'));
+    error_log('match_number: ' . ($_SESSION['match_number'] ?? 'NOT SET'));
+    error_log('match_field: ' . ($_SESSION['match_field'] ?? 'NOT SET (defaulting to 1)'));
+    
     $stmt->execute([
         ':department_id' => $_SESSION['division_id'],
         ':match_number'  => $_SESSION['match_number'],
+        ':match_field'   => $_SESSION['match_field'] ?? 1,
         ':team_red'      => $data['red_team_id'],
         ':team_white'    => $data['white_team_id'],
         ':winner'        => $data['winner'],

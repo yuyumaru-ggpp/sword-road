@@ -51,6 +51,8 @@ function getTournamentInfo($pdo, $division_id) {
 
 /* ===============================
    選手一覧取得（個人戦）
+   ※ substitute_flg = 1（棄権）の選手も含めて取得し、
+     呼び出し側でUIに反映する
 =============================== */
 function getPlayers($pdo, $division_id) {
     $sql = "
@@ -58,13 +60,13 @@ function getPlayers($pdo, $division_id) {
             p.id,
             p.player_number,
             p.name,
+            p.substitute_flg,
             t.name as team_name
         FROM players p
         INNER JOIN teams t ON p.team_id = t.id
         INNER JOIN departments d ON t.department_id = d.id
         WHERE d.id = :division_id
-          AND p.substitute_flg = 0
-        ORDER BY p.id
+        ORDER BY p.player_number
     ";
     
     $stmt = $pdo->prepare($sql);

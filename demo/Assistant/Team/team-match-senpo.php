@@ -249,8 +249,19 @@ body {
     opacity: 0.8;
 }
 
+.white-circles .radio-circle.selected {
+    background: #2563eb;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+.white-circles .radio-circle:hover {
+    opacity: 0.8;
+    background: rgba(59, 130, 246, 0.3);
+}
+
 .divider-section {
     position: relative;
+    z-index: 10;
     margin: 20px 0;
     text-align: center;
 }

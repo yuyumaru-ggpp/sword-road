@@ -94,6 +94,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['match_number'] = $match_number;
                 $_SESSION['match_field'] = $match_field;
 
+                // デバッグ用ログ
+                error_log('=== match_input.php SESSION SAVE ===');
+                error_log('division_id: ' . $division_id);
+                error_log('match_number: ' . $match_number);
+                error_log('match_field: ' . $match_field);
+
                 // 次回の入力のために試合場番号を記憶
                 $_SESSION['last_match_field'] = $match_field;
 
