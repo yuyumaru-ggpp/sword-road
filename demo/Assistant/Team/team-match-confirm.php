@@ -155,7 +155,7 @@ function calcMatchResult($posData)
     if (!is_array($whiteSelected)) { $whiteSelected = []; }
     
     foreach ($scores as $i => $score) {
-        if ($score !== '▼' && $score !== '▲' && $score !== '不' && $score !== '') {
+        if ($score !== '▼' && $score !== '▲' && $score !== '') {
             if (in_array($i, $redSelected)) { $redPoint++; }
             if (in_array($i, $whiteSelected)) { $whitePoint++; }
         }
@@ -446,7 +446,7 @@ if (isset($matchResults['代表決定戦'])) {
                                 $redPosPoints = $posResult['red_points'];
                                 
                                 foreach ($scores as $i => $score) {
-                                    if ($score !== '▼' && $score !== '▲' && $score !== '不' && $score !== '' && 
+                                    if ($score !== '▼' && $score !== '▲' && $score !== '' && 
                                         in_array($i, $redSelected)) {
                                         $class = ($redPosPoints > 0 && $i === 0 && in_array(0, $redSelected)) ? 'score-item winner first-point' : 'score-item winner';
                                         $redScores .= '<span class="' . $class . '">' . htmlspecialchars($score) . '</span>';
@@ -504,7 +504,7 @@ if (isset($matchResults['代表決定戦'])) {
                                     }
                                     
                                     foreach ($scores as $i => $score) {
-                                        if ($score !== '▼' && $score !== '▲' && $score !== '不' && $score !== '' && 
+                                        if ($score !== '▼' && $score !== '▲' && $score !== '' && 
                                             in_array($i, $redSelected)) {
                                             $class = ($redRepPoints > 0 && $i === 0 && in_array(0, $redSelected)) ? 'winner first-point' : 'winner';
                                             echo '<span class="' . $class . '">' . htmlspecialchars($score) . '</span>';
@@ -540,7 +540,7 @@ if (isset($matchResults['代表決定戦'])) {
                                 $whitePosPoints = $posResult['white_points'];
                                 
                                 foreach ($scores as $i => $score) {
-                                    if ($score !== '▼' && $score !== '▲' && $score !== '不' && $score !== '' && 
+                                    if ($score !== '▼' && $score !== '▲' && $score !== '' && 
                                         in_array($i, $whiteSelected)) {
                                         $class = ($whitePosPoints > 0 && $i === 0 && in_array(0, $whiteSelected)) ? 'score-item winner first-point' : 'score-item winner';
                                         $whiteScores .= '<span class="' . $class . '">' . htmlspecialchars($score) . '</span>';
@@ -595,7 +595,7 @@ if (isset($matchResults['代表決定戦'])) {
                                     }
                                     
                                     foreach ($scores as $i => $score) {
-                                        if ($score !== '▼' && $score !== '▲' && $score !== '不' && $score !== '' && 
+                                        if ($score !== '▼' && $score !== '▲' && $score !== '' && 
                                             in_array($i, $whiteSelected)) {
                                             $class = ($whiteRepPoints > 0 && $i === 0 && in_array(0, $whiteSelected)) ? 'winner first-point' : 'winner';
                                             echo '<span class="' . $class . '">' . htmlspecialchars($score) . '</span>';
