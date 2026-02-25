@@ -80,6 +80,22 @@ $redTotalPoints = 0;
 $whiteTotalPoints = 0;
 
 foreach ($positions as $pos) {
+    $redPlayerId   = $redOrder[$pos] ?? null;
+    $whitePlayerId = $whiteOrder[$pos] ?? null;
+
+    // 片方しか選手がいない → 不戦勝
+    if ($redPlayerId === null && $whitePlayerId !== null) {
+        $whiteWins++;
+        $whiteTotalPoints++;
+        continue;
+    } elseif ($whitePlayerId === null && $redPlayerId !== null) {
+        $redWins++;
+        $redTotalPoints++;
+        continue;
+    } elseif ($redPlayerId === null && $whitePlayerId === null) {
+        continue; // 両方いない → スキップ
+    }
+
     if (isset($matchResults[$pos])) {
         $result = calcMatchResult($matchResults[$pos]);
 
@@ -240,9 +256,9 @@ try {
             $whitePlayerId = $whiteOrder[$posName] ?? null;
         }
 
-        // 選手IDがnullの場合はスキップ（外部キー制約エラー回避）
-        if ($redPlayerId === null || $whitePlayerId === null) {
-            error_log("警告: {$posName} の選手IDがnullのためスキップ (red={$redPlayerId}, white={$whitePlayerId})");
+        // 両方nullの場合のみスキップ（片方nullはそのままINSERT）
+        if ($redPlayerId === null && $whitePlayerId === null) {
+            error_log("警告: {$posName} の両選手IDがnullのためスキップ");
             continue;
         }
 
